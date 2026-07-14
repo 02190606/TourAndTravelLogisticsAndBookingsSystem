@@ -79,7 +79,7 @@ export function Complaints() {
       <Modal open={!!viewComplaint} onClose={() => setViewComplaint(null)} title="Complaint Details">
         {viewComplaint && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div><span className="text-text-secondary">Vehicle:</span> {viewComplaint.vehicles?.registration_number}</div>
               <div><span className="text-text-secondary">Date:</span> {formatDate(viewComplaint.date_filed)}</div>
               <div><span className="text-text-secondary">Status:</span> <StatusBadge status={viewComplaint.status} /></div>

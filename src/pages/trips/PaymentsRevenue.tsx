@@ -135,7 +135,7 @@ export function PaymentsRevenue() {
         </table>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {monthlySummary.map(m => (
           <div key={m.name} className={`rounded-lg border border-slate-200/80 p-3 shadow-sm text-center transition-colors ${m.revenue > 0 ? 'bg-white' : 'bg-slate-50/60 opacity-50'}`}>
             <p className="text-xs text-text-secondary font-medium">{m.name}</p>

@@ -13,7 +13,7 @@ export function AppLayout() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,#F8FAFC_0%,#F1F5F9_48%,#E2E8F0_100%)] px-4 md:px-6 pb-4 md:pb-6">
+        <main className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,#F8FAFC_0%,#F1F5F9_48%,#E2E8F0_100%)] px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:pb-6">
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 10 }}

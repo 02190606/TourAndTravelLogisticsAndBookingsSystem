@@ -55,15 +55,15 @@ export function AdminDashboard() {
         subtitle="Overview of fleet, trips, and revenue"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard title="Available Vehicles" value={vehicleStats.available} icon="🚙" color="success" />
         <StatCard title="Active Trips" value={tripCounts.ongoing} icon="✈️" color="warning" />
         <StatCard title="Total Revenue" value={`UGX ${(revenue || 0).toLocaleString()}`} icon="💰" color="primary" />
         <StatCard title="Completed Trips" value={tripCounts.completed} icon="✅" color="success" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm overflow-hidden">
           <h3 className="font-display font-bold text-lg mb-4">Fleet Status</h3>
           <DonutChart
             data={[
@@ -73,7 +73,7 @@ export function AdminDashboard() {
             ]}
           />
         </div>
-        <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm overflow-hidden">
           <h3 className="font-display font-bold text-lg mb-4">Trip Status</h3>
           <DonutChart
             data={[
@@ -86,7 +86,7 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         <Button onClick={() => navigate('/logistics/vehicles')}>Add Vehicle</Button>
         <Button onClick={() => navigate('/logistics/drivers')}>Add Driver</Button>
         <Button onClick={() => navigate('/trips/manage')}>Create Trip</Button>

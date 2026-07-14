@@ -72,7 +72,7 @@ export function VehicleDetails() {
         title="Fleet Management"
         subtitle={`${activeCount} active · ${soldCount} sold`}
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               onClick={() => setShowSold(!showSold)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${showSold ? 'bg-danger/10 text-danger' : 'bg-muted/30 text-text-secondary hover:text-text-primary'}`}
@@ -261,7 +261,7 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
       <form onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }} className="space-y-6">
         <div>
           <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Identity</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Registration Number *</label>
               <input value={form.registration_number} onChange={e => setForm(f => ({ ...f, registration_number: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
@@ -287,7 +287,7 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
 
         <div className="border-t border-muted/30 pt-4">
           <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Status & Location</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Status</label>
               <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as VehicleStatus }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
@@ -319,7 +319,7 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
 
         <div className="border-t border-muted/30 pt-4">
           <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Documentation & Compliance</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {([
               { key: 'driving_permit' as const, label: 'Driving Permit', type: 'text' as const },
               { key: 'permit_expiry_date' as const, label: 'Permit Expiry', type: 'date' as const },
@@ -348,7 +348,7 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
 
         <div className="border-t border-muted/30 pt-4">
           <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Technical</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Fuel Type</label>
               <div className="flex gap-3">

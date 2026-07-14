@@ -64,7 +64,7 @@ export function ServiceMaintenance() {
     <div className="space-y-6">
       <PageHeader title="Maintenance and Repair" />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="bg-white rounded-xl px-4 py-3 border border-muted/30">
           <p className="text-xs text-text-secondary uppercase tracking-wider">Service Total</p>
           <p className="text-lg font-bold font-mono mt-0.5">{formatUGX(serviceTotal)}</p>
@@ -84,13 +84,13 @@ export function ServiceMaintenance() {
       </div>
 
       {hasCombinedData && (
-        <div className="bg-white rounded-2xl shadow-sm">
-          <button onClick={() => setShowCombinedChart(!showCombinedChart)} className="flex items-center gap-2 px-6 py-3 w-full text-left text-sm font-medium text-text-secondary hover:text-text-primary transition-colors cursor-pointer">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <button onClick={() => setShowCombinedChart(!showCombinedChart)} className="flex items-center gap-2 px-4 sm:px-6 py-3 w-full text-left text-sm font-medium text-text-secondary hover:text-text-primary transition-colors cursor-pointer">
             <svg className={`w-4 h-4 transition-transform ${showCombinedChart ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /></svg>
             View Monthly Trend
           </button>
           {showCombinedChart && (
-            <div className="px-6 pb-6">
+            <div className="px-4 sm:px-6 pb-6">
               <p className="text-xs text-text-secondary mb-3">Monthly cost breakdown (UGX in thousands)</p>
               <ResponsiveContainer width="100%" height={250}>
                 <RechartsLine data={combinedMonthlyData}>
@@ -109,7 +109,7 @@ export function ServiceMaintenance() {
         </div>
       )}
 
-      <div className="flex gap-2 bg-muted/20 rounded-xl p-1 w-fit">
+      <div className="flex gap-2 bg-muted/20 rounded-xl p-1 overflow-x-auto">
         <button onClick={() => setSubTab('service')} className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${subTab === 'service' ? 'bg-white shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}> Service</button>
         <button onClick={() => setSubTab('maintenance')} className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${subTab === 'maintenance' ? 'bg-white shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}> Maintenance</button>
         <button onClick={() => setSubTab('repairs')} className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${subTab === 'repairs' ? 'bg-white shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}> Repairs</button>

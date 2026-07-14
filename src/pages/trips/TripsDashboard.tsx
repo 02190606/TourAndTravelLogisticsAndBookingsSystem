@@ -65,16 +65,16 @@ export function TripsDashboard() {
     <div className="space-y-6">
       <PageHeader title="Trips Dashboard" subtitle="Trip flow, revenue, and near-term scheduling" />
 
-      <section className="rounded-lg border border-slate-200/80 bg-white p-5 shadow-sm">
-        <div className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr] lg:items-center">
+      <section className="rounded-lg border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm">
+        <div className="grid gap-4 sm:items-center lg:grid-cols-[1.4fr_0.8fr]">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">Bookings performance</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-950">Track demand, delivery, and revenue momentum</h2>
+            <h2 className="mt-2 text-xl sm:text-2xl font-bold text-slate-950">Track demand, delivery, and revenue momentum</h2>
             <p className="mt-2 max-w-2xl text-sm text-text-secondary">
               Keep planned tours, active trips, and completed revenue visible for the operations team.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
             <MiniMetric label="Completion" value={`${completionRate}%`} />
             <MiniMetric label="This week" value={stats.upcomingThisWeek} />
             <MiniMetric label="This month" value={formatUGX(stats.monthlyRevenue)} />
@@ -82,7 +82,7 @@ export function TripsDashboard() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard title="Total Trips" value={stats.total} icon={<Icon name="plane" />} color="primary" />
         <StatCard title="Planned" value={stats.planned} icon={<Icon name="clipboard" />} color="info" />
         <StatCard title="Ongoing" value={stats.ongoing} icon={<Icon name="sync" />} color="warning" />
@@ -90,14 +90,14 @@ export function TripsDashboard() {
         <StatCard title="Cancelled" value={stats.cancelled} icon={<Icon name="x" />} color="danger" />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard title="Completed Revenue (Month)" value={formatUGX(stats.monthlyRevenue)} icon={<Icon name="cash" />} color="primary" />
         <StatCard title="Completed Revenue (Year)" value={formatUGX(stats.yearlyRevenue)} icon={<Icon name="trend" />} color="secondary" />
         <StatCard title="Upcoming This Week" value={stats.upcomingThisWeek} icon={<Icon name="calendar" />} color="info" />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="rounded-lg border border-slate-200/80 bg-white p-6 shadow-sm">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+        <section className="rounded-lg border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
           <div className="mb-5">
             <h3 className="text-lg font-bold text-slate-950">Trips by Status</h3>
             <p className="text-sm text-text-secondary">Current distribution across all bookings</p>
@@ -111,7 +111,7 @@ export function TripsDashboard() {
             ]}
           />
         </section>
-        <section className="rounded-lg border border-slate-200/80 bg-white p-6 shadow-sm">
+        <section className="rounded-lg border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
           <div className="mb-5">
             <h3 className="text-lg font-bold text-slate-950">Monthly Revenue</h3>
             <p className="text-sm text-text-secondary">Revenue booked by trip start month</p>
@@ -121,7 +121,7 @@ export function TripsDashboard() {
       </div>
 
       {stats.upcomingTrips.length > 0 && (
-        <section className="rounded-lg border border-slate-200/80 bg-white p-6 shadow-sm">
+        <section className="rounded-lg border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm">
           <div className="mb-5">
             <h3 className="text-lg font-bold text-slate-950">Upcoming Trips</h3>
             <p className="text-sm text-text-secondary">Next planned or ongoing client movements</p>

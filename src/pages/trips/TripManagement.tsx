@@ -109,7 +109,7 @@ export function TripManagement() {
       <Modal open={!!viewTrip} onClose={() => setViewTrip(null)} title="Trip Details" className="max-w-2xl">
         {viewTrip && (
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div><span className="text-text-secondary text-sm">Client:</span><p className="font-semibold">{viewTrip.client_name}</p></div>
               <div><span className="text-text-secondary text-sm">Clients:</span><p>{viewTrip.number_of_clients}</p></div>
               <div><span className="text-text-secondary text-sm">Car Type:</span><p className="capitalize">{viewTrip.car_type}</p></div>
@@ -243,7 +243,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
       <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-6">
         <div>
           <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Client Info</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Client Name *</label>
               <input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
@@ -257,7 +257,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
 
         <div className="border-t border-muted/30 pt-4">
           <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Vehicle & Driver</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Car Type Requested</label>
               <select value={form.car_type} onChange={e => setForm(f => ({ ...f, car_type: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm capitalize">
@@ -287,7 +287,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
 
         <div className="border-t border-muted/30 pt-4">
           <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Schedule</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Trip Start Date</label>
               <input type="date" value={form.trip_start_date} onChange={e => setForm(f => ({ ...f, trip_start_date: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
@@ -310,7 +310,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
 
         <div className="border-t border-muted/30 pt-4">
           <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Payment</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Currency</label>
               <select value={form.currency} onChange={e => updateCurrency(e.target.value)} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">

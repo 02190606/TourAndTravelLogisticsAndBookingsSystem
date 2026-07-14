@@ -139,7 +139,7 @@ export function UserManagement() {
         actions={<Button onClick={() => { setEditUser(null); setDrawerOpen(true) }}>Add User</Button>}
       />
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <StatCard title="Total Users" value={users.length} icon="👥" color="primary" />
         <StatCard title="Active Users" value={activeUsers} icon="✅" color="success" />
         <StatCard title="Inactive Users" value={inactiveUsers} icon="⛔" color="danger" />

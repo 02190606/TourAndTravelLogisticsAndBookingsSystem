@@ -46,8 +46,8 @@ export function Drawer({ open, onClose, title, children, width = 'max-w-xl' }: D
             className={`relative bg-white w-full ${width} h-full shadow-2xl overflow-y-auto`}
           >
             {title && (
-              <div className="sticky top-0 z-10 flex items-center justify-between p-6 bg-white border-b border-muted/50">
-                <h2 className="text-xl font-display font-bold">{title}</h2>
+              <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-4 sm:p-6 bg-white border-b border-muted/50">
+                <h2 className="text-lg sm:text-xl font-display font-bold">{title}</h2>
                 <button
                   onClick={onClose}
                   className="p-2 hover:bg-muted/50 rounded-lg transition-colors cursor-pointer"
@@ -59,7 +59,7 @@ export function Drawer({ open, onClose, title, children, width = 'max-w-xl' }: D
                 </button>
               </div>
             )}
-            <div className="p-6">{children}</div>
+            <div className="p-4 sm:p-6">{children}</div>
           </motion.div>
         </div>
       )}

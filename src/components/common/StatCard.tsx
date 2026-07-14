@@ -36,8 +36,8 @@ export function StatCard({ title, value, icon, color = 'primary', subtitle, inde
         </div>
       </div>
       <div className="space-y-1">
-        <p className="truncate text-2xl font-bold text-text-primary lg:text-3xl">{value}</p>
-        <p className="text-sm font-medium text-text-secondary">{title}</p>
+        <p className="truncate text-xl font-bold text-text-primary sm:text-2xl lg:text-3xl">{value}</p>
+        <p className="text-xs sm:text-sm font-medium text-text-secondary">{title}</p>
         {subtitle && <p className="text-xs text-text-secondary/70">{subtitle}</p>}
       </div>
     </motion.div>
