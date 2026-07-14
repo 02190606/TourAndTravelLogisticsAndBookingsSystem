@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, Drawer, Modal, StatusBadge, CardSkeleton } from '@/components/common'
-import { formatDate, formatUGX, generateId, getDaysBetween } from '@/utils'
+import { formatDate, formatUGX, generateId, getDaysBetween, computeTripStatus } from '@/utils'
 import toast from 'react-hot-toast'
 import type { Trip, TripStatus, Vehicle, Driver } from '@/types'
 
@@ -49,7 +49,7 @@ export function TripManagement() {
     )},
     { key: 'trip_start_date', header: 'Start', render: (t: any) => formatDate(t.trip_start_date) },
     { key: 'trip_end_date', header: 'End', render: (t: any) => formatDate(t.trip_end_date) },
-    { key: 'status', header: 'Status', render: (t: any) => <StatusBadge status={t.status} /> },
+    { key: 'status', header: 'Status', render: (t: any) => <StatusBadge status={computeTripStatus(t)} /> },
     { key: 'actions', header: 'Actions', render: (t: any) => (
       <div className="flex gap-2">
         <button onClick={() => setViewTrip(t)} className="text-xs text-primary hover:underline cursor-pointer">View</button>
@@ -115,7 +115,7 @@ export function TripManagement() {
               <div><span className="text-text-secondary text-sm">Car Type:</span><p className="capitalize">{viewTrip.car_type}</p></div>
               <div><span className="text-text-secondary text-sm">Vehicle:</span><p>{viewTrip.vehicles?.registration_number || '-'}</p></div>
               <div><span className="text-text-secondary text-sm">Driver:</span><p>{viewTrip.drivers?.full_name || '-'}</p></div>
-              <div><span className="text-text-secondary text-sm">Status:</span><StatusBadge status={viewTrip.status} /></div>
+              <div><span className="text-text-secondary text-sm">Status:</span><StatusBadge status={computeTripStatus(viewTrip)} /></div>
             </div>
             <div className="border-t border-muted/30 pt-4">
               <h4 className="font-medium mb-3">📅 Schedule</h4>
@@ -163,7 +163,6 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     payment_mode: editTrip?.payment_mode || 'cash',
     amount_paid: editTrip?.amount_paid || 0,
     balance: editTrip?.balance || 0,
-    status: editTrip?.status || 'planned' as TripStatus,
     exchangeRate: 1,
   })
 
@@ -211,8 +210,9 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const { amount: _amount, exchangeRate: _exchangeRate, ...dbFields } = form
       const payload = {
-        ...form,
+        ...dbFields,
         number_of_clients: Number(form.number_of_clients),
         amount_in_ugx: Number(form.amount_in_ugx),
         amount_paid: Number(form.amount_paid),
@@ -333,12 +333,6 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
                 <div className="w-full px-3 py-2.5 bg-muted/20 rounded-xl text-sm font-mono font-semibold text-primary">{form.amount_in_ugx.toLocaleString()} UGX</div>
               </div>
             )}
-            {form.currency === 'UGX' && (
-              <div>
-                <label className="block text-sm font-medium mb-1">Amount (UGX)</label>
-                <input type="number" value={form.amount} onChange={e => updateAmount(Number(e.target.value))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-              </div>
-            )}
             <div>
               <label className="block text-sm font-medium mb-1">Payment Mode</label>
               <div className="flex gap-4 mt-2">
@@ -360,18 +354,6 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
                 {form.balance.toLocaleString()} UGX
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="border-t border-muted/30 pt-4">
-          <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Status</h4>
-          <div>
-            <label className="block text-sm font-medium mb-1">Trip Status</label>
-            <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as TripStatus }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
-              {(['planned', 'ongoing', 'completed', 'cancelled'] as TripStatus[]).map(s => (
-                <option key={s} value={s} className="capitalize">{s}</option>
-              ))}
-            </select>
           </div>
         </div>
 

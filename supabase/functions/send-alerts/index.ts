@@ -4,7 +4,7 @@ import nodemailer from 'npm:nodemailer@6.9.16'
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SERVICE_ROLE_KEY')!)
 
-const PRIMARY_RECIPIENT_EMAIL = 'mugir2000@gmail.com'
+const RECIPIENT_EMAILS = ['mugir2000@gmail.com']
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
@@ -16,44 +16,132 @@ const transporter = nodemailer.createTransport({
   },
 })
 
+interface Alert {
+  itemId: string
+  stage: number
+  label: string
+  reg: string
+  status: string
+  date: string
+  type: 'logistics' | 'trip'
+}
+
 function daysUntil(dateStr: string, today: Date): number {
   return Math.ceil((new Date(dateStr).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 }
 
-function buildEmailHtml(alerts: { label: string; reg: string; status: string; date: string; stage: number }[]): string {
-  const rows = alerts.map(a => {
-    const isUrgent = a.stage === 2
-    const badgeBg = isUrgent ? 'background: #fef2f2; color: #b91c1c;' : 'background: #fffbeb; color: #b45309;'
-    return `
+function getUrgency(status: string): 'expired' | 'today' | 'upcoming' {
+  const lower = status.toLowerCase()
+  if (lower.includes('expired') || lower.includes('overdue') || lower.includes('ago')) return 'expired'
+  if (lower.includes('today')) return 'today'
+  return 'upcoming'
+}
+
+function groupByReg(alerts: Alert[]): { reg: string; alerts: Alert[] }[] {
+  const map = new Map<string, Alert[]>()
+  for (const a of alerts) {
+    const existing = map.get(a.reg) || []
+    existing.push(a)
+    map.set(a.reg, existing)
+  }
+  return Array.from(map.entries()).map(([reg, alerts]) => ({ reg, alerts }))
+}
+
+function urgencyBadge(status: string): string {
+  const u = getUrgency(status)
+  if (u === 'expired') return 'background: #fef2f2; color: #b91c1c; border-left: 3px solid #ef4444;'
+  if (u === 'today') return 'background: #fffbeb; color: #b45309; border-left: 3px solid #f59e0b;'
+  return 'background: #eff6ff; color: #1d4ed8; border-left: 3px solid #3b82f6;'
+}
+
+function urgencyIcon(status: string): string {
+  const u = getUrgency(status)
+  if (u === 'expired') return '&#9888;&#65039;'
+  if (u === 'today') return '&#128197;'
+  return '&#128336;'
+}
+
+function buildEmailHtml(alerts: Alert[]): string {
+  const logistics = alerts.filter(a => a.type === 'logistics')
+  const trips = alerts.filter(a => a.type === 'trip')
+  const grouped = groupByReg(logistics)
+
+  let sections = ''
+
+  if (logistics.length > 0) {
+    let logisticsHtml = ''
+    for (const group of grouped) {
+      const rows = group.alerts.map(a => `
+        <tr>
+          <td style="padding: 8px 12px; font-weight: 500; color: #334155; width: 120px;">${a.label}</td>
+          <td style="padding: 8px 12px;">
+            <span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; ${urgencyBadge(a.status)}">${urgencyIcon(a.status)} ${a.status}</span>
+          </td>
+          <td style="padding: 8px 12px; color: #64748b; font-size: 13px; width: 100px;">${a.date}</td>
+        </tr>`).join('')
+
+      logisticsHtml += `
+        <tr>
+          <td colspan="3" style="padding: 10px 12px 4px 12px; font-weight: 700; color: #0f766e; font-size: 13px; border-bottom: 1px solid #e2e8f0;">
+            &#128663; ${group.reg}
+          </td>
+        </tr>
+        ${rows}`
+    }
+
+    sections += `
       <tr>
-        <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-weight: 500;">${a.label}</td>
-        <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">${a.reg}</td>
-        <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;"><span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 12px; font-weight: 600; ${badgeBg}">${a.status}</span></td>
-        <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; color: #64748b;">${a.date}</td>
-        <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0;">${isUrgent ? '⚠️ URGENT' : 'Reminder'}</td>
-      </tr>`
-  }).join('')
+        <td colspan="3" style="padding: 16px 12px 8px 12px; font-size: 15px; font-weight: 700; color: #0f172a; border-bottom: 2px solid #0f766e;">
+          &#128663; Logistics Alerts (${logistics.length})
+        </td>
+      </tr>
+      ${logisticsHtml}`
+  }
+
+  if (trips.length > 0) {
+    const tripRows = trips.map(a => `
+      <tr>
+        <td style="padding: 8px 12px; font-weight: 500; color: #334155; width: 120px;">${a.label}</td>
+        <td style="padding: 8px 12px;">
+          <span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; ${urgencyBadge(a.status)}">${urgencyIcon(a.status)} ${a.status}</span>
+        </td>
+        <td style="padding: 8px 12px; color: #64748b; font-size: 13px; width: 100px;">${a.date}</td>
+      </tr>`).join('')
+
+    sections += `
+      <tr>
+        <td colspan="3" style="padding: 16px 12px 8px 12px; font-size: 15px; font-weight: 700; color: #0f172a; border-bottom: 2px solid #0f766e;">
+          &#129521; Trip Alerts (${trips.length})
+        </td>
+      </tr>
+      ${tripRows}`
+  }
+
+  const total = alerts.length
 
   return `
-    <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-      <div style="background: #0F766E; padding: 24px; border-radius: 12px 12px 0 0;">
-        <h1 style="color: white; margin: 0; font-size: 20px;">SafariTour Alerts</h1>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+      <div style="background: #0F766E; padding: 24px 28px; border-radius: 12px 12px 0 0;">
+        <h1 style="color: white; margin: 0; font-size: 20px; font-weight: 700;">SafariTour Alerts</h1>
+        <p style="color: #ccfbf1; margin: 4px 0 0 0; font-size: 13px;">Daily compliance &amp; trip notifications</p>
       </div>
-      <div style="border: 1px solid #e2e8f0; border-top: none; padding: 24px; border-radius: 0 0 12px 12px;">
-        <p style="color: #475569;">You have <strong>${alerts.length}</strong> pending alert${alerts.length > 1 ? 's' : ''}:</p>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+      <div style="border: 1px solid #e2e8f0; border-top: none; padding: 20px 28px 24px 28px; border-radius: 0 0 12px 12px;">
+        <p style="color: #475569; margin: 0 0 16px 0; font-size: 14px;">
+          You have <strong style="color: #0f766e;">${total}</strong> pending alert${total !== 1 ? 's' : ''}:
+        </p>
+        <table style="width: 100%; border-collapse: collapse;">
           <thead>
             <tr style="background: #f8fafc;">
-              <th style="padding: 8px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #64748b;">Item</th>
-              <th style="padding: 8px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #64748b;">Vehicle/Client</th>
-              <th style="padding: 8px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #64748b;">Status</th>
-              <th style="padding: 8px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #64748b;">Date</th>
-              <th style="padding: 8px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #64748b;">Type</th>
+              <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Item</th>
+              <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Status</th>
+              <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Date</th>
             </tr>
           </thead>
-          <tbody>${rows}</tbody>
+          <tbody>
+            ${sections}
+          </tbody>
         </table>
-        <p style="color: #94a3b8; font-size: 12px; margin-top: 20px;">Log in to SafariTour to acknowledge these alerts.</p>
+        <p style="color: #94a3b8; font-size: 12px; margin: 20px 0 0 0;">Log in to SafariTour to acknowledge these alerts.</p>
       </div>
     </div>`
 }
@@ -110,12 +198,12 @@ serve(async (req) => {
     ['psv_expiry', 'psv', 'PSV'],
   ]
 
-  const emailsToSend: { email: string; alerts: { itemId: string; stage: number; label: string; reg: string; status: string; date: string }[] }[] = []
+  const emailsToSend: { email: string; alerts: Alert[] }[] = []
 
   for (const user of users) {
-    if (user.email === PRIMARY_RECIPIENT_EMAIL) continue
+    if (RECIPIENT_EMAILS.includes(user.email)) continue
 
-    const userAlerts: { itemId: string; stage: number; label: string; reg: string; status: string; date: string }[] = []
+    const userAlerts: Alert[] = []
 
     const isLogistics = user.role === 'admin' || user.role === 'logistics'
     const isTrips = user.role === 'admin' || user.role === 'trips'
@@ -132,11 +220,11 @@ serve(async (req) => {
           const itemId = `${type}-${v.id}`
 
           if (diff >= 6 && diff <= 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-            userAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: `Expires in ${diff} days`, date: dateStr })
+            userAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: `Expires in ${diff} days`, date: dateStr, type: 'logistics' })
           }
           if (diff <= 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
             const urgentLabel = diff <= 0 ? 'EXPIRED' : `Expires in ${diff} day(s)`
-            userAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: urgentLabel, date: dateStr })
+            userAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: urgentLabel, date: dateStr, type: 'logistics' })
           }
         }
       }
@@ -150,11 +238,11 @@ serve(async (req) => {
         const itemId = `service-${s.id}`
 
         if (diff >= 6 && diff <= 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-          userAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days`, date: s.next_service_date })
+          userAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days`, date: s.next_service_date, type: 'logistics' })
         }
         if (diff <= 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
           const urgentLabel = diff <= 0 ? 'OVERDUE' : `Due in ${diff} day(s)`
-          userAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: urgentLabel, date: s.next_service_date })
+          userAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: urgentLabel, date: s.next_service_date, type: 'logistics' })
         }
       }
     }
@@ -166,11 +254,11 @@ serve(async (req) => {
           const itemId = `trip_start-${t.id}`
 
           if (diff >= 6 && diff <= 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-            userAlerts.push({ itemId, stage: 1, label: 'Trip Start', reg: t.client_name, status: `In ${diff} days`, date: t.trip_start_date })
+            userAlerts.push({ itemId, stage: 1, label: 'Trip Start', reg: t.client_name, status: `In ${diff} days`, date: t.trip_start_date, type: 'trip' })
           }
-          if (diff <= 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
-            const urgentLabel = diff <= 0 ? 'Started today' : `Starts in ${diff} day(s)`
-            userAlerts.push({ itemId, stage: 2, label: 'Trip Start', reg: t.client_name, status: urgentLabel, date: t.trip_start_date })
+          if (diff <= 0 && !sentKey.has(`${user.id}:${itemId}:2`)) {
+            const urgentLabel = diff < 0 ? `Started ${Math.abs(diff)} day(s) ago` : 'Starts today'
+            userAlerts.push({ itemId, stage: 2, label: 'Trip Start', reg: t.client_name, status: urgentLabel, date: t.trip_start_date, type: 'trip' })
           }
         }
 
@@ -179,11 +267,11 @@ serve(async (req) => {
           const itemId = `trip_end-${t.id}`
 
           if (diff >= 6 && diff <= 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-            userAlerts.push({ itemId, stage: 1, label: 'Trip End', reg: t.client_name, status: `In ${diff} days`, date: t.trip_end_date })
+            userAlerts.push({ itemId, stage: 1, label: 'Trip End', reg: t.client_name, status: `In ${diff} days`, date: t.trip_end_date, type: 'trip' })
           }
-          if (diff <= 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
-            const urgentLabel = diff <= 0 ? 'Ended today' : `Ends in ${diff} day(s)`
-            userAlerts.push({ itemId, stage: 2, label: 'Trip End', reg: t.client_name, status: urgentLabel, date: t.trip_end_date })
+          if (diff <= 0 && !sentKey.has(`${user.id}:${itemId}:2`)) {
+            const urgentLabel = diff < 0 ? `Ended ${Math.abs(diff)} day(s) ago` : 'Ends today'
+            userAlerts.push({ itemId, stage: 2, label: 'Trip End', reg: t.client_name, status: urgentLabel, date: t.trip_end_date, type: 'trip' })
           }
         }
       }
@@ -194,72 +282,74 @@ serve(async (req) => {
     }
   }
 
-  const primaryUserId = users?.find(u => u.email === PRIMARY_RECIPIENT_EMAIL)?.id
-  const primaryAlerts: { itemId: string; stage: number; label: string; reg: string; status: string; date: string }[] = []
+  for (const email of RECIPIENT_EMAILS) {
+    const recipientUserId = users?.find(u => u.email === email)?.id || email
+    const recipientAlerts: Alert[] = []
 
-  if (vehicles) {
-    for (const v of vehicles) {
-      if (v.status === 'sold') continue
-      for (const [field, type, label] of docChecks) {
-        const dateStr = v[field as keyof typeof v] as string | undefined
-        if (!dateStr) continue
-        const diff = daysUntil(dateStr, today)
-        const itemId = `${type}-${v.id}`
-        if (diff >= 6 && diff <= 7 && !sentKey.has(`${primaryUserId || 'primary'}:${itemId}:1`)) {
-          primaryAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: `Expires in ${diff} days`, date: dateStr })
-        }
-        if (diff <= 2 && !sentKey.has(`${primaryUserId || 'primary'}:${itemId}:2`)) {
-          const urgentLabel = diff <= 0 ? 'EXPIRED' : `Expires in ${diff} day(s)`
-          primaryAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: urgentLabel, date: dateStr })
+    if (vehicles) {
+      for (const v of vehicles) {
+        if (v.status === 'sold') continue
+        for (const [field, type, label] of docChecks) {
+          const dateStr = v[field as keyof typeof v] as string | undefined
+          if (!dateStr) continue
+          const diff = daysUntil(dateStr, today)
+          const itemId = `${type}-${v.id}`
+          if (diff >= 6 && diff <= 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
+            recipientAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: `Expires in ${diff} days`, date: dateStr, type: 'logistics' })
+          }
+          if (diff <= 2 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
+            const urgentLabel = diff <= 0 ? 'EXPIRED' : `Expires in ${diff} day(s)`
+            recipientAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: urgentLabel, date: dateStr, type: 'logistics' })
+          }
         }
       }
     }
-  }
 
-  if (services) {
-    for (const s of services) {
-      if (!s.next_service_date) continue
-      const diff = daysUntil(s.next_service_date, today)
-      const itemId = `service-${s.id}`
-      if (diff >= 6 && diff <= 7 && !sentKey.has(`${primaryUserId || 'primary'}:${itemId}:1`)) {
-        primaryAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days`, date: s.next_service_date })
-      }
-      if (diff <= 2 && !sentKey.has(`${primaryUserId || 'primary'}:${itemId}:2`)) {
-        const urgentLabel = diff <= 0 ? 'OVERDUE' : `Due in ${diff} day(s)`
-        primaryAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: urgentLabel, date: s.next_service_date })
-      }
-    }
-  }
-
-  if (trips) {
-    for (const t of trips) {
-      if (t.trip_start_date) {
-        const diff = daysUntil(t.trip_start_date, today)
-        const itemId = `trip_start-${t.id}`
-        if (diff >= 6 && diff <= 7 && !sentKey.has(`${primaryUserId || 'primary'}:${itemId}:1`)) {
-          primaryAlerts.push({ itemId, stage: 1, label: 'Trip Start', reg: t.client_name, status: `In ${diff} days`, date: t.trip_start_date })
+    if (services) {
+      for (const s of services) {
+        if (!s.next_service_date) continue
+        const diff = daysUntil(s.next_service_date, today)
+        const itemId = `service-${s.id}`
+        if (diff >= 6 && diff <= 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
+          recipientAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days`, date: s.next_service_date, type: 'logistics' })
         }
-        if (diff <= 2 && !sentKey.has(`${primaryUserId || 'primary'}:${itemId}:2`)) {
-          const urgentLabel = diff <= 0 ? 'Started today' : `Starts in ${diff} day(s)`
-          primaryAlerts.push({ itemId, stage: 2, label: 'Trip Start', reg: t.client_name, status: urgentLabel, date: t.trip_start_date })
-        }
-      }
-      if (t.trip_end_date) {
-        const diff = daysUntil(t.trip_end_date, today)
-        const itemId = `trip_end-${t.id}`
-        if (diff >= 6 && diff <= 7 && !sentKey.has(`${primaryUserId || 'primary'}:${itemId}:1`)) {
-          primaryAlerts.push({ itemId, stage: 1, label: 'Trip End', reg: t.client_name, status: `In ${diff} days`, date: t.trip_end_date })
-        }
-        if (diff <= 2 && !sentKey.has(`${primaryUserId || 'primary'}:${itemId}:2`)) {
-          const urgentLabel = diff <= 0 ? 'Ended today' : `Ends in ${diff} day(s)`
-          primaryAlerts.push({ itemId, stage: 2, label: 'Trip End', reg: t.client_name, status: urgentLabel, date: t.trip_end_date })
+        if (diff <= 2 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
+          const urgentLabel = diff <= 0 ? 'OVERDUE' : `Due in ${diff} day(s)`
+          recipientAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: urgentLabel, date: s.next_service_date, type: 'logistics' })
         }
       }
     }
-  }
 
-  if (primaryAlerts.length > 0) {
-    emailsToSend.unshift({ email: PRIMARY_RECIPIENT_EMAIL, alerts: primaryAlerts })
+    if (trips) {
+      for (const t of trips) {
+        if (t.trip_start_date) {
+          const diff = daysUntil(t.trip_start_date, today)
+          const itemId = `trip_start-${t.id}`
+          if (diff >= 6 && diff <= 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
+            recipientAlerts.push({ itemId, stage: 1, label: 'Trip Start', reg: t.client_name, status: `In ${diff} days`, date: t.trip_start_date, type: 'trip' })
+          }
+          if (diff <= 0 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
+            const urgentLabel = diff < 0 ? `Started ${Math.abs(diff)} day(s) ago` : 'Starts today'
+            recipientAlerts.push({ itemId, stage: 2, label: 'Trip Start', reg: t.client_name, status: urgentLabel, date: t.trip_start_date, type: 'trip' })
+          }
+        }
+        if (t.trip_end_date) {
+          const diff = daysUntil(t.trip_end_date, today)
+          const itemId = `trip_end-${t.id}`
+          if (diff >= 6 && diff <= 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
+            recipientAlerts.push({ itemId, stage: 1, label: 'Trip End', reg: t.client_name, status: `In ${diff} days`, date: t.trip_end_date, type: 'trip' })
+          }
+          if (diff <= 0 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
+            const urgentLabel = diff < 0 ? `Ended ${Math.abs(diff)} day(s) ago` : 'Ends today'
+            recipientAlerts.push({ itemId, stage: 2, label: 'Trip End', reg: t.client_name, status: urgentLabel, date: t.trip_end_date, type: 'trip' })
+          }
+        }
+      }
+    }
+
+    if (recipientAlerts.length > 0) {
+      emailsToSend.unshift({ email, alerts: recipientAlerts })
+    }
   }
 
   let sent = 0
@@ -286,7 +376,7 @@ serve(async (req) => {
 
       sent++
       const rows = alerts.map(a => ({
-        user_id: email === PRIMARY_RECIPIENT_EMAIL ? (primaryUserId || '') : (users?.find(u => u.email === email)?.id || ''),
+        user_id: users?.find(u => u.email === email)?.id || email,
         alert_item_id: a.itemId,
         stage: a.stage,
       })).filter(r => r.user_id)

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, CardSkeleton } from '@/components/common'
 import { useAuth } from '@/context/AuthContext'
-import { formatDate, formatUGX } from '@/utils'
+import { formatDate, computeTripStatus } from '@/utils'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { addDays, parseISO, isBefore } from 'date-fns'
@@ -85,8 +85,30 @@ export function TripAlerts() {
   }, [settings])
 
   const today = new Date()
+
+  function getDaysToStart(trip: Trip): number {
+    const start = parseISO(trip.trip_start_date)
+    return Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  }
+
+  function dayLabel(n: number): string {
+    return Math.abs(n) === 1 ? 'day' : 'days'
+  }
+
+  type Urgency = 'overdue' | 'today' | 'soon'
+
+  function getUrgency(trip: Trip): Urgency {
+    const d = getDaysToStart(trip)
+    if (d < 0) return 'overdue'
+    if (d === 0) return 'today'
+    return 'soon'
+  }
+
   const tripAlerts = trips
-    .filter(t => t.status === 'planned' || t.status === 'ongoing')
+    .filter(t => {
+      const s = computeTripStatus(t)
+      return s === 'planned' || s === 'ongoing'
+    })
     .filter(t => {
       const start = parseISO(t.trip_start_date)
       const end = parseISO(t.trip_end_date)
@@ -95,11 +117,27 @@ export function TripAlerts() {
       return isBefore(start, startThreshold) || isBefore(end, endThreshold)
     })
     .filter(t => !acknowledgedIds?.has(`trip-start-${t.id}`))
+    .sort((a, b) => getDaysToStart(a) - getDaysToStart(b))
     .slice(0, 20)
+
+  const sections: { key: Urgency; label: string; dot: string; items: typeof tripAlerts }[] = [
+    { key: 'overdue', label: 'Overdue', dot: 'bg-danger', items: tripAlerts.filter(t => getUrgency(t) === 'overdue') },
+    { key: 'today', label: 'Starting Today', dot: 'bg-warning', items: tripAlerts.filter(t => getUrgency(t) === 'today') },
+    { key: 'soon', label: 'Starting Soon', dot: 'bg-secondary', items: tripAlerts.filter(t => getUrgency(t) === 'soon') },
+  ]
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Trip Alerts" subtitle={`${tripAlerts.length} upcoming alerts`} />
+      <PageHeader
+        title="Trip Alerts"
+        actions={
+          tripAlerts.length > 0 ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-danger/10 px-3 py-1 text-xs font-semibold text-danger">
+              {tripAlerts.length}
+            </span>
+          ) : undefined
+        }
+      />
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <button
@@ -135,7 +173,7 @@ export function TripAlerts() {
         </AnimatePresence>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-5">
         {tripAlerts.length === 0 ? (
           <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/10 flex items-center justify-center">
@@ -146,50 +184,82 @@ export function TripAlerts() {
             <p className="text-text-secondary font-medium">No upcoming alerts</p>
           </div>
         ) : (
-          tripAlerts.map((trip, i) => {
-            const start = parseISO(trip.trip_start_date)
-            const daysToStart = Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-            const isOverdue = daysToStart < 0
+          sections.filter(s => s.items.length > 0).map(section => (
+            <div key={section.key}>
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <span className={`w-2 h-2 rounded-full ${section.dot}`} />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-text-secondary">
+                  {section.label}
+                </h3>
+                <span className="text-xs text-text-secondary/60">({section.items.length})</span>
+              </div>
+              <div className="space-y-2">
+                {section.items.map((trip, i) => {
+                  const daysToStart = getDaysToStart(trip)
+                  const isOverdue = daysToStart < 0
+                  const borderClass = isOverdue
+                    ? 'border-l-danger'
+                    : daysToStart === 0
+                      ? 'border-l-warning'
+                      : 'border-l-secondary'
 
-            return (
-              <motion.div
-                key={trip.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className={`bg-white rounded-xl p-4 shadow-sm border-l-4 flex items-start justify-between gap-4 ${
-                  isOverdue ? 'border-l-danger' : daysToStart <= 1 ? 'border-l-danger' : 'border-l-warning'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <span className="text-xl mt-0.5">✈️</span>
-                  <div>
-                    <p className="font-semibold text-sm">{trip.client_name}</p>
-                    <p className="text-sm text-text-secondary">
-                      {isOverdue
-                        ? `Trip started ${Math.abs(daysToStart)} days ago`
-                        : daysToStart === 0
-                          ? 'Trip starts today!'
-                          : `Trip starts in ${daysToStart} days`
-                      }
-                    </p>
-                    <p className="text-xs text-text-secondary mt-1">
-                      {formatDate(trip.trip_start_date)} — {formatDate(trip.trip_end_date)}
-                    </p>
-                    {trip.vehicles && <p className="text-xs text-text-secondary">🚙 {trip.vehicles.registration_number}</p>}
-                    {trip.drivers && <p className="text-xs text-text-secondary">👤 {trip.drivers.full_name}</p>}
-                  </div>
-                </div>
-                <button
-                  onClick={() => acknowledgeTripAlert.mutate(`trip-start-${trip.id}`)}
-                  disabled={acknowledgeTripAlert.isPending}
-                  className="px-3 py-1.5 text-xs bg-secondary/10 text-secondary rounded-lg hover:bg-secondary/20 transition-colors cursor-pointer flex-shrink-0 disabled:opacity-50"
-                >
-                  {acknowledgeTripAlert.isPending ? '...' : 'Acknowledge'}
-                </button>
-              </motion.div>
-            )
-          })
+                  return (
+                    <motion.div
+                      key={trip.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className={`bg-white rounded-xl px-4 py-3 shadow-sm border border-muted/40 border-l-4 ${borderClass} flex items-center justify-between gap-4`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm truncate">{trip.client_name}</p>
+                          <p className="text-xs text-text-secondary">
+                            {isOverdue
+                              ? `Started ${Math.abs(daysToStart)} ${dayLabel(daysToStart)} ago`
+                              : daysToStart === 0
+                                ? 'Starts today'
+                                : `Starts in ${daysToStart} ${dayLabel(daysToStart)}`
+                            }
+                          </p>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-text-secondary">
+                            <span>{formatDate(trip.trip_start_date)} — {formatDate(trip.trip_end_date)}</span>
+                            {trip.vehicles && (
+                              <span className="flex items-center gap-1">
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15h14l-1.4-4.2A2.6 2.6 0 0 0 15.1 9H8.9a2.6 2.6 0 0 0-2.5 1.8L5 15Z" /></svg>
+                                {trip.vehicles.registration_number}
+                              </span>
+                            )}
+                            {trip.drivers && (
+                              <span className="flex items-center gap-1">
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                                {trip.drivers.full_name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => acknowledgeTripAlert.mutate(`trip-start-${trip.id}`)}
+                        disabled={acknowledgeTripAlert.isPending}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 transition-all cursor-pointer flex-shrink-0 disabled:opacity-50"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Acknowledge
+                      </button>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>

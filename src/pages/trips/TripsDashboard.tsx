@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, StatCard, StatusBadge, CardSkeleton } from '@/components/common'
 import { DonutChart } from '@/components/charts/DonutChart'
 import { LineChart } from '@/components/charts/LineChart'
-import { formatUGX, formatDate } from '@/utils'
+import { formatUGX, formatDate, computeTripStatus } from '@/utils'
 import type { Trip } from '@/types'
 import { startOfWeek, endOfWeek, parseISO, isWithinInterval } from 'date-fns'
 
@@ -14,19 +14,19 @@ export function TripsDashboard() {
       const { data: trips } = await supabase.from('trips').select('*')
       const t = (trips || []) as Trip[]
 
-      const planned = t.filter(t => t.status === 'planned').length
-      const ongoing = t.filter(t => t.status === 'ongoing').length
-      const completed = t.filter(t => t.status === 'completed').length
-      const cancelled = t.filter(t => t.status === 'cancelled').length
+      const planned = t.filter(t => computeTripStatus(t) === 'planned').length
+      const ongoing = t.filter(t => computeTripStatus(t) === 'ongoing').length
+      const completed = t.filter(t => computeTripStatus(t) === 'completed').length
+      const cancelled = t.filter(t => computeTripStatus(t) === 'cancelled').length
 
       const thisMonth = new Date().getMonth()
       const thisYear = new Date().getFullYear()
       const monthlyRevenue = t
-        .filter(t => t.status === 'completed' && new Date(t.created_at).getMonth() === thisMonth && new Date(t.created_at).getFullYear() === thisYear)
+        .filter(t => computeTripStatus(t) === 'completed' && new Date(t.created_at).getMonth() === thisMonth && new Date(t.created_at).getFullYear() === thisYear)
         .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
 
       const yearlyRevenue = t
-        .filter(t => t.status === 'completed' && new Date(t.created_at).getFullYear() === thisYear)
+        .filter(t => computeTripStatus(t) === 'completed' && new Date(t.created_at).getFullYear() === thisYear)
         .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
 
       const now = new Date()
@@ -34,11 +34,14 @@ export function TripsDashboard() {
       const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
       const upcomingThisWeek = t.filter(t => {
         const start = parseISO(t.trip_start_date)
-        return isWithinInterval(start, { start: weekStart, end: weekEnd }) && t.status !== 'cancelled'
+        return isWithinInterval(start, { start: weekStart, end: weekEnd }) && computeTripStatus(t) !== 'cancelled'
       })
 
       const upcomingTrips = t
-        .filter(t => t.status === 'planned' || t.status === 'ongoing')
+        .filter(t => {
+          const s = computeTripStatus(t)
+          return s === 'planned' || s === 'ongoing'
+        })
         .sort((a, b) => new Date(a.trip_start_date).getTime() - new Date(b.trip_start_date).getTime())
         .slice(0, 5)
 
@@ -88,8 +91,8 @@ export function TripsDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard title="Revenue This Month" value={formatUGX(stats.monthlyRevenue)} icon={<Icon name="cash" />} color="primary" />
-        <StatCard title="Revenue This Year" value={formatUGX(stats.yearlyRevenue)} icon={<Icon name="trend" />} color="secondary" />
+        <StatCard title="Completed Revenue (Month)" value={formatUGX(stats.monthlyRevenue)} icon={<Icon name="cash" />} color="primary" />
+        <StatCard title="Completed Revenue (Year)" value={formatUGX(stats.yearlyRevenue)} icon={<Icon name="trend" />} color="secondary" />
         <StatCard title="Upcoming This Week" value={stats.upcomingThisWeek} icon={<Icon name="calendar" />} color="info" />
       </div>
 
@@ -102,8 +105,8 @@ export function TripsDashboard() {
           <DonutChart
             data={[
               { name: 'Planned', value: stats.planned, color: '#3B82F6' },
-              { name: 'Ongoing', value: stats.ongoing, color: '#F59E0B' },
-              { name: 'Completed', value: stats.completed, color: '#10B981' },
+              { name: 'Ongoing', value: stats.ongoing, color: '#10B981' },
+              { name: 'Completed', value: stats.completed, color: '#94A3B8' },
               { name: 'Cancelled', value: stats.cancelled, color: '#EF4444' },
             ]}
           />
@@ -132,7 +135,7 @@ export function TripsDashboard() {
                     {formatDate(trip.trip_start_date)} to {formatDate(trip.trip_end_date)}
                   </p>
                 </div>
-                <StatusBadge status={trip.status} />
+                <StatusBadge status={computeTripStatus(trip)} />
               </div>
             ))}
           </div>

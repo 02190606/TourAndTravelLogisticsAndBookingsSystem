@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 interface BadgeProps {
-  variant?: 'success' | 'warning' | 'danger' | 'info' | 'primary'
+  variant?: 'success' | 'warning' | 'danger' | 'info' | 'primary' | 'neutral'
   children: ReactNode
   className?: string
 }
@@ -12,6 +12,7 @@ const badgeVariants = {
   danger: 'bg-red-50 text-red-700 ring-red-600/15',
   info: 'bg-blue-50 text-blue-700 ring-blue-600/15',
   primary: 'bg-teal-50 text-teal-700 ring-teal-600/15',
+  neutral: 'bg-slate-100 text-slate-600 ring-slate-500/15',
 }
 
 export function Badge({ variant = 'primary', children, className = '' }: BadgeProps) {
@@ -31,8 +32,8 @@ export function StatusBadge({ status }: { status: string }) {
     in_service: { variant: 'danger', label: 'In Service' },
     sold: { variant: 'danger', label: 'Sold' },
     planned: { variant: 'info', label: 'Planned' },
-    ongoing: { variant: 'warning', label: 'Ongoing' },
-    completed: { variant: 'success', label: 'Completed' },
+    ongoing: { variant: 'success', label: 'Ongoing' },
+    completed: { variant: 'neutral', label: 'Completed' },
     cancelled: { variant: 'danger', label: 'Cancelled' },
     open: { variant: 'warning', label: 'Open' },
     resolved: { variant: 'success', label: 'Resolved' },

@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, StatCard, Button, CardSkeleton } from '@/components/common'
 import { DonutChart } from '@/components/charts/DonutChart'
 import { BarChart } from '@/components/charts/BarChart'
+import { computeTripStatus } from '@/utils'
 
 export function AdminDashboard() {
   const navigate = useNavigate()
@@ -24,13 +25,13 @@ export function AdminDashboard() {
   const { data: tripCounts } = useQuery({
     queryKey: ['trip-counts'],
     queryFn: async () => {
-      const { data } = await supabase.from('trips').select('status')
+      const { data } = await supabase.from('trips').select('status, trip_start_date, trip_end_date')
       if (!data) return { planned: 0, ongoing: 0, completed: 0, cancelled: 0 }
       return {
-        planned: data.filter(t => t.status === 'planned').length,
-        ongoing: data.filter(t => t.status === 'ongoing').length,
-        completed: data.filter(t => t.status === 'completed').length,
-        cancelled: data.filter(t => t.status === 'cancelled').length,
+        planned: data.filter(t => computeTripStatus(t) === 'planned').length,
+        ongoing: data.filter(t => computeTripStatus(t) === 'ongoing').length,
+        completed: data.filter(t => computeTripStatus(t) === 'completed').length,
+        cancelled: data.filter(t => computeTripStatus(t) === 'cancelled').length,
       }
     },
   })
@@ -77,8 +78,8 @@ export function AdminDashboard() {
           <DonutChart
             data={[
               { name: 'Planned', value: tripCounts.planned, color: '#3B82F6' },
-              { name: 'Ongoing', value: tripCounts.ongoing, color: '#F59E0B' },
-              { name: 'Completed', value: tripCounts.completed, color: '#4CAF50' },
+              { name: 'Ongoing', value: tripCounts.ongoing, color: '#10B981' },
+              { name: 'Completed', value: tripCounts.completed, color: '#94A3B8' },
               { name: 'Cancelled', value: tripCounts.cancelled, color: '#EF4444' },
             ]}
           />

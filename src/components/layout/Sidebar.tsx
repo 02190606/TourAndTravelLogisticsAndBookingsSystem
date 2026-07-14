@@ -166,7 +166,7 @@ function NavEntry({ item, onClick }: { item: NavItem; onClick: () => void }) {
       className={({ isActive }) =>
         `group mb-1 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-all duration-200 border-l-2 ${
           isActive
-            ? 'border-primary bg-white/10 text-white'
+            ? 'border-primary bg-primary/20 text-white'
             : 'border-transparent text-white/60 hover:bg-white/10 hover:text-white'
         }`
       }
@@ -201,7 +201,7 @@ function CollapsibleGroup({
     <div className="mb-2 px-4">
       <button
         onClick={onToggle}
-        className="mb-1 flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest text-white/90 transition-colors hover:text-white"
+        className="mb-1 flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:text-white"
       >
         {title}
         <svg

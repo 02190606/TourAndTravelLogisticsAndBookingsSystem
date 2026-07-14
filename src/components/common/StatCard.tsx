@@ -8,6 +8,7 @@ interface StatCardProps {
   color?: 'primary' | 'secondary' | 'accent' | 'info' | 'success' | 'warning' | 'danger'
   subtitle?: string
   index?: number
+  className?: string
 }
 
 const colorMap = {
@@ -20,13 +21,13 @@ const colorMap = {
   danger: 'bg-danger/10 text-red-700 ring-danger/15',
 }
 
-export function StatCard({ title, value, icon, color = 'primary', subtitle, index = 0 }: StatCardProps) {
+export function StatCard({ title, value, icon, color = 'primary', subtitle, index = 0, className = '' }: StatCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.4 }}
-      className="group relative overflow-hidden rounded-lg border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg hover:shadow-slate-200/70"
+      className={`group relative overflow-hidden rounded-lg border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg hover:shadow-slate-200/70 ${className}`}
     >
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/50 via-primary/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       <div className="mb-4 flex items-start justify-between">
