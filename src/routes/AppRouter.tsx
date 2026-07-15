@@ -13,6 +13,7 @@ const VehicleDetails = lazy(() => import('@/pages/logistics/VehicleDetails').the
 const VehicleProfile = lazy(() => import('@/pages/logistics/VehicleProfile').then(m => ({ default: m.VehicleProfile })))
 const ServiceMaintenance = lazy(() => import('@/pages/logistics/ServiceMaintenance').then(m => ({ default: m.ServiceMaintenance })))
 const Complaints = lazy(() => import('@/pages/logistics/Complaints').then(m => ({ default: m.Complaints })))
+const Penalties = lazy(() => import('@/pages/logistics/Penalties').then(m => ({ default: m.Penalties })))
 const DriverDetails = lazy(() => import('@/pages/logistics/DriverDetails').then(m => ({ default: m.DriverDetails })))
 const LogisticsAlerts = lazy(() => import('@/pages/logistics/LogisticsAlerts').then(m => ({ default: m.LogisticsAlerts })))
 const TripsDashboard = lazy(() => import('@/pages/trips/TripsDashboard').then(m => ({ default: m.TripsDashboard })))
@@ -108,6 +109,14 @@ export function AppRouter() {
             element={
               <ProtectedRoute roles={['admin', 'logistics']}>
                 <LazyLoad><Complaints /></LazyLoad>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/logistics/penalties"
+            element={
+              <ProtectedRoute roles={['admin', 'logistics']}>
+                <LazyLoad><Penalties /></LazyLoad>
               </ProtectedRoute>
             }
           />

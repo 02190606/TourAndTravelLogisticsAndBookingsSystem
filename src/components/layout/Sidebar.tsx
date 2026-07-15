@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import type { UserRole } from '@/types'
 import { useState, type ReactNode } from 'react'
 
-type IconName = 'chart' | 'vehicle' | 'tool' | 'alert' | 'user' | 'bell' | 'plane' | 'calendar' | 'cash' | 'users'
+type IconName = 'chart' | 'vehicle' | 'tool' | 'alert' | 'fine' | 'user' | 'bell' | 'plane' | 'calendar' | 'cash' | 'users'
 
 interface NavItem {
   label: string
@@ -21,6 +21,7 @@ const sections: { title: string; items: NavItem[] }[] = [
       { label: 'Fleet', path: '/logistics/vehicles', icon: 'vehicle', roles: ['admin', 'logistics'] },
       { label: 'Maintenance and Repair', path: '/logistics/service', icon: 'tool', roles: ['admin', 'logistics'] },
       { label: 'Complaints', path: '/logistics/complaints', icon: 'alert', roles: ['admin', 'logistics'] },
+      { label: 'Penalties', path: '/logistics/penalties', icon: 'fine', roles: ['admin', 'logistics'] },
       { label: 'Drivers', path: '/logistics/drivers', icon: 'user', roles: ['admin', 'logistics'] },
       { label: 'Alerts', path: '/logistics/alerts', icon: 'bell', roles: ['admin', 'logistics'] },
     ],
@@ -235,6 +236,7 @@ function SidebarIcon({ name }: { name: IconName }) {
     vehicle: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15h14l-1.4-4.2A2.6 2.6 0 0 0 15.1 9H8.9a2.6 2.6 0 0 0-2.5 1.8L5 15Zm2 0v3m10-3v3M8 18h.01M16 18h.01M7 12h10" />,
     tool: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m14.7 6.3 3 3M5 19l8.2-8.2m1.5-4.5 3-3 3 3-3 3m-3-3 3 3" />,
     alert: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.3 4.9 3.7 16.3A2 2 0 0 0 5.4 19h13.2a2 2 0 0 0 1.7-2.7L13.7 4.9a2 2 0 0 0-3.4 0Z" />,
+    fine: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l2 2 4-4M15 3H9a2 2 0 0 0-2 2v14l4-2 4 2V5a2 2 0 0 0-2-2Z" />,
     user: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM5 19a7 7 0 0 1 14 0" />,
     bell: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17H9m9-2V11a6 6 0 1 0-12 0v4l-2 2h16l-2-2Zm-5 4a2 2 0 0 1-2 0" />,
     plane: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 13.5 4 20l-1-3 4.5-5L3 7l1-3 6.5 6.5L19 2l2 2-6.5 8L21 20l-2 2-8.5-8.5Z" />,
