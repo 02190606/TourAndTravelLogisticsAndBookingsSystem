@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
-import { PageHeader, Button, Drawer, Modal, StatusBadge, CardSkeleton } from '@/components/common'
+import { PageHeader, Button, Drawer, Modal, StatusBadge, Badge, CardSkeleton } from '@/components/common'
 import { formatDate, formatUGX, generateId, getDaysBetween, computeTripStatus } from '@/utils'
 import toast from 'react-hot-toast'
 import { MapPin } from 'lucide-react'
@@ -41,6 +41,13 @@ export function TripManagement() {
     { key: 'client_name', header: 'Client' },
     { key: 'clients', header: 'Clients', render: (t: any) => t.number_of_clients },
     { key: 'car_type', header: 'Car Type' },
+    { key: 'trip_type', header: 'Trip Type', render: (t: any) => (
+      <div className="flex gap-1 flex-wrap">
+        {t.is_cross_border && <Badge variant="info">Cross Border</Badge>}
+        {t.is_one_way && <Badge variant="warning">One Way</Badge>}
+        {!t.is_cross_border && !t.is_one_way && <span className="text-text-secondary text-xs">Local</span>}
+      </div>
+    )},
     { key: 'vehicle', header: 'Vehicle', render: (t: any) => t.vehicles?.registration_number || '-' },
     { key: 'driver', header: 'Driver', render: (t: any) => t.drivers?.full_name || '-' },
     { key: 'amount_in_ugx', header: 'Amount (UGX)', render: (t: any) => formatUGX(t.amount_in_ugx) },
@@ -136,6 +143,12 @@ export function TripManagement() {
                   <span className="text-text-secondary">Pickup Location:</span> <span className="font-medium">{viewTrip.pickup_location}</span>
                 </div>
               )}
+              {(viewTrip.is_cross_border || viewTrip.is_one_way) && (
+                <div className="mt-2 flex gap-2">
+                  {viewTrip.is_cross_border && <Badge variant="info">Cross Border</Badge>}
+                  {viewTrip.is_one_way && <Badge variant="warning">One Way</Badge>}
+                </div>
+              )}
             </div>
             <div className="border-t border-muted/30 pt-4">
               <h4 className="font-medium mb-3">💳 Payment</h4>
@@ -164,6 +177,8 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     trip_end_date: editTrip?.trip_end_date?.split('T')[0] || '',
     flight_arrival_time: editTrip?.flight_arrival_time || '',
     pickup_location: editTrip?.pickup_location || '',
+    is_cross_border: editTrip?.is_cross_border || false,
+    is_one_way: editTrip?.is_one_way || false,
     currency: editTrip?.currency || 'UGX',
     amount: 0,
     amount_in_ugx: editTrip?.amount_in_ugx || 0,
@@ -310,6 +325,19 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium mb-1"><MapPin className="inline-block w-3.5 h-3.5 mr-1 -mt-0.5" />Pickup Location</label>
               <input type="text" value={form.pickup_location} onChange={e => setForm(f => ({ ...f, pickup_location: e.target.value }))} placeholder="e.g. Entebbe Airport, Terminal 1" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium mb-1">Trip Type</label>
+              <div className="flex gap-5 mt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.is_cross_border} onChange={e => setForm(f => ({ ...f, is_cross_border: e.target.checked }))} className="rounded border-muted/60 text-primary focus:ring-primary" />
+                  <span className="text-sm">Cross Border Trip</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.is_one_way} onChange={e => setForm(f => ({ ...f, is_one_way: e.target.checked }))} className="rounded border-muted/60 text-primary focus:ring-primary" />
+                  <span className="text-sm">One Way Trip</span>
+                </label>
+              </div>
             </div>
             {days > 0 && (
               <div className="flex items-end">

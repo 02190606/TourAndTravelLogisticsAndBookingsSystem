@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
-import { PageHeader, StatCard, StatusBadge, CardSkeleton } from '@/components/common'
+import { PageHeader, StatCard, StatusBadge, Badge, CardSkeleton } from '@/components/common'
 import { DonutChart } from '@/components/charts/DonutChart'
 import { LineChart } from '@/components/charts/LineChart'
 import { formatUGX, formatDate, computeTripStatus } from '@/utils'
@@ -134,6 +134,12 @@ export function TripsDashboard() {
                   <p className="text-xs text-text-secondary">
                     {formatDate(trip.trip_start_date)} to {formatDate(trip.trip_end_date)}
                   </p>
+                  {(trip.is_cross_border || trip.is_one_way) && (
+                    <div className="flex gap-1 mt-1">
+                      {trip.is_cross_border && <Badge variant="info">Cross Border</Badge>}
+                      {trip.is_one_way && <Badge variant="warning">One Way</Badge>}
+                    </div>
+                  )}
                 </div>
                 <StatusBadge status={computeTripStatus(trip)} />
               </div>

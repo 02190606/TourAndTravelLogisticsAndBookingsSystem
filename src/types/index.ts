@@ -127,6 +127,8 @@ export interface Trip {
   trip_end_date: string
   flight_arrival_time: string
   pickup_location: string
+  is_cross_border: boolean
+  is_one_way: boolean
   status: TripStatus
   created_at: string
   vehicles?: Vehicle

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
-import { PageHeader, CardSkeleton, Modal, Button, StatusBadge } from '@/components/common'
+import { PageHeader, CardSkeleton, Modal, Button, StatusBadge, Badge } from '@/components/common'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -137,6 +137,15 @@ export function CalendarView() {
                 <p className="text-xs text-text-secondary uppercase tracking-wider">Driver</p>
                 <p className="text-sm mt-1">{selectedTrip.drivers?.full_name || '—'}</p>
               </div>
+              {(selectedTrip.is_cross_border || selectedTrip.is_one_way) && (
+                <div className="col-span-2">
+                  <p className="text-xs text-text-secondary uppercase tracking-wider">Trip Type</p>
+                  <div className="flex gap-2 mt-1">
+                    {selectedTrip.is_cross_border && <Badge variant="info">Cross Border</Badge>}
+                    {selectedTrip.is_one_way && <Badge variant="warning">One Way</Badge>}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex justify-end gap-3 pt-2 border-t border-muted/30">
               <Button variant="outline" onClick={() => setSelectedTrip(null)}>Close</Button>
