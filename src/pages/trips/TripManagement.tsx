@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, Drawer, Modal, StatusBadge, CardSkeleton } from '@/components/common'
 import { formatDate, formatUGX, generateId, getDaysBetween, computeTripStatus } from '@/utils'
 import toast from 'react-hot-toast'
+import { MapPin } from 'lucide-react'
 import type { Trip, TripStatus, Vehicle, Driver } from '@/types'
 
 export function TripManagement() {
@@ -130,6 +131,11 @@ export function TripManagement() {
                   <p className="font-semibold text-sm">{formatDate(viewTrip.trip_end_date)}</p>
                 </div>
               </div>
+              {viewTrip.pickup_location && (
+                <div className="mt-3 text-sm">
+                  <span className="text-text-secondary">Pickup Location:</span> <span className="font-medium">{viewTrip.pickup_location}</span>
+                </div>
+              )}
             </div>
             <div className="border-t border-muted/30 pt-4">
               <h4 className="font-medium mb-3">💳 Payment</h4>
@@ -157,6 +163,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     trip_start_date: editTrip?.trip_start_date?.split('T')[0] || '',
     trip_end_date: editTrip?.trip_end_date?.split('T')[0] || '',
     flight_arrival_time: editTrip?.flight_arrival_time || '',
+    pickup_location: editTrip?.pickup_location || '',
     currency: editTrip?.currency || 'UGX',
     amount: 0,
     amount_in_ugx: editTrip?.amount_in_ugx || 0,
@@ -299,6 +306,10 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             <div>
               <label className="block text-sm font-medium mb-1">Flight Arrival Time 🛫</label>
               <input type="time" value={form.flight_arrival_time} onChange={e => setForm(f => ({ ...f, flight_arrival_time: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium mb-1"><MapPin className="inline-block w-3.5 h-3.5 mr-1 -mt-0.5" />Pickup Location</label>
+              <input type="text" value={form.pickup_location} onChange={e => setForm(f => ({ ...f, pickup_location: e.target.value }))} placeholder="e.g. Entebbe Airport, Terminal 1" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
             {days > 0 && (
               <div className="flex items-end">

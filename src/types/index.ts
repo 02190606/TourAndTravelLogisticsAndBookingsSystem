@@ -126,6 +126,7 @@ export interface Trip {
   trip_start_date: string
   trip_end_date: string
   flight_arrival_time: string
+  pickup_location: string
   status: TripStatus
   created_at: string
   vehicles?: Vehicle
