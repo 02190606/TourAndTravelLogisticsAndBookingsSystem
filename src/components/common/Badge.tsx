@@ -39,6 +39,9 @@ export function StatusBadge({ status }: { status: string }) {
     resolved: { variant: 'success', label: 'Resolved' },
     active: { variant: 'success', label: 'Active' },
     inactive: { variant: 'danger', label: 'Inactive' },
+    unpaid: { variant: 'danger', label: 'Unpaid' },
+    paid: { variant: 'success', label: 'Paid' },
+    disputed: { variant: 'warning', label: 'Disputed' },
   }
 
   const config = map[status] || { variant: 'info' as const, label: status }

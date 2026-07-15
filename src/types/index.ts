@@ -143,3 +143,17 @@ export interface Payment {
   created_at: string
   trips?: Trip
 }
+
+export type PenaltyStatus = 'unpaid' | 'paid' | 'disputed'
+
+export interface Penalty {
+  id: string
+  vehicle_id: string
+  date_issued: string
+  amount: number
+  reason: string
+  status: PenaltyStatus
+  issued_by: string
+  notes: string
+  created_at: string
+}
