@@ -5,9 +5,9 @@ import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, Badge, Modal, Drawer, StatusBadge, CardSkeleton } from '@/components/common'
 import { formatDate, formatUGX, generateId } from '@/utils'
 import toast from 'react-hot-toast'
-import type { Vehicle, ServiceRecord, MaintenanceRecord, Complaint, Repair, Penalty } from '@/types'
+import type { Vehicle, ServiceRecord, MaintenanceRecord, Complaint, Repair } from '@/types'
 
-type SubTab = 'service' | 'maintenance' | 'complaints' | 'repairs' | 'penalties'
+type SubTab = 'service' | 'maintenance' | 'complaints' | 'repairs'
 
 export function VehicleProfile() {
   const { id } = useParams()
@@ -85,13 +85,13 @@ export function VehicleProfile() {
       </div>
 
       <div className="flex gap-2 border-b border-muted/30 pb-2">
-        {(['service', 'maintenance', 'complaints', 'repairs', 'penalties'] as SubTab[]).map(tab => (
+        {(['service', 'maintenance', 'complaints', 'repairs'] as SubTab[]).map(tab => (
           <button
             key={tab}
             onClick={() => setSubTab(tab)}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer capitalize ${subTab === tab ? 'bg-primary/10 text-primary' : 'text-text-secondary hover:text-text-primary'}`}
           >
-            {tab === 'service' ? '📋 Service Records' : tab === 'maintenance' ? '🔧 Maintenance Records' : tab === 'complaints' ? '⚠️ Complaints' : tab === 'repairs' ? '🔧 Repairs' : '💰 Penalties & Fines'}
+            {tab === 'service' ? '📋 Service Records' : tab === 'maintenance' ? '🔧 Maintenance Records' : tab === 'complaints' ? '⚠️ Complaints' : '🔧 Repairs'}
           </button>
         ))}
       </div>
@@ -100,7 +100,6 @@ export function VehicleProfile() {
       {subTab === 'maintenance' && <MaintenanceRecordsTable vehicleId={vehicle.id} />}
       {subTab === 'complaints' && <ComplaintsTable vehicleId={vehicle.id} />}
       {subTab === 'repairs' && <RepairsTable vehicleId={vehicle.id} />}
-      {subTab === 'penalties' && <PenaltiesTable vehicleId={vehicle.id} />}
     </div>
   )
 }
@@ -669,132 +668,3 @@ function RepairDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: ()
   )
 }
 
-function PenaltiesTable({ vehicleId }: { vehicleId: string }) {
-  const queryClient = useQueryClient()
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<Penalty | null>(null)
-
-  const { data: records = [] } = useQuery({
-    queryKey: ['penalties', vehicleId],
-    queryFn: async () => {
-      const { data } = await supabase.from('penalties').select('*').eq('vehicle_id', vehicleId).order('date_issued', { ascending: false })
-      return (data || []) as Penalty[]
-    },
-  })
-
-  const deleteRecord = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('penalties').delete().eq('id', id)
-      if (error) throw error
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['penalties', vehicleId] }); setDeleteTarget(null); toast.success('Penalty deleted') },
-    onError: (err: Error) => toast.error(err.message),
-  })
-
-  const unpaidTotal = records.filter(p => p.status === 'unpaid').reduce((sum, p) => sum + (p.amount || 0), 0)
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <Badge variant="danger">{formatUGX(unpaidTotal)} unpaid</Badge>
-        <Button size="sm" variant="outline" onClick={() => setDrawerOpen(true)}>Log Penalty</Button>
-      </div>
-      <div className="bg-white rounded-xl border border-muted/30 overflow-hidden">
-        <table className="w-full responsive-table">
-          <thead>
-            <tr className="bg-muted/20">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">ID</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Date Issued</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Reason</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Amount</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Issued By</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-muted/30">
-            {records.map((p, i) => (
-              <tr key={p.id} className={i % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
-                <td data-label="ID" className="px-4 py-3 font-mono text-sm">{p.id.slice(0, 8)}</td>
-                <td data-label="Date" className="px-4 py-3 text-sm">{formatDate(p.date_issued)}</td>
-                <td data-label="Reason" className="px-4 py-3 text-sm max-w-[200px] truncate">{p.reason}</td>
-                <td data-label="Amount" className="px-4 py-3 text-sm font-mono">{formatUGX(p.amount)}</td>
-                <td data-label="Issued By" className="px-4 py-3 text-sm">{p.issued_by || '-'}</td>
-                <td data-label="Status" className="px-4 py-3"><StatusBadge status={p.status} /></td>
-                <td data-label="" className="px-4 py-3">
-                  <button onClick={() => setDeleteTarget(p)} className="text-xs text-danger hover:underline cursor-pointer">Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <PenaltyDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} vehicleId={vehicleId} />
-
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Penalty">
-        <div className="space-y-4">
-          <p>Delete this penalty record? This cannot be undone.</p>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-            <Button variant="danger" onClick={() => deleteTarget && deleteRecord.mutate(deleteTarget.id)}>Delete</Button>
-          </div>
-        </div>
-      </Modal>
-    </div>
-  )
-}
-
-function PenaltyDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: () => void; vehicleId: string }) {
-  const queryClient = useQueryClient()
-  const [form, setForm] = useState({ date_issued: '', amount: 0, reason: '', issued_by: '', notes: '' })
-  const [status, setStatus] = useState<'unpaid' | 'paid' | 'disputed'>('unpaid')
-
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from('penalties').insert({
-        id: generateId('PEN'), vehicle_id: vehicleId, ...form, amount: Number(form.amount), status,
-      })
-      if (error) throw error
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['penalties', vehicleId] }); onClose(); toast.success('Penalty logged') },
-    onError: (err: Error) => toast.error(err.message),
-  })
-
-  return (
-    <Drawer open={open} onClose={onClose} title="Log Penalty">
-      <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-4">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium">Status:</span>
-          <button type="button" onClick={() => setStatus(s => s === 'unpaid' ? 'paid' : s === 'paid' ? 'disputed' : 'unpaid')} className={`px-3 py-1.5 rounded-lg text-sm cursor-pointer ${status === 'unpaid' ? 'bg-danger/15 text-danger' : status === 'paid' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </button>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Date Issued</label>
-          <input type="date" value={form.date_issued} onChange={e => setForm(f => ({ ...f, date_issued: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Amount (UGX)</label>
-          <input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: Number(e.target.value) }))} required min={0} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Reason</label>
-          <textarea value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} rows={3} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Issued By</label>
-          <input value={form.issued_by} onChange={e => setForm(f => ({ ...f, issued_by: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Notes</label>
-          <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-        </div>
-        <div className="flex gap-3 pt-4">
-          <Button type="submit" isLoading={saveMutation.isPending}>Save Penalty</Button>
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-        </div>
-      </form>
-    </Drawer>
-  )
-}
