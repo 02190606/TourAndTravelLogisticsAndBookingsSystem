@@ -150,6 +150,18 @@ export function TripManagement() {
                 </div>
               )}
             </div>
+            {viewTrip.needs_accommodation && (
+              <div className="border-t border-muted/30 pt-4">
+                <h4 className="font-medium mb-3">🏨 Accommodation</h4>
+                <div className="bg-muted/20 rounded-xl p-4 space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-text-secondary">Hotel</span><span className="font-medium">{viewTrip.accommodation_name || '—'}</span></div>
+                  <div className="flex justify-between"><span className="text-text-secondary">Check-in</span><span>{formatDate(viewTrip.accommodation_checkin)}</span></div>
+                  <div className="flex justify-between"><span className="text-text-secondary">Check-out</span><span>{formatDate(viewTrip.accommodation_checkout)}</span></div>
+                  <div className="flex justify-between"><span className="text-text-secondary">Rooms</span><span>{viewTrip.accommodation_rooms || '—'}</span></div>
+                  {viewTrip.accommodation_cost > 0 && <div className="flex justify-between border-t border-muted/30 pt-2"><span className="text-text-secondary">Cost</span><span className="font-mono font-semibold">{formatUGX(viewTrip.accommodation_cost)}</span></div>}
+                </div>
+              </div>
+            )}
             <div className="border-t border-muted/30 pt-4">
               <h4 className="font-medium mb-3">💳 Payment</h4>
               <div className="bg-muted/20 rounded-xl p-4 space-y-2">
@@ -179,6 +191,12 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     pickup_location: editTrip?.pickup_location || '',
     is_cross_border: editTrip?.is_cross_border || false,
     is_one_way: editTrip?.is_one_way || false,
+    needs_accommodation: editTrip?.needs_accommodation || false,
+    accommodation_name: editTrip?.accommodation_name || '',
+    accommodation_checkin: editTrip?.accommodation_checkin?.split('T')[0] || '',
+    accommodation_checkout: editTrip?.accommodation_checkout?.split('T')[0] || '',
+    accommodation_rooms: editTrip?.accommodation_rooms || 1,
+    accommodation_cost: editTrip?.accommodation_cost || 0,
     currency: editTrip?.currency || 'UGX',
     amount: 0,
     amount_in_ugx: editTrip?.amount_in_ugx || 0,
@@ -274,6 +292,42 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
               <label className="block text-sm font-medium mb-1">Number of Clients</label>
               <input type="number" value={form.number_of_clients} onChange={e => setForm(f => ({ ...f, number_of_clients: Number(e.target.value) }))} min={1} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
+          </div>
+        </div>
+
+        <div className="border-t border-muted/30 pt-4">
+          <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Accommodation</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.needs_accommodation} onChange={e => setForm(f => ({ ...f, needs_accommodation: e.target.checked }))} className="rounded border-muted/60 text-primary focus:ring-primary" />
+                <span className="text-sm font-medium">Needs Accommodation</span>
+              </label>
+            </div>
+            {form.needs_accommodation && (
+              <>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium mb-1">Hotel / Accommodation Name</label>
+                  <input value={form.accommodation_name} onChange={e => setForm(f => ({ ...f, accommodation_name: e.target.value }))} placeholder="e.g. Serena Hotel Kampala" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Check-in Date</label>
+                  <input type="date" value={form.accommodation_checkin} onChange={e => setForm(f => ({ ...f, accommodation_checkin: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Check-out Date</label>
+                  <input type="date" value={form.accommodation_checkout} onChange={e => setForm(f => ({ ...f, accommodation_checkout: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Number of Rooms</label>
+                  <input type="number" value={form.accommodation_rooms} onChange={e => setForm(f => ({ ...f, accommodation_rooms: Number(e.target.value) }))} min={1} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Accommodation Cost (UGX)</label>
+                  <input type="number" value={form.accommodation_cost} onChange={e => setForm(f => ({ ...f, accommodation_cost: Number(e.target.value) }))} min={0} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                </div>
+              </>
+            )}
           </div>
         </div>
 

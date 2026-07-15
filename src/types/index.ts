@@ -129,6 +129,12 @@ export interface Trip {
   pickup_location: string
   is_cross_border: boolean
   is_one_way: boolean
+  needs_accommodation: boolean
+  accommodation_name: string
+  accommodation_checkin: string
+  accommodation_checkout: string
+  accommodation_rooms: number
+  accommodation_cost: number
   status: TripStatus
   created_at: string
   vehicles?: Vehicle
