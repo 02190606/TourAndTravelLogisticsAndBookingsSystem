@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, Badge, Modal, Drawer, StatusBadge, CardSkeleton } from '@/components/common'
 import { formatDate, formatUGX, generateId } from '@/utils'
-import { usePenalties, useAddPenalty, useUpdatePenaltyStatus } from '@/hooks/usePenalties'
 import toast from 'react-hot-toast'
 import type { Vehicle, ServiceRecord, MaintenanceRecord, Complaint, Repair, Penalty } from '@/types'
 
@@ -671,14 +670,19 @@ function RepairDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: ()
 }
 
 function PenaltiesTable({ vehicleId }: { vehicleId: string }) {
+  const queryClient = useQueryClient()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Penalty | null>(null)
 
-  const { data: penalties = [] } = usePenalties(vehicleId)
-  const updateStatus = useUpdatePenaltyStatus()
+  const { data: records = [] } = useQuery({
+    queryKey: ['penalties', vehicleId],
+    queryFn: async () => {
+      const { data } = await supabase.from('penalties').select('*').eq('vehicle_id', vehicleId).order('date_issued', { ascending: false })
+      return (data || []) as Penalty[]
+    },
+  })
 
-  const queryClient = useQueryClient()
-  const deletePenalty = useMutation({
+  const deleteRecord = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('penalties').delete().eq('id', id)
       if (error) throw error
@@ -687,24 +691,20 @@ function PenaltiesTable({ vehicleId }: { vehicleId: string }) {
     onError: (err: Error) => toast.error(err.message),
   })
 
-  const unpaidTotal = penalties.filter(p => p.status === 'unpaid').reduce((sum, p) => sum + (p.amount || 0), 0)
+  const unpaidTotal = records.filter(p => p.status === 'unpaid').reduce((sum, p) => sum + (p.amount || 0), 0)
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <svg className="w-4 h-4 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-          </svg>
-          <Badge variant="danger">{formatUGX(unpaidTotal)} unpaid</Badge>
-        </div>
-        <Button size="sm" onClick={() => setDrawerOpen(true)}>Add Penalty</Button>
+        <Badge variant="danger">{formatUGX(unpaidTotal)} unpaid</Badge>
+        <Button size="sm" variant="outline" onClick={() => setDrawerOpen(true)}>Log Penalty</Button>
       </div>
       <div className="bg-white rounded-xl border border-muted/30 overflow-hidden">
         <table className="w-full responsive-table">
           <thead>
             <tr className="bg-muted/20">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Date</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">ID</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Date Issued</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Reason</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Amount</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Issued By</th>
@@ -713,25 +713,16 @@ function PenaltiesTable({ vehicleId }: { vehicleId: string }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-muted/30">
-            {penalties.map((p, i) => (
+            {records.map((p, i) => (
               <tr key={p.id} className={i % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
+                <td data-label="ID" className="px-4 py-3 font-mono text-sm">{p.id.slice(0, 8)}</td>
                 <td data-label="Date" className="px-4 py-3 text-sm">{formatDate(p.date_issued)}</td>
                 <td data-label="Reason" className="px-4 py-3 text-sm max-w-[200px] truncate">{p.reason}</td>
                 <td data-label="Amount" className="px-4 py-3 text-sm font-mono">{formatUGX(p.amount)}</td>
                 <td data-label="Issued By" className="px-4 py-3 text-sm">{p.issued_by || '-'}</td>
                 <td data-label="Status" className="px-4 py-3"><StatusBadge status={p.status} /></td>
                 <td data-label="" className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    {p.status === 'unpaid' && (
-                      <button
-                        onClick={() => updateStatus.mutate({ id: p.id, status: 'paid', vehicleId })}
-                        className="text-xs text-success hover:underline cursor-pointer"
-                      >
-                        Mark Paid
-                      </button>
-                    )}
-                    <button onClick={() => setDeleteTarget(p)} className="text-xs text-danger hover:underline cursor-pointer">Delete</button>
-                  </div>
+                  <button onClick={() => setDeleteTarget(p)} className="text-xs text-danger hover:underline cursor-pointer">Delete</button>
                 </td>
               </tr>
             ))}
@@ -746,7 +737,7 @@ function PenaltiesTable({ vehicleId }: { vehicleId: string }) {
           <p>Delete this penalty record? This cannot be undone.</p>
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-            <Button variant="danger" onClick={() => deleteTarget && deletePenalty.mutate(deleteTarget.id)}>Delete</Button>
+            <Button variant="danger" onClick={() => deleteTarget && deleteRecord.mutate(deleteTarget.id)}>Delete</Button>
           </div>
         </div>
       </Modal>
@@ -755,34 +746,52 @@ function PenaltiesTable({ vehicleId }: { vehicleId: string }) {
 }
 
 function PenaltyDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: () => void; vehicleId: string }) {
+  const queryClient = useQueryClient()
   const [form, setForm] = useState({ date_issued: '', amount: 0, reason: '', issued_by: '', notes: '' })
-  const addPenalty = useAddPenalty()
+  const [status, setStatus] = useState<'unpaid' | 'paid' | 'disputed'>('unpaid')
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('penalties').insert({
+        id: generateId('PEN'), vehicle_id: vehicleId, ...form, amount: Number(form.amount), status,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['penalties', vehicleId] }); onClose(); toast.success('Penalty logged') },
+    onError: (err: Error) => toast.error(err.message),
+  })
 
   return (
-    <Drawer open={open} onClose={onClose} title="Add Penalty">
-      <form onSubmit={e => { e.preventDefault(); addPenalty.mutate({ vehicleId, ...form }, { onSuccess: () => { onClose(); setForm({ date_issued: '', amount: 0, reason: '', issued_by: '', notes: '' }) } }) }} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Date Issued *</label>
-          <input type="date" value={form.date_issued} onChange={e => setForm(f => ({ ...f, date_issued: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+    <Drawer open={open} onClose={onClose} title="Log Penalty">
+      <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium">Status:</span>
+          <button type="button" onClick={() => setStatus(s => s === 'unpaid' ? 'paid' : s === 'paid' ? 'disputed' : 'unpaid')} className={`px-3 py-1.5 rounded-lg text-sm cursor-pointer ${status === 'unpaid' ? 'bg-danger/15 text-danger' : status === 'paid' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </button>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Amount (UGX) *</label>
-          <input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: Number(e.target.value) }))} required min={0} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          <label className="block text-sm font-medium mb-1">Date Issued</label>
+          <input type="date" value={form.date_issued} onChange={e => setForm(f => ({ ...f, date_issued: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Reason *</label>
-          <textarea value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} rows={3} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          <label className="block text-sm font-medium mb-1">Amount (UGX)</label>
+          <input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: Number(e.target.value) }))} required min={0} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Reason</label>
+          <textarea value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} rows={3} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Issued By</label>
-          <input value={form.issued_by} onChange={e => setForm(f => ({ ...f, issued_by: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          <input value={form.issued_by} onChange={e => setForm(f => ({ ...f, issued_by: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Notes</label>
-          <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div className="flex gap-3 pt-4">
-          <Button type="submit" isLoading={addPenalty.isPending}>Save Penalty</Button>
+          <Button type="submit" isLoading={saveMutation.isPending}>Save Penalty</Button>
           <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
         </div>
       </form>
