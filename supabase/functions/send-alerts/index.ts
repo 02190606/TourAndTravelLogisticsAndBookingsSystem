@@ -24,6 +24,8 @@ interface Alert {
   status: string
   date: string
   type: 'logistics' | 'trip'
+  tripStart?: string
+  tripEnd?: string
 }
 
 function daysUntil(dateStr: string, today: Date): number {
@@ -59,6 +61,42 @@ function urgencyIcon(status: string): string {
   if (u === 'expired') return '&#9888;&#65039;'
   if (u === 'today') return '&#128197;'
   return '&#128336;'
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  return `${String(d.getDate()).padStart(2, '0')} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+}
+
+function tripDuration(start: string, end: string): number {
+  return Math.round((new Date(end + 'T00:00:00').getTime() - new Date(start + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24)) + 1
+}
+
+function tripUrgencyScore(a: Alert): number {
+  const s = a.status.toLowerCase()
+  if (s.includes('ago')) return 0
+  if (s === 'starts today') return 1
+  if (s === 'ends today') return 2
+  if (s === 'trip in progress') return 3
+  const m = s.match(/in (\d+) days?/)
+  if (m) return 10 + parseInt(m[1])
+  return 20
+}
+
+function tripBadgeStyle(a: Alert): string {
+  const s = a.status.toLowerCase()
+  if (s.includes('ago') || s === 'starts today') return 'background: #fef2f2; color: #b91c1c; border-left: 3px solid #ef4444;'
+  if (s === 'ends today' || s === 'trip in progress') return 'background: #fff7ed; color: #c2410c; border-left: 3px solid #f97316;'
+  return 'background: #eff6ff; color: #1d4ed8; border-left: 3px solid #3b82f6;'
+}
+
+function tripBadgeIcon(a: Alert): string {
+  const s = a.status.toLowerCase()
+  if (s.includes('ago') || s === 'starts today') return '&#128308;'
+  if (s === 'ends today' || s === 'trip in progress') return '&#128992;'
+  return '&#128309;'
 }
 
 function buildEmailHtml(alerts: Alert[]): string {
@@ -98,23 +136,44 @@ function buildEmailHtml(alerts: Alert[]): string {
       ${logisticsHtml}`
   }
 
+  let tripTable = ''
   if (trips.length > 0) {
-    const tripRows = trips.map(a => `
-      <tr>
-        <td style="padding: 8px 12px; font-weight: 500; color: #334155; width: 120px;">${a.label}</td>
-        <td style="padding: 8px 12px;">
-          <span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; ${urgencyBadge(a.status)}">${urgencyIcon(a.status)} ${a.status}</span>
-        </td>
-        <td style="padding: 8px 12px; color: #64748b; font-size: 13px; width: 100px;">${a.date}</td>
-      </tr>`).join('')
+    const sorted = [...trips].sort((a, b) => tripUrgencyScore(a) - tripUrgencyScore(b))
+    const tripRows = sorted.map(a => {
+      const dates = `${formatDate(a.tripStart!)} - ${formatDate(a.tripEnd!)}`
+      const dur = tripDuration(a.tripStart!, a.tripEnd!)
+      return `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 10px 12px; font-weight: 600; color: #1e293b; font-size: 13px;">${a.reg}</td>
+          <td style="padding: 10px 12px; color: #475569; font-size: 13px;">${dates}</td>
+          <td style="padding: 10px 12px; color: #475569; font-size: 13px; text-align: center;">${dur} days</td>
+          <td style="padding: 10px 12px;">
+            <span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; ${tripBadgeStyle(a)}">${tripBadgeIcon(a)} ${a.status}</span>
+          </td>
+        </tr>`
+    }).join('')
 
-    sections += `
-      <tr>
-        <td colspan="3" style="padding: 16px 12px 8px 12px; font-size: 15px; font-weight: 700; color: #0f172a; border-bottom: 2px solid #0f766e;">
-          &#129521; Trip Alerts (${trips.length})
-        </td>
-      </tr>
-      ${tripRows}`
+    tripTable = `
+      <div style="margin-top: 16px;">
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
+          <thead>
+            <tr>
+              <td colspan="4" style="padding: 16px 12px 8px 12px; font-size: 15px; font-weight: 700; color: #0f172a; border-bottom: 2px solid #0f766e;">
+                &#129521; Trip Alerts (${trips.length})
+              </td>
+            </tr>
+            <tr style="background: #f0fdfa;">
+              <th style="padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Client</th>
+              <th style="padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Trip Dates</th>
+              <th style="padding: 8px 12px; text-align: center; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Duration</th>
+              <th style="padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Alert</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tripRows}
+          </tbody>
+        </table>
+      </div>`
   }
 
   const total = alerts.length
@@ -129,6 +188,7 @@ function buildEmailHtml(alerts: Alert[]): string {
         <p style="color: #475569; margin: 0 0 16px 0; font-size: 14px;">
           You have <strong style="color: #0f766e;">${total}</strong> pending alert${total !== 1 ? 's' : ''}:
         </p>
+        ${logistics.length > 0 ? `
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
             <tr style="background: #f8fafc;">
@@ -141,6 +201,8 @@ function buildEmailHtml(alerts: Alert[]): string {
             ${sections}
           </tbody>
         </table>
+        ` : ''}
+        ${tripTable}
         <p style="color: #94a3b8; font-size: 12px; margin: 20px 0 0 0;">Log in to SafariTour to acknowledge these alerts.</p>
       </div>
     </div>`
@@ -249,30 +311,29 @@ serve(async (req) => {
 
     if (isTrips && trips) {
       for (const t of trips) {
-        if (t.trip_start_date) {
-          const diff = daysUntil(t.trip_start_date, today)
-          const itemId = `trip_start-${t.id}`
+        if (!t.trip_start_date || !t.trip_end_date) continue
 
-          if (diff >= 6 && diff <= 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-            userAlerts.push({ itemId, stage: 1, label: 'Trip Start', reg: t.client_name, status: `In ${diff} days`, date: t.trip_start_date, type: 'trip' })
-          }
-          if (diff <= 0 && !sentKey.has(`${user.id}:${itemId}:2`)) {
-            const urgentLabel = diff < 0 ? `Started ${Math.abs(diff)} day(s) ago` : 'Starts today'
-            userAlerts.push({ itemId, stage: 2, label: 'Trip Start', reg: t.client_name, status: urgentLabel, date: t.trip_start_date, type: 'trip' })
-          }
+        const startDiff = daysUntil(t.trip_start_date, today)
+        const endDiff = daysUntil(t.trip_end_date, today)
+
+        if (startDiff === 7 && !sentKey.has(`${user.id}:trip_7day-${t.id}:1`)) {
+          userAlerts.push({ itemId: `trip_7day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 7 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
         }
 
-        if (t.trip_end_date) {
-          const diff = daysUntil(t.trip_end_date, today)
-          const itemId = `trip_end-${t.id}`
+        if (startDiff === 2 && !sentKey.has(`${user.id}:trip_2day-${t.id}:1`)) {
+          userAlerts.push({ itemId: `trip_2day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 2 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+        }
 
-          if (diff >= 6 && diff <= 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-            userAlerts.push({ itemId, stage: 1, label: 'Trip End', reg: t.client_name, status: `In ${diff} days`, date: t.trip_end_date, type: 'trip' })
-          }
-          if (diff <= 0 && !sentKey.has(`${user.id}:${itemId}:2`)) {
-            const urgentLabel = diff < 0 ? `Ended ${Math.abs(diff)} day(s) ago` : 'Ends today'
-            userAlerts.push({ itemId, stage: 2, label: 'Trip End', reg: t.client_name, status: urgentLabel, date: t.trip_end_date, type: 'trip' })
-          }
+        if (startDiff === 0 && !sentKey.has(`${user.id}:trip_start_today-${t.id}:2`)) {
+          userAlerts.push({ itemId: `trip_start_today-${t.id}`, stage: 2, label: 'Trip Start', reg: t.client_name, status: 'Starts today', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+        }
+
+        if (startDiff < 0 && endDiff > 0 && !sentKey.has(`${user.id}:trip_ongoing-${t.id}:2`)) {
+          userAlerts.push({ itemId: `trip_ongoing-${t.id}`, stage: 2, label: 'Trip', reg: t.client_name, status: 'Trip in progress', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+        }
+
+        if (endDiff === 0 && !sentKey.has(`${user.id}:trip_end_today-${t.id}:2`)) {
+          userAlerts.push({ itemId: `trip_end_today-${t.id}`, stage: 2, label: 'Trip End', reg: t.client_name, status: 'Ends today', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
         }
       }
     }
@@ -322,27 +383,29 @@ serve(async (req) => {
 
     if (trips) {
       for (const t of trips) {
-        if (t.trip_start_date) {
-          const diff = daysUntil(t.trip_start_date, today)
-          const itemId = `trip_start-${t.id}`
-          if (diff >= 6 && diff <= 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
-            recipientAlerts.push({ itemId, stage: 1, label: 'Trip Start', reg: t.client_name, status: `In ${diff} days`, date: t.trip_start_date, type: 'trip' })
-          }
-          if (diff <= 0 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
-            const urgentLabel = diff < 0 ? `Started ${Math.abs(diff)} day(s) ago` : 'Starts today'
-            recipientAlerts.push({ itemId, stage: 2, label: 'Trip Start', reg: t.client_name, status: urgentLabel, date: t.trip_start_date, type: 'trip' })
-          }
+        if (!t.trip_start_date || !t.trip_end_date) continue
+
+        const startDiff = daysUntil(t.trip_start_date, today)
+        const endDiff = daysUntil(t.trip_end_date, today)
+
+        if (startDiff === 7 && !sentKey.has(`${recipientUserId}:trip_7day-${t.id}:1`)) {
+          recipientAlerts.push({ itemId: `trip_7day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 7 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
         }
-        if (t.trip_end_date) {
-          const diff = daysUntil(t.trip_end_date, today)
-          const itemId = `trip_end-${t.id}`
-          if (diff >= 6 && diff <= 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
-            recipientAlerts.push({ itemId, stage: 1, label: 'Trip End', reg: t.client_name, status: `In ${diff} days`, date: t.trip_end_date, type: 'trip' })
-          }
-          if (diff <= 0 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
-            const urgentLabel = diff < 0 ? `Ended ${Math.abs(diff)} day(s) ago` : 'Ends today'
-            recipientAlerts.push({ itemId, stage: 2, label: 'Trip End', reg: t.client_name, status: urgentLabel, date: t.trip_end_date, type: 'trip' })
-          }
+
+        if (startDiff === 2 && !sentKey.has(`${recipientUserId}:trip_2day-${t.id}:1`)) {
+          recipientAlerts.push({ itemId: `trip_2day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 2 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+        }
+
+        if (startDiff === 0 && !sentKey.has(`${recipientUserId}:trip_start_today-${t.id}:2`)) {
+          recipientAlerts.push({ itemId: `trip_start_today-${t.id}`, stage: 2, label: 'Trip Start', reg: t.client_name, status: 'Starts today', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+        }
+
+        if (startDiff < 0 && endDiff > 0 && !sentKey.has(`${recipientUserId}:trip_ongoing-${t.id}:2`)) {
+          recipientAlerts.push({ itemId: `trip_ongoing-${t.id}`, stage: 2, label: 'Trip', reg: t.client_name, status: 'Trip in progress', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+        }
+
+        if (endDiff === 0 && !sentKey.has(`${recipientUserId}:trip_end_today-${t.id}:2`)) {
+          recipientAlerts.push({ itemId: `trip_end_today-${t.id}`, stage: 2, label: 'Trip End', reg: t.client_name, status: 'Ends today', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
         }
       }
     }
@@ -363,8 +426,8 @@ serve(async (req) => {
 
     const stage2Count = alerts.filter(a => a.stage === 2).length
     const subject = stage2Count > 0
-      ? `SafariTour — ${stage2Count} urgent alert${stage2Count > 1 ? 's' : ''} need attention`
-      : `SafariTour — ${alerts.length} upcoming alert${alerts.length > 1 ? 's' : ''}`
+      ? `SafariTour - ${stage2Count} urgent alert${stage2Count > 1 ? 's' : ''} need attention`
+      : `SafariTour - ${alerts.length} upcoming alert${alerts.length > 1 ? 's' : ''}`
 
     try {
       await transporter.sendMail({

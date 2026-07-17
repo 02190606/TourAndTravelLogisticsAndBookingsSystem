@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Trip Alerts Email Preview</title>
+</head>
+<body style="background: #f1f5f9; margin: 0; padding: 40px;">
+
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+  <div style="background: #0F766E; padding: 24px 28px; border-radius: 12px 12px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 20px; font-weight: 700;">SafariTour Alerts</h1>
+    <p style="color: #ccfbf1; margin: 4px 0 0 0; font-size: 13px;">Daily compliance &amp; trip notifications</p>
+  </div>
+  <div style="border: 1px solid #e2e8f0; border-top: none; padding: 20px 28px 24px 28px; border-radius: 0 0 12px 12px;">
+    <p style="color: #475569; margin: 0 0 16px 0; font-size: 14px;">
+      You have <strong style="color: #0f766e;">5</strong> pending alerts:
+    </p>
+
+    <!-- ============ LOGISTICS (unchanged) ============ -->
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background: #f8fafc;">
+          <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Item</th>
+          <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Status</th>
+          <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="3" style="padding: 16px 12px 8px 12px; font-size: 15px; font-weight: 700; color: #0f172a; border-bottom: 2px solid #0f766e;">
+            &#128663; Logistics Alerts (2)
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" style="padding: 10px 12px 4px 12px; font-weight: 700; color: #0f766e; font-size: 13px; border-bottom: 1px solid #e2e8f0;">
+            &#128663; UAX 456P
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 12px; font-weight: 500; color: #334155; width: 120px;">Permit</td>
+          <td style="padding: 8px 12px;">
+            <span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #fff7ed; color: #c2410c; border-left: 3px solid #f97316;">&#128197; Expires in 1 day(s)</span>
+          </td>
+          <td style="padding: 8px 12px; color: #64748b; font-size: 13px; width: 100px;">2026-07-18</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="padding: 10px 12px 4px 12px; font-weight: 700; color: #0f766e; font-size: 13px; border-bottom: 1px solid #e2e8f0;">
+            &#128663; UBD 789T
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 12px; font-weight: 500; color: #334155; width: 120px;">Insurance</td>
+          <td style="padding: 8px 12px;">
+            <span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #eff6ff; color: #1d4ed8; border-left: 3px solid #3b82f6;">&#128336; Expires in 7 days</span>
+          </td>
+          <td style="padding: 8px 12px; color: #64748b; font-size: 13px; width: 100px;">2026-07-24</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============ TRIP ALERTS (new design) ============ -->
+    <div style="margin-top: 16px;">
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
+        <thead>
+          <tr>
+            <td colspan="4" style="padding: 16px 12px 8px 12px; font-size: 15px; font-weight: 700; color: #0f172a; border-bottom: 2px solid #0f766e;">
+              &#129521; Trip Alerts (3)
+            </td>
+          </tr>
+          <tr style="background: #f0fdfa;">
+            <th style="padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Client</th>
+            <th style="padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Trip Dates</th>
+            <th style="padding: 8px 12px; text-align: center; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Duration</th>
+            <th style="padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Alert</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Row 1: Most urgent - overdue -->
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 12px; font-weight: 600; color: #1e293b; font-size: 13px;">Larry</td>
+            <td style="padding: 10px 12px; color: #475569; font-size: 13px;">10 Jul 2026 - 16 Jul 2026</td>
+            <td style="padding: 10px 12px; color: #475569; font-size: 13px; text-align: center;">6 days</td>
+            <td style="padding: 10px 12px;">
+              <span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #fef2f2; color: #b91c1c; border-left: 3px solid #ef4444;">&#128308; Ended 1 day(s) ago</span>
+            </td>
+          </tr>
+          <!-- Row 2: Urgent - ends today -->
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 12px; font-weight: 600; color: #1e293b; font-size: 13px;">Grace</td>
+            <td style="padding: 10px 12px; color: #475569; font-size: 13px;">12 Jul 2026 - 17 Jul 2026</td>
+            <td style="padding: 10px 12px; color: #475569; font-size: 13px; text-align: center;">5 days</td>
+            <td style="padding: 10px 12px;">
+              <span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #fff7ed; color: #c2410c; border-left: 3px solid #f97316;">&#128992; Ends today</span>
+            </td>
+          </tr>
+          <!-- Row 3: Upcoming -->
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 12px; font-weight: 600; color: #1e293b; font-size: 13px;">David</td>
+            <td style="padding: 10px 12px; color: #475569; font-size: 13px;">13 Jul 2026 - 23 Jul 2026</td>
+            <td style="padding: 10px 12px; color: #475569; font-size: 13px; text-align: center;">10 days</td>
+            <td style="padding: 10px 12px;">
+              <span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #eff6ff; color: #1d4ed8; border-left: 3px solid #3b82f6;">&#128309; Starts in 7 days</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="color: #94a3b8; font-size: 12px; margin: 20px 0 0 0;">Log in to SafariTour to acknowledge these alerts.</p>
+  </div>
+</div>
+
+</body>
+</html>

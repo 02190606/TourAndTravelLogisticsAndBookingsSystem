@@ -107,7 +107,7 @@ export interface AlertSetting {
   is_enabled: boolean
 }
 
-export type TripStatus = 'planned' | 'ongoing' | 'completed' | 'cancelled'
+export type TripStatus = 'planned' | 'ongoing' | 'ends_today' | 'completed' | 'cancelled'
 
 export type PaymentMode = 'cash' | 'credit'
 

@@ -7,5 +7,6 @@ export function computeTripStatus(trip: Pick<Trip, 'status' | 'trip_start_date' 
   const end = new Date(trip.trip_end_date); end.setHours(0, 0, 0, 0)
   if (today < start) return 'planned'
   if (today > end) return 'completed'
+  if (today.getTime() === end.getTime()) return 'ends_today'
   return 'ongoing'
 }

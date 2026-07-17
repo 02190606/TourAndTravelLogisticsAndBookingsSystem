@@ -107,7 +107,7 @@ export function TripAlerts() {
   const tripAlerts = trips
     .filter(t => {
       const s = computeTripStatus(t)
-      return s === 'planned' || s === 'ongoing'
+      return s === 'planned' || s === 'ongoing' || s === 'ends_today'
     })
     .filter(t => {
       const start = parseISO(t.trip_start_date)

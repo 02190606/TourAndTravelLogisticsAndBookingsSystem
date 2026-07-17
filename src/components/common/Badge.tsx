@@ -33,6 +33,7 @@ export function StatusBadge({ status }: { status: string }) {
     sold: { variant: 'danger', label: 'Sold' },
     planned: { variant: 'info', label: 'Planned' },
     ongoing: { variant: 'success', label: 'Ongoing' },
+    ends_today: { variant: 'warning', label: 'Ends Today' },
     completed: { variant: 'neutral', label: 'Completed' },
     cancelled: { variant: 'danger', label: 'Cancelled' },
     open: { variant: 'warning', label: 'Open' },

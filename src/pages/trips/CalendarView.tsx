@@ -6,15 +6,33 @@ import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
-import type { Trip } from '@/types'
+import type { Trip, TripStatus } from '@/types'
 import { useNavigate } from 'react-router-dom'
 import { formatDate, computeTripStatus } from '@/utils'
+import { addDays, parseISO, isAfter } from 'date-fns'
 
 const statusColors: Record<string, string> = {
   planned: '#3B82F6',
   ongoing: '#10B981',
+  ends_today: '#F59E0B',
   completed: '#94A3B8',
   cancelled: '#EF4444',
+}
+
+const statusLabels: Record<string, string> = {
+  planned: 'PLANNED',
+  ongoing: 'ONGOING',
+  ends_today: 'ENDS TODAY',
+  completed: 'DONE',
+  cancelled: 'CANCELLED',
+}
+
+const statusDots: Record<string, string> = {
+  planned: 'bg-blue-300',
+  ongoing: 'bg-emerald-300',
+  ends_today: 'bg-amber-300',
+  completed: 'bg-slate-400',
+  cancelled: 'bg-red-300',
 }
 
 export function CalendarView() {
@@ -38,25 +56,36 @@ export function CalendarView() {
   const nameCount: Record<string, number> = {}
   trips.forEach(t => { nameCount[t.client_name] = (nameCount[t.client_name] || 0) + 1 })
 
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
   const events = trips
     .filter(t => {
+      if (t.status === 'cancelled') return false
       const s = computeTripStatus(t)
-      return s === 'planned' || s === 'ongoing'
+      if (s === 'planned' || s === 'ongoing' || s === 'ends_today') return true
+      if (s === 'completed') {
+        const endDate = parseISO(t.trip_end_date)
+        return isAfter(today, endDate) && (today.getTime() - endDate.getTime()) <= 30 * 86400000
+      }
+      return false
     })
     .filter(t => {
       if (!viewStart || !viewEnd) return true
-      return t.trip_start_date >= viewStart && t.trip_start_date < viewEnd
+      return t.trip_end_date >= viewStart && t.trip_start_date < viewEnd
     })
     .map(trip => {
       const computed = computeTripStatus(trip)
       const label = nameCount[trip.client_name] > 1
         ? `${trip.client_name} · ${formatDate(trip.trip_start_date, 'dd MMM')}–${formatDate(trip.trip_end_date, 'dd MMM')}`
         : trip.client_name
+      const endDate = addDays(parseISO(trip.trip_end_date), 1)
+      const endStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`
       return {
         id: trip.id,
         title: label,
         start: trip.trip_start_date,
-        end: trip.trip_end_date,
+        end: endStr,
         backgroundColor: statusColors[computed] || '#475569',
         borderColor: statusColors[computed] || '#475569',
         textColor: '#fff',
@@ -72,6 +101,36 @@ export function CalendarView() {
     <div className="space-y-6">
       <PageHeader title="Calendar View" subtitle="Trip schedule overview" />
 
+      <style>{`
+        .fc-event {
+          border-radius: 4px !important;
+          border-right-width: 4px !important;
+          border-right-style: solid !important;
+          border-right-color: rgba(0,0,0,0.35) !important;
+          padding-right: 0 !important;
+          position: relative;
+        }
+        .fc-event-end-flag {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 16px;
+          height: 16px;
+          border-radius: 3px;
+          background: rgba(0,0,0,0.3);
+          color: #fff;
+          font-size: 9px;
+          font-weight: 800;
+          line-height: 1;
+          flex-shrink: 0;
+          margin-left: auto;
+          letter-spacing: -0.5px;
+        }
+        .fc-daygrid-event-harness + .fc-daygrid-event-harness {
+          margin-top: 1px;
+        }
+      `}</style>
+
       <div className="bg-white rounded-2xl p-4 shadow-sm">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -85,14 +144,15 @@ export function CalendarView() {
           eventClassNames="cursor-pointer hover:brightness-110 hover:shadow-md transition-all"
           eventContent={(arg) => {
             const status = arg.event.extendedProps.status as string
-            const dot = status === 'ongoing' ? 'bg-amber-300' : 'bg-blue-300'
-            const label = status === 'ongoing' ? 'ONGOING' : 'PLANNED'
+            const dot = statusDots[status] || 'bg-slate-400'
+            const label = statusLabels[status] || status.toUpperCase()
+            const hasEnd = !!arg.event.end
             return (
-              <span className="flex items-center gap-1 text-xs leading-tight px-0.5">
+              <span className="flex items-center gap-1 text-xs leading-tight px-0.5 overflow-hidden w-full">
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />
                 <span className="truncate">{arg.event.title}</span>
                 <span className="opacity-50 text-[10px] flex-shrink-0">{label}</span>
-                <span className="opacity-40 flex-shrink-0">→</span>
+                {hasEnd && <span className="fc-event-end-flag" title="Trip ends here">END</span>}
               </span>
             )
           }}
@@ -107,6 +167,15 @@ export function CalendarView() {
           height="auto"
           aspectRatio={1.8}
         />
+      </div>
+
+      <div className="flex flex-wrap gap-4 text-xs">
+        {Object.entries(statusColors).filter(([k]) => k !== 'cancelled').map(([key, color]) => (
+          <div key={key} className="flex items-center gap-1.5">
+            <span className="w-3 h-2 rounded-sm" style={{ backgroundColor: color }} />
+            <span className="text-text-secondary capitalize">{statusLabels[key] || key}</span>
+          </div>
+        ))}
       </div>
 
       <Modal open={!!selectedTrip} onClose={() => setSelectedTrip(null)} title="Trip Details">
@@ -128,6 +197,12 @@ export function CalendarView() {
               <div>
                 <p className="text-xs text-text-secondary uppercase tracking-wider">End Date</p>
                 <p className="text-sm mt-1">{formatDate(selectedTrip.trip_end_date)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-text-secondary uppercase tracking-wider">Duration</p>
+                <p className="text-sm mt-1">
+                  {Math.round((new Date(selectedTrip.trip_end_date).getTime() - new Date(selectedTrip.trip_start_date).getTime()) / 86400000) + 1} days
+                </p>
               </div>
               <div>
                 <p className="text-xs text-text-secondary uppercase tracking-wider">Vehicle</p>

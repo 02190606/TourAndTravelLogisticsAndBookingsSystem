@@ -33,5 +33,5 @@ export function getDaysBetween(start: string | Date, end: string | Date): number
   return differenceInDays(
     typeof end === 'string' ? parseISO(end) : end,
     typeof start === 'string' ? parseISO(start) : start
-  )
+  ) + 1
 }

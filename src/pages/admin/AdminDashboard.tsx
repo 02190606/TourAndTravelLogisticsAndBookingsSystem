@@ -26,10 +26,11 @@ export function AdminDashboard() {
     queryKey: ['trip-counts'],
     queryFn: async () => {
       const { data } = await supabase.from('trips').select('status, trip_start_date, trip_end_date')
-      if (!data) return { planned: 0, ongoing: 0, completed: 0, cancelled: 0 }
+      if (!data) return { planned: 0, ongoing: 0, endsToday: 0, completed: 0, cancelled: 0 }
       return {
         planned: data.filter(t => computeTripStatus(t) === 'planned').length,
         ongoing: data.filter(t => computeTripStatus(t) === 'ongoing').length,
+        endsToday: data.filter(t => computeTripStatus(t) === 'ends_today').length,
         completed: data.filter(t => computeTripStatus(t) === 'completed').length,
         cancelled: data.filter(t => computeTripStatus(t) === 'cancelled').length,
       }
@@ -79,6 +80,7 @@ export function AdminDashboard() {
             data={[
               { name: 'Planned', value: tripCounts.planned, color: '#3B82F6' },
               { name: 'Ongoing', value: tripCounts.ongoing, color: '#10B981' },
+              { name: 'Ends Today', value: tripCounts.endsToday, color: '#F59E0B' },
               { name: 'Completed', value: tripCounts.completed, color: '#94A3B8' },
               { name: 'Cancelled', value: tripCounts.cancelled, color: '#EF4444' },
             ]}

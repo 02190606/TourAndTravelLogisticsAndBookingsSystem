@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "imports": {
+    "https://deno.land/std@0.208.0/": "https://deno.land/std@0.208.0/",
+    "https://esm.sh/@supabase/supabase-js@2.39.0": "https://esm.sh/@supabase/supabase-js@2.39.0"
+  }
+}

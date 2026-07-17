@@ -16,6 +16,7 @@ export function TripsDashboard() {
 
       const planned = t.filter(t => computeTripStatus(t) === 'planned').length
       const ongoing = t.filter(t => computeTripStatus(t) === 'ongoing').length
+      const endsToday = t.filter(t => computeTripStatus(t) === 'ends_today').length
       const completed = t.filter(t => computeTripStatus(t) === 'completed').length
       const cancelled = t.filter(t => computeTripStatus(t) === 'cancelled').length
 
@@ -40,7 +41,7 @@ export function TripsDashboard() {
       const upcomingTrips = t
         .filter(t => {
           const s = computeTripStatus(t)
-          return s === 'planned' || s === 'ongoing'
+          return s === 'planned' || s === 'ongoing' || s === 'ends_today'
         })
         .sort((a, b) => new Date(a.trip_start_date).getTime() - new Date(b.trip_start_date).getTime())
         .slice(0, 5)
@@ -53,7 +54,7 @@ export function TripsDashboard() {
           .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0),
       }))
 
-      return { planned, ongoing, completed, cancelled, monthlyRevenue, yearlyRevenue, upcomingThisWeek: upcomingThisWeek.length, upcomingTrips, revenueByMonth, total: t.length }
+      return { planned, ongoing, endsToday, completed, cancelled, monthlyRevenue, yearlyRevenue, upcomingThisWeek: upcomingThisWeek.length, upcomingTrips, revenueByMonth, total: t.length }
     },
   })
 
@@ -82,11 +83,12 @@ export function TripsDashboard() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard title="Total Trips" value={stats.total} icon={<Icon name="plane" />} color="primary" />
         <StatCard title="Planned" value={stats.planned} icon={<Icon name="clipboard" />} color="info" />
-        <StatCard title="Ongoing" value={stats.ongoing} icon={<Icon name="sync" />} color="warning" />
-        <StatCard title="Completed" value={stats.completed} icon={<Icon name="check" />} color="success" />
+        <StatCard title="Ongoing" value={stats.ongoing} icon={<Icon name="sync" />} color="success" />
+        <StatCard title="Ends Today" value={stats.endsToday} icon={<Icon name="calendar" />} color="warning" />
+        <StatCard title="Completed" value={stats.completed} icon={<Icon name="check" />} color="primary" />
         <StatCard title="Cancelled" value={stats.cancelled} icon={<Icon name="x" />} color="danger" />
       </div>
 
@@ -106,6 +108,7 @@ export function TripsDashboard() {
             data={[
               { name: 'Planned', value: stats.planned, color: '#3B82F6' },
               { name: 'Ongoing', value: stats.ongoing, color: '#10B981' },
+              { name: 'Ends Today', value: stats.endsToday, color: '#F59E0B' },
               { name: 'Completed', value: stats.completed, color: '#94A3B8' },
               { name: 'Cancelled', value: stats.cancelled, color: '#EF4444' },
             ]}

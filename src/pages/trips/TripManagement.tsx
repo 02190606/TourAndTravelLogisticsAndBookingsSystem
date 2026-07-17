@@ -372,6 +372,11 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
               <label className="block text-sm font-medium mb-1">Trip End Date</label>
               <input type="date" value={form.trip_end_date} onChange={e => setForm(f => ({ ...f, trip_end_date: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
+            {days > 0 && (
+              <div className="sm:col-span-2">
+                <span className="inline-block px-3 py-1.5 bg-primary/10 text-primary rounded-xl text-sm font-medium">{days} {days === 1 ? 'Day' : 'Days'}</span>
+              </div>
+            )}
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium mb-1">Trip Type</label>
               <div className="flex gap-5 mt-2">
@@ -393,11 +398,6 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
               <label className="block text-sm font-medium mb-1"><MapPin className="inline-block w-3.5 h-3.5 mr-1 -mt-0.5" />Pickup Location</label>
               <input type="text" value={form.pickup_location} onChange={e => setForm(f => ({ ...f, pickup_location: e.target.value }))} placeholder="e.g. Entebbe Airport, Terminal 1" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
-            {days > 0 && (
-              <div className="flex items-end">
-                <span className="px-3 py-2.5 bg-primary/10 text-primary rounded-xl text-sm font-medium">{days} Days</span>
-              </div>
-            )}
           </div>
         </div>
 
