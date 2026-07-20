@@ -24,6 +24,7 @@ export function TripManagement() {
       const { data } = await supabase
         .from('trips')
         .select('*, vehicles!left(registration_number, make, model), drivers!left(full_name, license_number)')
+        .neq('status', 'cancelled')
         .order('trip_start_date', { ascending: false })
       return (data || []) as (Trip & { vehicles?: Vehicle; drivers?: Driver })[]
     },
