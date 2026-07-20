@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, Drawer, Modal, StatusBadge, Badge, CardSkeleton } from '@/components/common'
-import { formatDate, formatUGX, generateId, getDaysBetween, computeTripStatus } from '@/utils'
+import { formatDate, formatUGX, generateId, getDaysBetween, computeTripStatus, sanitizeTripPayload } from '@/utils'
 import toast from 'react-hot-toast'
 import { MapPin } from 'lucide-react'
 import type { Trip, TripStatus, Vehicle, Driver } from '@/types'
@@ -250,14 +250,37 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { amount: _amount, exchangeRate: _exchangeRate, ...dbFields } = form
+      if (!form.trip_start_date) throw new Error('Trip Start Date is required')
+      if (!form.trip_end_date) throw new Error('Trip End Date is required')
+      if (form.needs_accommodation) {
+        if (!form.accommodation_checkin) throw new Error('Check-in Date is required when accommodation is needed')
+        if (!form.accommodation_checkout) throw new Error('Check-out Date is required when accommodation is needed')
+      }
       const payload = {
-        ...dbFields,
+        client_name: form.client_name,
         number_of_clients: Number(form.number_of_clients),
+        car_type: form.car_type,
+        vehicle_id: form.vehicle_id || null,
+        driver_id: form.driver_id || null,
+        trip_start_date: form.trip_start_date,
+        trip_end_date: form.trip_end_date,
+        flight_arrival_time: form.flight_arrival_time || null,
+        pickup_location: form.pickup_location || null,
+        is_cross_border: form.is_cross_border,
+        is_one_way: form.is_one_way,
+        needs_accommodation: form.needs_accommodation,
+        accommodation_name: form.accommodation_name || null,
+        accommodation_checkin: form.accommodation_checkin || null,
+        accommodation_checkout: form.accommodation_checkout || null,
+        accommodation_rooms: form.accommodation_rooms || null,
+        accommodation_cost: form.accommodation_cost || null,
+        currency: form.currency,
         amount_in_ugx: Number(form.amount_in_ugx),
+        payment_mode: form.payment_mode,
         amount_paid: Number(form.amount_paid),
         balance: Number(form.balance),
       }
+      console.log('[TripDrawer] payload being sent:', JSON.stringify(payload, null, 2))
       if (editTrip) {
         const { error } = await supabase.from('trips').update(payload).eq('id', editTrip.id)
         if (error) throw error
@@ -311,12 +334,12 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
                   <input value={form.accommodation_name} onChange={e => setForm(f => ({ ...f, accommodation_name: e.target.value }))} placeholder="e.g. Serena Hotel Kampala" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Check-in Date</label>
-                  <input type="date" value={form.accommodation_checkin} onChange={e => setForm(f => ({ ...f, accommodation_checkin: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                  <label className="block text-sm font-medium mb-1">Check-in Date *</label>
+                  <input type="date" value={form.accommodation_checkin} onChange={e => setForm(f => ({ ...f, accommodation_checkin: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Check-out Date</label>
-                  <input type="date" value={form.accommodation_checkout} onChange={e => setForm(f => ({ ...f, accommodation_checkout: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                  <label className="block text-sm font-medium mb-1">Check-out Date *</label>
+                  <input type="date" value={form.accommodation_checkout} onChange={e => setForm(f => ({ ...f, accommodation_checkout: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Number of Rooms</label>

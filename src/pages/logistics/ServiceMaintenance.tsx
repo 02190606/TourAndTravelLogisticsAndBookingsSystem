@@ -251,7 +251,8 @@ function ServiceDrawer({ open, onClose, record }: { open: boolean; onClose: () =
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const payload = { ...form, cost: Number(form.cost) }
+      if (!form.service_date) throw new Error('Service Date is required')
+      const payload = { ...form, cost: Number(form.cost), next_service_date: form.next_service_date || null }
       if (isEdit) {
         const { error } = await supabase.from('service_records').update(payload).eq('id', record.id)
         if (error) throw error
@@ -439,6 +440,7 @@ function MaintenanceDrawer({ open, onClose, record }: { open: boolean; onClose: 
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      if (!form.repair_date) throw new Error('Repair Date is required')
       const payload = { ...form, cost: Number(form.cost) }
       if (isEdit) {
         const { error } = await supabase.from('maintenance_records').update(payload).eq('id', record.id)
@@ -666,6 +668,7 @@ function RepairDrawer({ open, onClose, record }: { open: boolean; onClose: () =>
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      if (!form.date_of_repair) throw new Error('Date of Repair is required')
       const payload = { ...form, cost: Number(form.cost) }
       if (isEdit) {
         const { error } = await supabase.from('repairs').update(payload).eq('id', record.id)

@@ -223,6 +223,12 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
         mileage: Number(form.mileage),
         year: Number(form.year),
         current_driver_id: form.current_driver_id || null,
+        permit_expiry_date: form.permit_expiry_date || null,
+        insurance_commencement: form.insurance_commencement || null,
+        insurance_expiry: form.insurance_expiry || null,
+        pmo_commencement: form.pmo_commencement || null,
+        pmo_expiry: form.pmo_expiry || null,
+        psv_expiry: form.psv_expiry || null,
       }
       if (editVehicle) {
         const { error } = await supabase.from('vehicles').update(payload).eq('id', editVehicle.id)

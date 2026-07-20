@@ -116,8 +116,8 @@ export interface Trip {
   client_name: string
   number_of_clients: number
   car_type: string
-  vehicle_id: string
-  driver_id: string
+  vehicle_id: string | null
+  driver_id: string | null
   amount_paid: number
   currency: string
   amount_in_ugx: number
@@ -125,16 +125,16 @@ export interface Trip {
   balance: number
   trip_start_date: string
   trip_end_date: string
-  flight_arrival_time: string
-  pickup_location: string
+  flight_arrival_time: string | null
+  pickup_location: string | null
   is_cross_border: boolean
   is_one_way: boolean
   needs_accommodation: boolean
-  accommodation_name: string
-  accommodation_checkin: string
-  accommodation_checkout: string
-  accommodation_rooms: number
-  accommodation_cost: number
+  accommodation_name: string | null
+  accommodation_checkin: string | null
+  accommodation_checkout: string | null
+  accommodation_rooms: number | null
+  accommodation_cost: number | null
   status: TripStatus
   created_at: string
   vehicles?: Vehicle
