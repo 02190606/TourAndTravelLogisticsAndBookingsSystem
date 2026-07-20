@@ -189,95 +189,135 @@ export function TripManagement() {
         )}
       </Modal>
 
-      <Modal open={!!viewTrip} onClose={() => setViewTrip(null)} title="Trip Details" className="max-w-2xl">
+      <Modal open={!!viewTrip} onClose={() => setViewTrip(null)} title="" className="max-w-2xl">
         {viewTrip && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div><span className="text-text-secondary text-sm">Client:</span><p className="font-semibold">{viewTrip.client_name}</p></div>
-              <div><span className="text-text-secondary text-sm">Clients:</span><p>{viewTrip.number_of_clients}</p></div>
-              <div><span className="text-text-secondary text-sm">Car Type:</span><p className="capitalize">{viewTrip.car_type}</p></div>
-              <div><span className="text-text-secondary text-sm">Vehicle:</span><p>{viewTrip.vehicles?.registration_number || '-'}</p></div>
-              <div><span className="text-text-secondary text-sm">Driver:</span><p>{viewTrip.drivers?.full_name || '-'}</p></div>
-              <div><span className="text-text-secondary text-sm">Status:</span><StatusBadge status={computeTripStatus(viewTrip)} /></div>
+          <div className="space-y-0">
+            {/* Header */}
+            <div className="flex items-center gap-4 pb-5">
+              <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-full bg-primary text-white font-bold text-lg">
+                {viewTrip.client_name?.charAt(0)?.toUpperCase() || '?'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-bold text-text-primary">{viewTrip.client_name}</p>
+                <p className="text-sm text-text-secondary">{viewTrip.number_of_clients} client{viewTrip.number_of_clients !== 1 ? 's' : ''}</p>
+              </div>
+              <StatusBadge status={computeTripStatus(viewTrip)} />
             </div>
-            <div className="border-t border-muted/30 pt-4">
-              <h4 className="font-medium mb-3">📅 Schedule</h4>
-              <div className="flex items-center gap-4">
-                <div className="flex-1 text-center p-3 bg-muted/20 rounded-xl">
-                  <p className="text-xs text-text-secondary">Start</p>
-                  <p className="font-semibold text-sm">{formatDate(viewTrip.trip_start_date)}</p>
+
+            {/* Vehicle & Driver */}
+            <div className="grid grid-cols-2 gap-4 border-t border-muted/30 py-4">
+              <div>
+                <p className="text-[13px] text-text-secondary mb-0.5">Car Type</p>
+                <p className="text-[15px] font-bold capitalize text-text-primary">{viewTrip.car_type}</p>
+              </div>
+              <div>
+                <p className="text-[13px] text-text-secondary mb-0.5">Vehicle</p>
+                <p className="text-[15px] font-bold text-text-primary">{viewTrip.vehicles?.registration_number || '—'}</p>
+              </div>
+              <div>
+                <p className="text-[13px] text-text-secondary mb-0.5">Driver</p>
+                <p className="text-[15px] font-bold text-text-primary">{viewTrip.drivers?.full_name || '—'}</p>
+              </div>
+              {(viewTrip.pickup_location || viewTrip.Destination) && (
+                <div>
+                  <p className="text-[13px] text-text-secondary mb-0.5">Route</p>
+                  <p className="text-[15px] font-bold text-text-primary">{viewTrip.pickup_location || '—'} → {viewTrip.Destination || '—'}</p>
                 </div>
-                <div className="text-text-secondary">→</div>
-                <div className="flex-1 text-center p-3 bg-muted/20 rounded-xl">
-                  <p className="text-xs text-text-secondary">End</p>
-                  <p className="font-semibold text-sm">{formatDate(viewTrip.trip_end_date)}</p>
+              )}
+            </div>
+
+            {/* Schedule */}
+            <div className="border-t border-muted/30 py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <span className="text-xs font-semibold uppercase tracking-wider text-primary">Schedule</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 rounded-xl border border-muted/40 bg-surface-2 px-4 py-3 text-center">
+                  <p className="text-[11px] uppercase tracking-wider text-text-secondary mb-0.5">Start</p>
+                  <p className="text-sm font-bold text-text-primary">{formatDate(viewTrip.trip_start_date)}</p>
+                </div>
+                <svg className="h-5 w-5 flex-shrink-0 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                <div className="flex-1 rounded-xl border border-muted/40 bg-surface-2 px-4 py-3 text-center">
+                  <p className="text-[11px] uppercase tracking-wider text-text-secondary mb-0.5">End</p>
+                  <p className="text-sm font-bold text-text-primary">{formatDate(viewTrip.trip_end_date)}</p>
                 </div>
               </div>
-              {viewTrip.pickup_location && (
-                <div className="mt-3 text-sm">
-                  <span className="text-text-secondary">Pickup Location:</span> <span className="font-medium">{viewTrip.pickup_location}</span>
-                </div>
-              )}
-              {viewTrip.Destination && (
-                <div className="mt-1 text-sm">
-                  <span className="text-text-secondary">Destination:</span> <span className="font-medium">{viewTrip.Destination}</span>
-                </div>
-              )}
               {(viewTrip.is_cross_border || viewTrip.is_one_way || viewTrip.is_return_trip) && (
-                <div className="mt-2 flex gap-2">
+                <div className="flex gap-2 mt-3">
                   {viewTrip.is_cross_border && <Badge variant="info">Cross Border</Badge>}
                   {viewTrip.is_one_way && <Badge variant="warning">One Way</Badge>}
                   {viewTrip.is_return_trip && <Badge variant="info">Return trip</Badge>}
                 </div>
               )}
               {viewTrip.is_return_trip && viewTrip['Return Trip'] && (
-                <div className="mt-2 text-sm">
-                  <span className="text-text-secondary">Return trip:</span> <span className="font-medium">{formatDate(viewTrip['Return Trip'])}</span>
-                </div>
+                <p className="mt-2 text-sm text-text-secondary">Return: <span className="font-medium text-text-primary">{formatDate(viewTrip['Return Trip'])}</span></p>
               )}
             </div>
-            {viewTrip.needs_accommodation && (
-              <div className="border-t border-muted/30 pt-4">
-                <h4 className="font-medium mb-3">🏨 Accommodation</h4>
-                <div className="bg-muted/20 rounded-xl p-4 space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-text-secondary">Hotel</span><span className="font-medium">{viewTrip.accommodation_name || '—'}</span></div>
-                  <div className="flex justify-between"><span className="text-text-secondary">Check-in</span><span>{viewTrip.accommodation_checkin ? formatDate(viewTrip.accommodation_checkin) : '—'}</span></div>
-                  <div className="flex justify-between"><span className="text-text-secondary">Check-out</span><span>{viewTrip.accommodation_checkout ? formatDate(viewTrip.accommodation_checkout) : '—'}</span></div>
-                  <div className="flex justify-between"><span className="text-text-secondary">Rooms</span><span>{viewTrip.accommodation_rooms || '—'}</span></div>
-                  {(viewTrip.accommodation_cost ?? 0) > 0 && <div className="flex justify-between border-t border-muted/30 pt-2"><span className="text-text-secondary">Cost</span><span className="font-mono font-semibold">{formatUGX(viewTrip.accommodation_cost ?? 0)}</span></div>}
-                </div>
+
+            {/* Payment */}
+            <div className="border-t border-muted/30 py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                <span className="text-xs font-semibold uppercase tracking-wider text-primary">Payment</span>
               </div>
-            )}
-            <div className="border-t border-muted/30 pt-4">
-              <h4 className="font-medium mb-3">💳 Payment</h4>
-              <div className="bg-muted/20 rounded-xl p-4 space-y-2">
-                <div className="flex justify-between text-sm"><span>Total (UGX)</span><span className="font-mono font-semibold">{formatUGX(viewTrip.amount_in_ugx)}</span></div>
-                <div className="flex justify-between text-sm"><span>Paid</span><span className="font-mono text-success">{formatUGX(viewTrip.amount_paid)}</span></div>
-                <div className="flex justify-between text-sm border-t border-muted/30 pt-2"><span>Balance</span><span className={`font-mono font-semibold ${viewTrip.balance > 0 ? 'text-warning' : 'text-success'}`}>{formatUGX(viewTrip.balance)}</span></div>
+              <div className="rounded-xl border border-muted/40 bg-surface-2 divide-y divide-muted/30">
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-[15px] text-text-secondary">Total</span>
+                  <span className="text-[15px] font-bold font-mono text-text-primary">{formatUGX(viewTrip.amount_in_ugx)}</span>
+                </div>
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-[15px] text-text-secondary">Paid</span>
+                  <span className="text-[15px] font-bold font-mono text-success">{formatUGX(viewTrip.amount_paid)}</span>
+                </div>
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-[15px] text-text-secondary">Balance</span>
+                  <span className={`text-[15px] font-bold font-mono ${viewTrip.balance > 0 ? 'text-warning' : 'text-success'}`}>{formatUGX(viewTrip.balance)}</span>
+                </div>
               </div>
             </div>
-            {(() => {
-              const hasExperience = viewTrip.car_seats || viewTrip.has_gps || viewTrip.extras || viewTrip.gorilla_tracking || viewTrip.chimpanzee_tracking || viewTrip.activities
-              if (!hasExperience) return (
-                <div className="border-t border-muted/30 pt-4">
-                  <h4 className="font-medium mb-3">🧭 Experience</h4>
-                  <p className="text-sm text-text-secondary">No experience details added yet.</p>
-                </div>
-              )
-              return (
-                <div className="border-t border-muted/30 pt-4">
-                  <h4 className="font-medium mb-3">🧭 Experience</h4>
-                  <div className="bg-muted/20 rounded-xl p-4 space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-text-secondary">Car Seats</span><span className="font-medium">{viewTrip.car_seats ?? '—'}</span></div>
-                    <div className="flex justify-between"><span className="text-text-secondary">GPS</span><span className="font-medium">{viewTrip.has_gps ? 'Yes' : 'No'}</span></div>
-                    <div className="flex justify-between"><span className="text-text-secondary">Extras</span><span className="font-medium">{viewTrip.extras || '—'}</span></div>
-                    <div className="border-t border-muted/30 pt-2 flex justify-between"><span className="text-text-secondary">Gorilla Tracking</span><span className="font-medium">{viewTrip.gorilla_tracking ? 'Yes' : 'No'}</span></div>
-                    <div className="flex justify-between"><span className="text-text-secondary">Chimpanzee Tracking</span><span className="font-medium">{viewTrip.chimpanzee_tracking ? 'Yes' : 'No'}</span></div>
-                    {viewTrip.activities && <div className="border-t border-muted/30 pt-2"><span className="text-text-secondary">Activities</span><p className="mt-1 font-medium whitespace-pre-wrap">{viewTrip.activities}</p></div>}
+
+            {/* Experience */}
+            <div className="border-t border-muted/30 py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 0 3.5 3.5M12 12l-3.5 3.5M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22" /></svg>
+                <span className="text-xs font-semibold uppercase tracking-wider text-primary">Experience</span>
+              </div>
+              {(() => {
+                const hasExperience = viewTrip.car_seats || viewTrip.has_gps || viewTrip.extras || viewTrip.gorilla_tracking || viewTrip.chimpanzee_tracking || viewTrip.activities
+                if (!hasExperience) return <p className="text-sm text-text-secondary">No experience details added yet.</p>
+                return (
+                  <div className="rounded-xl border border-muted/40 bg-surface-2 divide-y divide-muted/30">
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <span className="text-[15px] text-text-secondary">Car Seats</span>
+                      <span className="text-[15px] font-bold text-text-primary">{viewTrip.car_seats ?? '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <span className="text-[15px] text-text-secondary">GPS</span>
+                      <span className="text-[15px] font-bold text-text-primary">{viewTrip.has_gps ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <span className="text-[15px] text-text-secondary">Extras</span>
+                      <span className="text-[15px] font-bold text-text-primary">{viewTrip.extras || '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <span className="text-[15px] text-text-secondary">Gorilla Tracking</span>
+                      <span className={`text-[15px] font-bold ${viewTrip.gorilla_tracking ? 'text-success' : 'text-text-primary'}`}>{viewTrip.gorilla_tracking ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <span className="text-[15px] text-text-secondary">Chimpanzee Tracking</span>
+                      <span className={`text-[15px] font-bold ${viewTrip.chimpanzee_tracking ? 'text-success' : 'text-text-primary'}`}>{viewTrip.chimpanzee_tracking ? 'Yes' : 'No'}</span>
+                    </div>
+                    {viewTrip.activities && (
+                      <div className="px-4 py-3">
+                        <p className="text-[15px] text-text-secondary mb-1">Activities</p>
+                        <p className="text-[15px] font-bold text-text-primary whitespace-pre-wrap">{viewTrip.activities}</p>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )
-            })()}
+                )
+              })()}
+            </div>
           </div>
         )}
       </Modal>
