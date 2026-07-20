@@ -278,7 +278,7 @@ function AnimatedHeadline({ text }: { text: string }) {
       initial="hidden"
       animate="visible"
       className="max-w-2xl text-3xl font-black leading-[1.16] sm:text-4xl lg:text-5xl"
-      style={{ marginTop: '220px' }}
+      style={{ marginTop: '170px' }}
       aria-label={text}
     >
       {text.split(' ').map((word, index) => (
