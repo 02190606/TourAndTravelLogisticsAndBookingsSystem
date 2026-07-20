@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
+import { useAlerts } from '@/hooks/useAlerts'
 import type { UserRole } from '@/types'
 import { useState, type ReactNode } from 'react'
 
@@ -11,6 +12,7 @@ interface NavItem {
   path: string
   icon: IconName
   roles: UserRole[]
+  badge?: 'alerts'
 }
 
 const sections: { title: string; items: NavItem[] }[] = [
@@ -19,11 +21,11 @@ const sections: { title: string; items: NavItem[] }[] = [
     items: [
       { label: 'Dashboard', path: '/logistics', icon: 'chart', roles: ['admin', 'logistics'] },
       { label: 'Fleet', path: '/logistics/vehicles', icon: 'vehicle', roles: ['admin', 'logistics'] },
-      { label: 'Maintenance and Repair', path: '/logistics/service', icon: 'tool', roles: ['admin', 'logistics'] },
+      { label: 'Maintenance', path: '/logistics/service', icon: 'tool', roles: ['admin', 'logistics'] },
       { label: 'Complaints', path: '/logistics/complaints', icon: 'alert', roles: ['admin', 'logistics'] },
       { label: 'Penalties', path: '/logistics/penalties', icon: 'fine', roles: ['admin', 'logistics'] },
       { label: 'Drivers', path: '/logistics/drivers', icon: 'user', roles: ['admin', 'logistics'] },
-      { label: 'Alerts', path: '/logistics/alerts', icon: 'bell', roles: ['admin', 'logistics'] },
+      { label: 'Alerts', path: '/logistics/alerts', icon: 'bell', roles: ['admin', 'logistics'], badge: 'alerts' },
     ],
   },
   {
@@ -34,7 +36,7 @@ const sections: { title: string; items: NavItem[] }[] = [
       { label: 'Experience', path: '/trips/experience', icon: 'compass', roles: ['admin', 'trips'] },
       { label: 'Calendar', path: '/trips/calendar', icon: 'calendar', roles: ['admin', 'trips'] },
       { label: 'Revenue', path: '/trips/payments', icon: 'cash', roles: ['admin', 'trips'] },
-      { label: 'Alerts', path: '/trips/alerts', icon: 'bell', roles: ['admin', 'trips'] },
+      { label: 'Alerts', path: '/trips/alerts', icon: 'bell', roles: ['admin', 'trips'], badge: 'alerts' },
     ],
   },
 ]
@@ -51,6 +53,7 @@ interface SidebarProps {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const { user } = useAuth()
+  const { data: alertData } = useAlerts()
   const role = user?.role || 'logistics'
   const location = useLocation()
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
@@ -70,6 +73,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     setOpenSections(prev => ({ ...prev, [title]: !prev[title] }))
   }
 
+  const alertCount = alertData?.count || 0
+
+  const initials = user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'
+
   const sidebar = (
     <div className="relative flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#0a2e28] to-[#041e33] text-white">
       <div
@@ -79,19 +86,21 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         }}
       />
 
-      <div className="relative z-10 border-b border-white/10 p-5">
+      {/* Logo */}
+      <div className="relative z-10 border-b border-white/10 px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary shadow-lg shadow-primary/10">
-            <span className="text-lg font-bold text-white">S</span>
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/90 shadow-lg shadow-primary/20">
+            <span className="text-lg font-black text-white">S</span>
           </div>
           <div>
-            <p className="text-base font-bold text-white">SafariTour</p>
-            <p className="text-[10px] uppercase tracking-widest text-white/45">Operations</p>
+            <p className="text-[15px] font-bold text-white leading-tight">SafariTour</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30 mt-0.5">Operations</p>
           </div>
         </div>
       </div>
 
-      <nav className="relative z-10 flex-1 overflow-y-auto py-4">
+      {/* Nav */}
+      <nav className="relative z-10 flex-1 overflow-y-auto py-3 px-3 space-y-1">
         {role === 'admin' && (
           <CollapsibleGroup
             title="Admin"
@@ -100,6 +109,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             isOpen={!!openSections['Admin']}
             onToggle={() => toggleSection('Admin')}
             onNavClick={onClose}
+            alertCount={alertCount}
           />
         )}
 
@@ -112,18 +122,20 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             isOpen={!!openSections[section.title]}
             onToggle={() => toggleSection(section.title)}
             onNavClick={onClose}
+            alertCount={alertCount}
           />
         ))}
       </nav>
 
-      <div className="relative z-10 border-t border-white/10 p-4">
-        <div className="flex items-center gap-3 px-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 ring-1 ring-white/10">
-            <span className="text-xs font-bold text-white/65">{user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'}</span>
+      {/* User */}
+      <div className="relative z-10 border-t border-white/10 px-4 py-4">
+        <div className="flex items-center gap-3">
+          <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-white/10 ring-1 ring-white/15">
+            <span className="text-xs font-bold text-white/80">{initials}</span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-white/75">{user?.full_name || 'User'}</p>
-            <p className="text-[10px] capitalize text-white/35">{user?.role || '-'}</p>
+            <p className="truncate text-[13px] font-semibold text-white/90">{user?.full_name || 'User'}</p>
+            <p className="text-[11px] capitalize text-white/35">{user?.role || '-'}</p>
           </div>
         </div>
       </div>
@@ -160,23 +172,28 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   )
 }
 
-function NavEntry({ item, onClick }: { item: NavItem; onClick: () => void }) {
+function NavEntry({ item, onClick, alertCount }: { item: NavItem; onClick: () => void; alertCount: number }) {
   return (
     <NavLink
       to={item.path}
       onClick={onClick}
       className={({ isActive }) =>
-        `group mb-1 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-all duration-200 border-l-2 ${
+        `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150 ${
           isActive
-            ? 'border-primary bg-primary/20 text-white'
-            : 'border-transparent text-white/60 hover:bg-white/10 hover:text-white'
+            ? 'bg-primary text-white shadow-md shadow-primary/25'
+            : 'text-white/50 hover:bg-white/[0.07] hover:text-white/80'
         }`
       }
     >
-      <span className="grid h-5 w-5 place-items-center">
+      <span className="grid h-5 w-5 flex-shrink-0 place-items-center">
         <SidebarIcon name={item.icon} />
       </span>
-      <span className="font-medium">{item.label}</span>
+      <span className="flex-1">{item.label}</span>
+      {item.badge === 'alerts' && alertCount > 0 && (
+        <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[10px] font-bold text-white shadow-sm shadow-danger/30">
+          {alertCount > 9 ? '9+' : alertCount}
+        </span>
+      )}
     </NavLink>
   )
 }
@@ -188,6 +205,7 @@ function CollapsibleGroup({
   isOpen,
   onToggle,
   onNavClick,
+  alertCount,
 }: {
   title: string
   items: NavItem[]
@@ -195,15 +213,16 @@ function CollapsibleGroup({
   isOpen: boolean
   onToggle: () => void
   onNavClick: () => void
+  alertCount: number
 }) {
   const visible = items.filter(i => i.roles.includes(role as UserRole))
   if (visible.length === 0) return null
 
   return (
-    <div className="mb-2 px-4">
+    <div>
       <button
         onClick={onToggle}
-        className="mb-1 flex w-full cursor-pointer items-center justify-between rounded-md px-3 py-2 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:text-white"
+        className="mb-1 flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/25 transition-colors hover:text-white/40"
       >
         {title}
         <svg
@@ -216,14 +235,17 @@ function CollapsibleGroup({
       <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.15, ease: 'easeInOut' }}
+            className="overflow-hidden"
           >
-            {visible.map(item => (
-              <NavEntry key={item.path} item={item} onClick={onNavClick} />
-            ))}
+            <div className="space-y-0.5">
+              {visible.map(item => (
+                <NavEntry key={item.path} item={item} onClick={onNavClick} alertCount={alertCount} />
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
