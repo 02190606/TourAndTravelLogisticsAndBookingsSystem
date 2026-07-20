@@ -331,7 +331,6 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
         amount_paid: Number(form.amount_paid),
         balance: Number(form.balance),
       }
-      alert('[TripDrawer] payload:\n' + JSON.stringify(payload, null, 2))
       if (editTrip) {
         const { error } = await supabase.from('trips').update(payload).eq('id', editTrip.id)
         if (error) throw error
