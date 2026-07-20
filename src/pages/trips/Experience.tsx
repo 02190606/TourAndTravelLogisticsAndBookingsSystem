@@ -9,10 +9,6 @@ import type { Trip, Vehicle, Driver } from '@/types'
 
 type TripWithJoins = Trip & { vehicles?: Vehicle; drivers?: Driver }
 
-const EXPERIENCE_FIELDS = [
-  'car_seats', 'has_gps', 'extras', 'gorilla_tracking', 'chimpanzee_tracking', 'activities',
-] as const
-
 export function Experience() {
   const queryClient = useQueryClient()
   const [selected, setSelected] = useState<TripWithJoins | null>(null)
@@ -76,10 +72,14 @@ export function Experience() {
     { key: 'car_type', header: 'Car Type', render: t => <span className="capitalize">{t.car_type}</span> },
     {
       key: 'trip_type', header: 'Trip Type', render: t => (
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
           {t.is_cross_border && <Badge variant="info">Cross Border</Badge>}
           {t.is_one_way && <Badge variant="warning">One Way</Badge>}
           {!t.is_cross_border && !t.is_one_way && <span className="text-text-secondary">Local</span>}
+          {t.gorilla_tracking && <Badge variant="success">Gorilla</Badge>}
+          {t.chimpanzee_tracking && <Badge variant="success">Chimp</Badge>}
+          {t.has_gps && <Badge variant="info">GPS</Badge>}
+          {t.car_seats ? <Badge variant="info">{t.car_seats} Seats</Badge> : null}
         </div>
       ),
     },
@@ -101,12 +101,6 @@ export function Experience() {
     { key: 'trip_start_date', header: 'Start', render: t => formatDate(t.trip_start_date) },
     { key: 'trip_end_date', header: 'End', render: t => formatDate(t.trip_end_date) },
     { key: 'status', header: 'Status', render: t => <StatusBadge status={computeTripStatus(t)} /> },
-    {
-      key: 'experience', header: '', render: t => {
-        const hasData = EXPERIENCE_FIELDS.some(f => t[f as keyof TripWithJoins])
-        return hasData ? <Badge variant="success">Set</Badge> : <span className="text-xs text-text-secondary">—</span>
-      },
-    },
   ]
 
   if (isLoading) return <CardSkeleton count={3} />
