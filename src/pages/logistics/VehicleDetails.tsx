@@ -14,6 +14,7 @@ export function VehicleDetails() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editVehicle, setEditVehicle] = useState<Vehicle | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Vehicle | null>(null)
+  const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<Vehicle | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showSold, setShowSold] = useState(false)
 
@@ -60,6 +61,20 @@ export function VehicleDetails() {
       queryClient.invalidateQueries({ queryKey: ['all-vehicles-count'] })
       setDeleteTarget(null)
       toast.success('Vehicle marked as sold')
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const permanentDeleteVehicle = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('vehicles').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] })
+      queryClient.invalidateQueries({ queryKey: ['all-vehicles-count'] })
+      setPermanentDeleteTarget(null)
+      toast.success('Vehicle permanently deleted')
     },
     onError: (err: Error) => toast.error(err.message),
   })
@@ -118,7 +133,8 @@ export function VehicleDetails() {
                 <div className="flex gap-2 pt-2 border-t border-muted/30">
                   <button onClick={() => navigate(`/logistics/vehicles/${v.id}`)} className="text-xs text-primary hover:underline cursor-pointer">View</button>
                   <button onClick={() => { setEditVehicle(v); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer">Edit</button>
-                  <button onClick={() => setDeleteTarget(v)} className="text-danger hover:text-danger/80 cursor-pointer" title="Mark as sold">🗑️</button>
+                  <button onClick={() => setDeleteTarget(v)} className="text-xs text-text-secondary hover:underline cursor-pointer" title="Mark as sold">Sold</button>
+                  <button onClick={() => setPermanentDeleteTarget(v)} className="text-xs text-danger hover:underline cursor-pointer" title="Permanently delete">Delete</button>
                 </div>
               </div>
             </motion.div>
@@ -153,7 +169,8 @@ export function VehicleDetails() {
                     <div className="flex gap-2">
                       <button onClick={() => navigate(`/logistics/vehicles/${v.id}`)} className="text-xs text-primary hover:underline cursor-pointer">View</button>
                       <button onClick={() => { setEditVehicle(v); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer">Edit</button>
-                      <button onClick={() => setDeleteTarget(v)} className="text-danger hover:text-danger/80 cursor-pointer" title="Mark as sold">🗑️</button>
+                      <button onClick={() => setDeleteTarget(v)} className="text-xs text-text-secondary hover:underline cursor-pointer" title="Mark as sold">Sold</button>
+                      <button onClick={() => setPermanentDeleteTarget(v)} className="text-xs text-danger hover:underline cursor-pointer" title="Permanently delete">Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -178,6 +195,18 @@ export function VehicleDetails() {
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
               <Button variant="danger" onClick={() => markAsSold.mutate(deleteTarget.id)}>Mark as Sold</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!permanentDeleteTarget} onClose={() => setPermanentDeleteTarget(null)} title="Delete Vehicle">
+        {permanentDeleteTarget && (
+          <div className="space-y-4">
+            <p>Are you sure you want to permanently delete <strong>{permanentDeleteTarget.registration_number}</strong>? This will remove the vehicle and all its service, maintenance, and repair history. This cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setPermanentDeleteTarget(null)}>Cancel</Button>
+              <Button variant="danger" onClick={() => permanentDeleteVehicle.mutate(permanentDeleteTarget.id)} isLoading={permanentDeleteVehicle.isPending}>Confirm Delete</Button>
             </div>
           </div>
         )}
