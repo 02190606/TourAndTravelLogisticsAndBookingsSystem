@@ -79,6 +79,19 @@ export function VehicleDetails() {
     onError: (err: Error) => toast.error(err.message),
   })
 
+  const { data: linkedTripCount = 0, isLoading: checkingTrips } = useQuery({
+    queryKey: ['vehicle-linked-trips', permanentDeleteTarget?.id],
+    queryFn: async () => {
+      if (!permanentDeleteTarget) return 0
+      const { count } = await supabase
+        .from('trips')
+        .select('id', { count: 'exact', head: true })
+        .eq('vehicle_id', permanentDeleteTarget.id)
+      return count || 0
+    },
+    enabled: !!permanentDeleteTarget,
+  })
+
   if (isLoading) return <CardSkeleton count={6} />
 
   return (
@@ -203,11 +216,25 @@ export function VehicleDetails() {
       <Modal open={!!permanentDeleteTarget} onClose={() => setPermanentDeleteTarget(null)} title="Delete Vehicle">
         {permanentDeleteTarget && (
           <div className="space-y-4">
-            <p>Are you sure you want to permanently delete <strong>{permanentDeleteTarget.registration_number}</strong>? This will remove the vehicle and all its service, maintenance, and repair history. This cannot be undone.</p>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setPermanentDeleteTarget(null)}>Cancel</Button>
-              <Button variant="danger" onClick={() => permanentDeleteVehicle.mutate(permanentDeleteTarget.id)} isLoading={permanentDeleteVehicle.isPending}>Confirm Delete</Button>
-            </div>
+            {checkingTrips ? (
+              <p className="text-sm text-text-secondary">Checking for linked trips...</p>
+            ) : linkedTripCount > 0 ? (
+              <>
+                <p className="text-danger font-medium">Cannot delete {permanentDeleteTarget.registration_number}</p>
+                <p className="text-sm text-text-secondary">This vehicle is linked to <strong>{linkedTripCount}</strong> trip{linkedTripCount !== 1 ? 's' : ''}. Unassign or delete those trips first before removing this vehicle.</p>
+                <div className="flex justify-end">
+                  <Button variant="outline" onClick={() => setPermanentDeleteTarget(null)}>Close</Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>Are you sure you want to permanently delete <strong>{permanentDeleteTarget.registration_number}</strong>? This will remove the vehicle and all its service, maintenance, and repair history. This cannot be undone.</p>
+                <div className="flex justify-end gap-3">
+                  <Button variant="outline" onClick={() => setPermanentDeleteTarget(null)}>Cancel</Button>
+                  <Button variant="danger" onClick={() => permanentDeleteVehicle.mutate(permanentDeleteTarget.id)} isLoading={permanentDeleteVehicle.isPending}>Confirm Delete</Button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </Modal>
