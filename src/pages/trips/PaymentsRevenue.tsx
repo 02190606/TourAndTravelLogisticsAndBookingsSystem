@@ -112,12 +112,12 @@ export function PaymentsRevenue() {
         <table className="w-full border-separate border-spacing-x-4 responsive-table">
           <thead>
             <tr className="bg-muted/30">
-              <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Client</th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase">Amount (UGX)</th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase">Paid</th>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Payment Mode</th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase">Balance</th>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Start</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase border-r border-muted/20">Client</th>
+              <th className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase border-r border-muted/20">Amount (UGX)</th>
+              <th className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase border-r border-muted/20">Paid (UGX)</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase border-r border-muted/20">Payment Mode</th>
+              <th className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase border-r border-muted/20">Balance (UGX)</th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase border-r border-muted/20">Start</th>
               <th className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Status</th>
             </tr>
           </thead>
@@ -125,10 +125,10 @@ export function PaymentsRevenue() {
             {filteredTrips.map((t, i) => (
               <tr key={t.id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
                 <td data-label="Client" className="px-3 py-3 text-sm whitespace-nowrap">{t.client_name}</td>
-                <td data-label="Amount (UGX)" className="px-3 py-3 text-sm font-mono text-right whitespace-nowrap">{formatUGX(t.amount_in_ugx)}</td>
-                <td data-label="Paid" className="px-3 py-3 text-sm font-mono text-right text-success whitespace-nowrap">{formatUGX(t.amount_paid)}</td>
+                <td data-label="Amount (UGX)" className="px-3 py-3 text-sm font-mono text-right whitespace-nowrap">{(t.amount_in_ugx || 0).toLocaleString()}</td>
+                <td data-label="Paid (UGX)" className="px-3 py-3 text-sm font-mono text-right text-success whitespace-nowrap">{(t.amount_paid || 0).toLocaleString()}</td>
                 <td data-label="Payment" className="px-3 py-3 text-sm capitalize whitespace-nowrap">{t.payment_mode}</td>
-                <td data-label="Balance" className={`px-3 py-3 text-sm font-mono text-right whitespace-nowrap ${t.balance > 0 ? 'text-warning' : 'text-success'}`}>{formatUGX(t.balance)}</td>
+                <td data-label="Balance (UGX)" className={`px-3 py-3 text-sm font-mono text-right whitespace-nowrap ${t.balance > 0 ? 'text-warning' : 'text-success'}`}>{(t.balance || 0).toLocaleString()}</td>
                 <td data-label="Start" className="px-3 py-3 text-sm whitespace-nowrap">{formatDate(t.trip_start_date)}</td>
                 <td data-label="Status" className="whitespace-nowrap"><StatusBadge status={computeTripStatus(t)} /></td>
               </tr>

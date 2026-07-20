@@ -96,11 +96,11 @@ export function TripManagement() {
         <span className="text-text-secondary text-xs block">{t.drivers?.full_name || '—'}</span>
       </div>
     )},
-    { key: 'amount_in_ugx', header: 'Amount (UGX)', render: (t: any) => formatUGX(t.amount_in_ugx) },
-    { key: 'amount_paid', header: 'Paid', render: (t: any) => <span className="font-mono text-success">{formatUGX(t.amount_paid)}</span> },
+    { key: 'amount_in_ugx', header: 'Amount (UGX)', render: (t: any) => <span className="font-mono">{(t.amount_in_ugx || 0).toLocaleString()}</span> },
+    { key: 'amount_paid', header: 'Paid (UGX)', render: (t: any) => <span className="font-mono text-success">{(t.amount_paid || 0).toLocaleString()}</span> },
     { key: 'payment_mode', header: 'Payment', render: (t: any) => <span className="capitalize">{t.payment_mode}</span> },
-    { key: 'balance', header: 'Balance', render: (t: any) => (
-      <span className={t.balance > 0 ? 'text-warning font-mono' : 'text-success font-mono'}>{formatUGX(t.balance)}</span>
+    { key: 'balance', header: 'Balance (UGX)', render: (t: any) => (
+      <span className={t.balance > 0 ? 'text-warning font-mono' : 'text-success font-mono'}>{(t.balance || 0).toLocaleString()}</span>
     )},
     { key: 'trip_start_date', header: 'Start', render: (t: any) => formatDate(t.trip_start_date) },
     { key: 'trip_end_date', header: 'End', render: (t: any) => formatDate(t.trip_end_date) },
@@ -147,7 +147,7 @@ export function TripManagement() {
             <thead>
               <tr className="bg-muted/20">
                 {columns.map(col => (
-                  <th key={col.key} className="px-4 py-3.5 text-left text-xs font-semibold text-text-secondary uppercase whitespace-nowrap">{col.header}</th>
+                  <th key={col.key} className="px-4 py-3.5 text-left text-xs font-semibold text-text-secondary uppercase whitespace-nowrap border-r border-muted/20 last:border-r-0">{col.header}</th>
                 ))}
               </tr>
             </thead>
