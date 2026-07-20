@@ -99,7 +99,7 @@ export function Login() {
           <div className="absolute inset-0 bg-gradient-to-r from-orange-950/45 via-orange-900/10 to-slate-950/20" />
         </div>
 
-        <div className="relative z-10 flex min-h-[48vh] items-start px-6 pt-12 pb-10 sm:px-10 sm:pt-16 lg:min-h-screen lg:px-20 lg:pt-24">
+        <div className="relative z-10 flex min-h-[48vh] items-start px-6 pt-16 pb-10 sm:px-10 sm:pt-20 lg:min-h-screen lg:px-20 lg:pt-28">
           <motion.div
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
