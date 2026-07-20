@@ -17,15 +17,17 @@ export function TripManagement() {
   const [deleteTarget, setDeleteTarget] = useState<Trip | null>(null)
   const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<Trip | null>(null)
   const [viewTrip, setViewTrip] = useState<Trip & { vehicles?: Vehicle; drivers?: Driver } | null>(null)
+  const [showCancelled, setShowCancelled] = useState(false)
 
   const { data: trips = [], isLoading } = useQuery({
-    queryKey: ['trips'],
+    queryKey: ['trips', showCancelled],
     queryFn: async () => {
-      const { data } = await supabase
+      const query = supabase
         .from('trips')
         .select('*, vehicles!left(registration_number, make, model), drivers!left(full_name, license_number)')
-        .neq('status', 'cancelled')
         .order('trip_start_date', { ascending: false })
+      if (!showCancelled) query.neq('status', 'cancelled')
+      const { data } = await query
       return (data || []) as (Trip & { vehicles?: Vehicle; drivers?: Driver })[]
     },
   })
@@ -86,7 +88,12 @@ export function TripManagement() {
       <PageHeader
         title="All Trips"
         subtitle={`${trips.length} trips`}
-        actions={<Button onClick={() => { setEditTrip(null); setDrawerOpen(true) }}>Create Trip</Button>}
+        actions={<>
+          <button onClick={() => setShowCancelled(s => !s)} className="text-xs text-text-secondary hover:text-primary cursor-pointer underline">
+            {showCancelled ? 'Hide cancelled trips' : 'Show cancelled trips'}
+          </button>
+          <Button onClick={() => { setEditTrip(null); setDrawerOpen(true) }}>Create Trip</Button>
+        </>}
       />
 
       <div className="bg-white rounded-xl border border-muted/30 overflow-hidden">
