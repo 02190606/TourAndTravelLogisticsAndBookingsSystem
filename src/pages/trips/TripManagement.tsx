@@ -155,10 +155,10 @@ export function TripManagement() {
                 <h4 className="font-medium mb-3">🏨 Accommodation</h4>
                 <div className="bg-muted/20 rounded-xl p-4 space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-text-secondary">Hotel</span><span className="font-medium">{viewTrip.accommodation_name || '—'}</span></div>
-                  <div className="flex justify-between"><span className="text-text-secondary">Check-in</span><span>{formatDate(viewTrip.accommodation_checkin)}</span></div>
-                  <div className="flex justify-between"><span className="text-text-secondary">Check-out</span><span>{formatDate(viewTrip.accommodation_checkout)}</span></div>
+                  <div className="flex justify-between"><span className="text-text-secondary">Check-in</span><span>{viewTrip.accommodation_checkin ? formatDate(viewTrip.accommodation_checkin) : '—'}</span></div>
+                  <div className="flex justify-between"><span className="text-text-secondary">Check-out</span><span>{viewTrip.accommodation_checkout ? formatDate(viewTrip.accommodation_checkout) : '—'}</span></div>
                   <div className="flex justify-between"><span className="text-text-secondary">Rooms</span><span>{viewTrip.accommodation_rooms || '—'}</span></div>
-                  {viewTrip.accommodation_cost > 0 && <div className="flex justify-between border-t border-muted/30 pt-2"><span className="text-text-secondary">Cost</span><span className="font-mono font-semibold">{formatUGX(viewTrip.accommodation_cost)}</span></div>}
+                  {(viewTrip.accommodation_cost ?? 0) > 0 && <div className="flex justify-between border-t border-muted/30 pt-2"><span className="text-text-secondary">Cost</span><span className="font-mono font-semibold">{formatUGX(viewTrip.accommodation_cost ?? 0)}</span></div>}
                 </div>
               </div>
             )}
