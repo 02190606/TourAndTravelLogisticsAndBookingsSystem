@@ -1,5 +1,9 @@
 import type { Trip, TripStatus } from '@/types'
 
+export function isActiveTrip(trip: { status: string }): boolean {
+  return trip.status !== 'cancelled'
+}
+
 export function computeTripStatus(trip: Pick<Trip, 'status' | 'trip_start_date' | 'trip_end_date'>): TripStatus {
   if (trip.status === 'cancelled') return 'cancelled'
   const today = new Date(); today.setHours(0, 0, 0, 0)

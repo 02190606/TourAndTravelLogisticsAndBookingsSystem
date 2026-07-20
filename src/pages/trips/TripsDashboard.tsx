@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, StatCard, StatusBadge, Badge, CardSkeleton } from '@/components/common'
 import { DonutChart } from '@/components/charts/DonutChart'
 import { LineChart } from '@/components/charts/LineChart'
-import { formatUGX, formatDate, computeTripStatus } from '@/utils'
+import { formatUGX, formatDate, computeTripStatus, isActiveTrip } from '@/utils'
 import type { Trip } from '@/types'
 import { startOfWeek, endOfWeek, parseISO, isWithinInterval } from 'date-fns'
 
@@ -23,11 +23,11 @@ export function TripsDashboard() {
       const thisMonth = new Date().getMonth()
       const thisYear = new Date().getFullYear()
       const monthlyRevenue = t
-        .filter(t => computeTripStatus(t) === 'completed' && new Date(t.created_at).getMonth() === thisMonth && new Date(t.created_at).getFullYear() === thisYear)
+        .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getMonth() === thisMonth && new Date(t.trip_start_date).getFullYear() === thisYear)
         .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
 
       const yearlyRevenue = t
-        .filter(t => computeTripStatus(t) === 'completed' && new Date(t.created_at).getFullYear() === thisYear)
+        .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getFullYear() === thisYear)
         .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
 
       const now = new Date()
@@ -50,7 +50,7 @@ export function TripsDashboard() {
       const revenueByMonth = months.map((name, i) => ({
         name,
         value: t
-          .filter(t => new Date(t.trip_start_date).getMonth() === i && new Date(t.trip_start_date).getFullYear() === thisYear)
+          .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getMonth() === i && new Date(t.trip_start_date).getFullYear() === thisYear)
           .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0),
       }))
 

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, StatCard, Button, CardSkeleton, StatusBadge } from '@/components/common'
 import { BarChart } from '@/components/charts/BarChart'
-import { formatUGX, formatDate, computeTripStatus } from '@/utils'
+import { formatUGX, formatDate, computeTripStatus, isActiveTrip } from '@/utils'
 import { saveAs } from 'file-saver'
 import { DollarSign, TrendingUp, AlertTriangle } from 'lucide-react'
 import type { Trip } from '@/types'
@@ -32,27 +32,27 @@ export function PaymentsRevenue() {
   const filteredTrips = trips.filter(t => new Date(t.trip_start_date).getFullYear() === yearFilter)
 
   const monthlyRevenue = trips
-    .filter(t => computeTripStatus(t) !== 'cancelled' && new Date(t.trip_start_date).getMonth() === thisMonth && new Date(t.trip_start_date).getFullYear() === yearFilter)
+    .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getMonth() === thisMonth && new Date(t.trip_start_date).getFullYear() === yearFilter)
     .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
 
   const yearlyRevenue = filteredTrips
-    .filter(t => computeTripStatus(t) !== 'cancelled')
+    .filter(t => isActiveTrip(t))
     .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
 
   const outstandingBalance = trips
-    .filter(t => t.balance > 0 && computeTripStatus(t) !== 'cancelled')
+    .filter(t => t.balance > 0 && isActiveTrip(t))
     .reduce((sum, t) => sum + (t.balance || 0), 0)
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   const revenueByMonth = months.map((name, i) => ({
     name,
     value: filteredTrips
-      .filter(t => new Date(t.trip_start_date).getMonth() === i)
+      .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getMonth() === i)
       .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0),
   }))
 
   const monthlySummary = months.map((name, i) => {
-    const monthTrips = filteredTrips.filter(t => new Date(t.trip_start_date).getMonth() === i)
+    const monthTrips = filteredTrips.filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getMonth() === i)
     return {
       name,
       revenue: monthTrips.reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0),

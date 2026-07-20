@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, StatCard, Button, CardSkeleton } from '@/components/common'
 import { DonutChart } from '@/components/charts/DonutChart'
 import { BarChart } from '@/components/charts/BarChart'
-import { computeTripStatus } from '@/utils'
+import { computeTripStatus, isActiveTrip } from '@/utils'
 
 export function AdminDashboard() {
   const navigate = useNavigate()
@@ -40,8 +40,8 @@ export function AdminDashboard() {
   const { data: revenue } = useQuery({
     queryKey: ['admin-revenue'],
     queryFn: async () => {
-      const { data } = await supabase.from('trips').select('amount_in_ugx')
-      return data?.reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0) || 0
+      const { data } = await supabase.from('trips').select('amount_in_ugx, status')
+      return data?.filter(t => isActiveTrip(t)).reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0) || 0
     },
   })
 
