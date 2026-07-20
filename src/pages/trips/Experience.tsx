@@ -1,13 +1,35 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
-import { PageHeader, Modal, Button, CardSkeleton, StatusBadge, Badge, Table } from '@/components/common'
-import type { Column } from '@/components/common'
-import { formatDate, formatUGX, computeTripStatus } from '@/utils'
+import { PageHeader, Modal, Button, CardSkeleton } from '@/components/common'
+import { formatDate, computeTripStatus } from '@/utils'
 import toast from 'react-hot-toast'
 import type { Trip, Vehicle, Driver } from '@/types'
 
 type TripWithJoins = Trip & { vehicles?: Vehicle; drivers?: Driver }
+
+function hasExperienceData(trip: TripWithJoins): boolean {
+  return !!(trip.car_seats || trip.has_gps || trip.extras || trip.gorilla_tracking || trip.chimpanzee_tracking || trip.activities)
+}
+
+function getInitial(name: string): string {
+  return name?.charAt(0)?.toUpperCase() || '?'
+}
+
+const AVATAR_COLORS = [
+  'bg-primary text-white',
+  'bg-emerald-500 text-white',
+  'bg-amber-500 text-white',
+  'bg-rose-500 text-white',
+  'bg-violet-500 text-white',
+  'bg-cyan-500 text-white',
+]
+
+function getAvatarColor(name: string): string {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+}
 
 export function Experience() {
   const queryClient = useQueryClient()
@@ -66,55 +88,49 @@ export function Experience() {
     setSelected(trip)
   }
 
-  const columns: Column<TripWithJoins>[] = [
-    { key: 'client_name', header: 'Client' },
-    { key: 'clients', header: 'Clients', render: t => t.number_of_clients },
-    { key: 'car_type', header: 'Car Type', render: t => <span className="capitalize">{t.car_type}</span> },
-    {
-      key: 'trip_type', header: 'Trip Type', render: t => (
-        <div className="flex flex-wrap gap-1">
-          {t.is_cross_border && <Badge variant="info">Cross Border</Badge>}
-          {t.is_one_way && <Badge variant="warning">One Way</Badge>}
-          {!t.is_cross_border && !t.is_one_way && <span className="text-text-secondary">Local</span>}
-          {t.gorilla_tracking && <Badge variant="success">Gorilla</Badge>}
-          {t.chimpanzee_tracking && <Badge variant="success">Chimp</Badge>}
-          {t.has_gps && <Badge variant="info">GPS</Badge>}
-          {t.car_seats ? <Badge variant="info">{t.car_seats} Seats</Badge> : null}
-        </div>
-      ),
-    },
-    {
-      key: 'vehicle_driver', header: 'Vehicle / Driver', render: t => (
-        <div>
-          <p className="font-medium">{t.vehicles?.registration_number || '—'}</p>
-          <p className="text-xs text-text-secondary">{t.drivers?.full_name || '—'}</p>
-        </div>
-      ),
-    },
-    { key: 'amount_in_ugx', header: 'Amount (UGX)', render: t => <span className="font-mono">{formatUGX(t.amount_in_ugx)}</span> },
-    { key: 'payment_mode', header: 'Payment', render: t => <span className="capitalize">{t.payment_mode}</span> },
-    {
-      key: 'balance', header: 'Balance', render: t => (
-        <span className={`font-mono ${t.balance > 0 ? 'text-warning' : 'text-success'}`}>{formatUGX(t.balance)}</span>
-      ),
-    },
-    { key: 'trip_start_date', header: 'Start', render: t => formatDate(t.trip_start_date) },
-    { key: 'trip_end_date', header: 'End', render: t => formatDate(t.trip_end_date) },
-    { key: 'status', header: 'Status', render: t => <StatusBadge status={computeTripStatus(t)} /> },
-  ]
-
   if (isLoading) return <CardSkeleton count={3} />
 
   return (
     <div className="space-y-6">
       <PageHeader title="Experience" subtitle="Manage trip amenities, permits, and activities" />
 
-      <Table<TripWithJoins>
-        columns={columns}
-        data={trips}
-        onRowClick={openModal}
-        emptyMessage="No trips found"
-      />
+      <p className="text-sm text-text-secondary">{trips.length} active trip{trips.length !== 1 ? 's' : ''}</p>
+
+      <div className="flex flex-col gap-2">
+        {trips.map(trip => {
+          const added = hasExperienceData(trip)
+          return (
+            <button
+              key={trip.id}
+              onClick={() => openModal(trip)}
+              className="flex items-center gap-4 rounded-xl border border-muted/40 bg-surface-2 px-4 py-3.5 text-left transition-colors hover:bg-muted/20 cursor-pointer"
+            >
+              <div className={`grid h-10 w-10 flex-shrink-0 place-items-center rounded-full font-semibold text-sm ${getAvatarColor(trip.client_name)}`}>
+                {getInitial(trip.client_name)}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-text-primary">{trip.client_name}'s trip</p>
+                <p className="text-xs text-text-secondary">{formatDate(trip.trip_start_date)} — {formatDate(trip.trip_end_date)}</p>
+              </div>
+
+              <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${added ? 'bg-success/10 text-success' : 'bg-muted/30 text-text-secondary'}`}>
+                {added ? 'Added' : 'Not set'}
+              </span>
+
+              <svg className="h-4 w-4 flex-shrink-0 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )
+        })}
+
+        {trips.length === 0 && (
+          <div className="rounded-xl border border-dashed border-muted/40 bg-surface-2 p-14 text-center">
+            <p className="text-text-secondary font-medium">No trips found</p>
+          </div>
+        )}
+      </div>
 
       <Modal open={!!selected} onClose={() => setSelected(null)} title={`Experience — ${selected?.client_name || ''}`} className="max-w-xl">
         {selected && (
