@@ -89,13 +89,15 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-[#fff7ed] lg:grid lg:grid-cols-[1.08fr_0.92fr]">
-      <section className="relative min-h-[48vh] overflow-hidden lg:min-h-screen">
-        <img
-          src={heroImage}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-950/45 via-orange-900/10 to-slate-950/20" />
+      <section className="relative min-h-[48vh] lg:min-h-screen">
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src={heroImage}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-950/45 via-orange-900/10 to-slate-950/20" />
+        </div>
 
         <div className="relative z-10 flex min-h-[48vh] items-center px-6 py-10 sm:px-10 lg:min-h-screen lg:px-20">
           <motion.div
