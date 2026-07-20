@@ -127,8 +127,11 @@ export interface Trip {
   trip_end_date: string
   flight_arrival_time: string | null
   pickup_location: string | null
+  destination: string | null
   is_cross_border: boolean
   is_one_way: boolean
+  is_return_trip: boolean
+  return_date: string | null
   needs_accommodation: boolean
   accommodation_name: string | null
   accommodation_checkin: string | null

@@ -218,10 +218,21 @@ export function TripManagement() {
                   <span className="text-text-secondary">Pickup Location:</span> <span className="font-medium">{viewTrip.pickup_location}</span>
                 </div>
               )}
-              {(viewTrip.is_cross_border || viewTrip.is_one_way) && (
+              {viewTrip.destination && (
+                <div className="mt-1 text-sm">
+                  <span className="text-text-secondary">Destination:</span> <span className="font-medium">{viewTrip.destination}</span>
+                </div>
+              )}
+              {(viewTrip.is_cross_border || viewTrip.is_one_way || viewTrip.is_return_trip) && (
                 <div className="mt-2 flex gap-2">
                   {viewTrip.is_cross_border && <Badge variant="info">Cross Border</Badge>}
                   {viewTrip.is_one_way && <Badge variant="warning">One Way</Badge>}
+                  {viewTrip.is_return_trip && <Badge variant="info">Return Trip</Badge>}
+                </div>
+              )}
+              {viewTrip.is_return_trip && viewTrip.return_date && (
+                <div className="mt-2 text-sm">
+                  <span className="text-text-secondary">Return Date:</span> <span className="font-medium">{formatDate(viewTrip.return_date)}</span>
                 </div>
               )}
             </div>
@@ -264,8 +275,11 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     trip_end_date: editTrip?.trip_end_date?.split('T')[0] || '',
     flight_arrival_time: editTrip?.flight_arrival_time || '',
     pickup_location: editTrip?.pickup_location || '',
+    destination: editTrip?.destination || '',
     is_cross_border: editTrip?.is_cross_border || false,
     is_one_way: editTrip?.is_one_way || false,
+    is_return_trip: editTrip?.is_return_trip || false,
+    return_date: editTrip?.return_date?.split('T')[0] || '',
     needs_accommodation: editTrip?.needs_accommodation || false,
     accommodation_name: editTrip?.accommodation_name || '',
     accommodation_checkin: editTrip?.accommodation_checkin?.split('T')[0] || '',
@@ -341,8 +355,11 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
         trip_end_date: form.trip_end_date,
         flight_arrival_time: form.flight_arrival_time || null,
         pickup_location: form.pickup_location || null,
+        destination: form.destination || null,
         is_cross_border: form.is_cross_border,
         is_one_way: form.is_one_way,
+        is_return_trip: form.is_return_trip,
+        return_date: form.return_date || null,
         needs_accommodation: form.needs_accommodation,
         accommodation_name: form.accommodation_name || null,
         accommodation_checkin: form.accommodation_checkin || null,
@@ -485,8 +502,18 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
                   <input type="checkbox" checked={form.is_one_way} onChange={e => setForm(f => ({ ...f, is_one_way: e.target.checked }))} className="rounded border-muted/60 text-primary focus:ring-primary" />
                   <span className="text-sm">One Way Trip</span>
                 </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.is_return_trip} onChange={e => setForm(f => ({ ...f, is_return_trip: e.target.checked }))} className="rounded border-muted/60 text-primary focus:ring-primary" />
+                  <span className="text-sm">Return Trip</span>
+                </label>
               </div>
             </div>
+            {form.is_return_trip && (
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium mb-1">Return Date</label>
+                <input type="date" value={form.return_date} onChange={e => setForm(f => ({ ...f, return_date: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium mb-1">Flight Arrival Time 🛫</label>
               <input type="time" value={form.flight_arrival_time} onChange={e => setForm(f => ({ ...f, flight_arrival_time: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
@@ -494,6 +521,10 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium mb-1"><MapPin className="inline-block w-3.5 h-3.5 mr-1 -mt-0.5" />Pickup Location</label>
               <input type="text" value={form.pickup_location} onChange={e => setForm(f => ({ ...f, pickup_location: e.target.value }))} placeholder="e.g. Entebbe Airport, Terminal 1" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium mb-1">Destination</label>
+              <input type="text" value={form.destination} onChange={e => setForm(f => ({ ...f, destination: e.target.value }))} placeholder="e.g. Bwindi National Park" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
           </div>
         </div>
