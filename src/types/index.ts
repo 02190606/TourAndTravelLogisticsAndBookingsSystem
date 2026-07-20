@@ -138,6 +138,12 @@ export interface Trip {
   accommodation_checkout: string | null
   accommodation_rooms: number | null
   accommodation_cost: number | null
+  car_seats: number | null
+  has_gps: boolean | null
+  extras: string | null
+  gorilla_tracking: boolean | null
+  chimpanzee_tracking: boolean | null
+  activities: string | null
   status: TripStatus
   created_at: string
   vehicles?: Vehicle

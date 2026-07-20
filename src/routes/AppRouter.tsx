@@ -18,6 +18,7 @@ const DriverDetails = lazy(() => import('@/pages/logistics/DriverDetails').then(
 const LogisticsAlerts = lazy(() => import('@/pages/logistics/LogisticsAlerts').then(m => ({ default: m.LogisticsAlerts })))
 const TripsDashboard = lazy(() => import('@/pages/trips/TripsDashboard').then(m => ({ default: m.TripsDashboard })))
 const TripManagement = lazy(() => import('@/pages/trips/TripManagement').then(m => ({ default: m.TripManagement })))
+const Experience = lazy(() => import('@/pages/trips/Experience').then(m => ({ default: m.Experience })))
 const CalendarView = lazy(() => import('@/pages/trips/CalendarView').then(m => ({ default: m.CalendarView })))
 const PaymentsRevenue = lazy(() => import('@/pages/trips/PaymentsRevenue').then(m => ({ default: m.PaymentsRevenue })))
 const TripAlerts = lazy(() => import('@/pages/trips/TripAlerts').then(m => ({ default: m.TripAlerts })))
@@ -159,6 +160,14 @@ export function AppRouter() {
             element={
               <ProtectedRoute roles={['admin', 'trips']}>
                 <LazyLoad><TripManagement /></LazyLoad>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trips/experience"
+            element={
+              <ProtectedRoute roles={['admin', 'trips']}>
+                <LazyLoad><Experience /></LazyLoad>
               </ProtectedRoute>
             }
           />
