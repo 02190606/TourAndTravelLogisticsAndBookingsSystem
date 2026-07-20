@@ -97,6 +97,7 @@ export function TripManagement() {
       </div>
     )},
     { key: 'amount_in_ugx', header: 'Amount (UGX)', render: (t: any) => formatUGX(t.amount_in_ugx) },
+    { key: 'amount_paid', header: 'Paid', render: (t: any) => <span className="font-mono text-success">{formatUGX(t.amount_paid)}</span> },
     { key: 'payment_mode', header: 'Payment', render: (t: any) => <span className="capitalize">{t.payment_mode}</span> },
     { key: 'balance', header: 'Balance', render: (t: any) => (
       <span className={t.balance > 0 ? 'text-warning font-mono' : 'text-success font-mono'}>{formatUGX(t.balance)}</span>
