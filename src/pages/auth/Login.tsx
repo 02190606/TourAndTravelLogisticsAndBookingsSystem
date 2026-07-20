@@ -106,7 +106,7 @@ export function Login() {
             transition={{ duration: 0.7 }}
             className="max-w-2xl text-white drop-shadow"
           >
-            <div className="mb-8 flex items-center gap-4">
+            <div className="mb-8 flex items-center gap-4" style={{ marginTop: '28px' }}>
               <div className="grid h-16 w-16 place-items-center rounded-[22px] bg-white text-3xl font-black text-primary shadow-xl shadow-orange-950/20">
                 S
               </div>
