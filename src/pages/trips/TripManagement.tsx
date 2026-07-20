@@ -218,9 +218,9 @@ export function TripManagement() {
                   <span className="text-text-secondary">Pickup Location:</span> <span className="font-medium">{viewTrip.pickup_location}</span>
                 </div>
               )}
-              {viewTrip.destination && (
+              {viewTrip.Destination && (
                 <div className="mt-1 text-sm">
-                  <span className="text-text-secondary">Destination:</span> <span className="font-medium">{viewTrip.destination}</span>
+                  <span className="text-text-secondary">Destination:</span> <span className="font-medium">{viewTrip.Destination}</span>
                 </div>
               )}
               {(viewTrip.is_cross_border || viewTrip.is_one_way || viewTrip.is_return_trip) && (
@@ -230,9 +230,9 @@ export function TripManagement() {
                   {viewTrip.is_return_trip && <Badge variant="info">Return trip</Badge>}
                 </div>
               )}
-              {viewTrip.is_return_trip && viewTrip.return_date && (
+              {viewTrip.is_return_trip && viewTrip['Return Trip'] && (
                 <div className="mt-2 text-sm">
-                  <span className="text-text-secondary">Return trip:</span> <span className="font-medium">{formatDate(viewTrip.return_date)}</span>
+                  <span className="text-text-secondary">Return trip:</span> <span className="font-medium">{formatDate(viewTrip['Return Trip'])}</span>
                 </div>
               )}
             </div>
@@ -275,11 +275,11 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     trip_end_date: editTrip?.trip_end_date?.split('T')[0] || '',
     flight_arrival_time: editTrip?.flight_arrival_time || '',
     pickup_location: editTrip?.pickup_location || '',
-    destination: editTrip?.destination || '',
+    destination: editTrip?.Destination || '',
     is_cross_border: editTrip?.is_cross_border || false,
     is_one_way: editTrip?.is_one_way || false,
     is_return_trip: editTrip?.is_return_trip || false,
-    return_date: editTrip?.return_date?.split('T')[0] || '',
+    return_date: editTrip?.['Return Trip']?.split('T')[0] || '',
     needs_accommodation: editTrip?.needs_accommodation || false,
     accommodation_name: editTrip?.accommodation_name || '',
     accommodation_checkin: editTrip?.accommodation_checkin?.split('T')[0] || '',
@@ -355,11 +355,11 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
         trip_end_date: form.trip_end_date,
         flight_arrival_time: form.flight_arrival_time || null,
         pickup_location: form.pickup_location || null,
-        destination: form.destination || null,
+        Destination: form.destination || null,
         is_cross_border: form.is_cross_border,
         is_one_way: form.is_one_way,
         is_return_trip: form.is_return_trip,
-        return_date: form.return_date || null,
+        'Return Trip': form.return_date || null,
         needs_accommodation: form.needs_accommodation,
         accommodation_name: form.accommodation_name || null,
         accommodation_checkin: form.accommodation_checkin || null,

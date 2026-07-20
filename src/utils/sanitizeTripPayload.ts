@@ -2,12 +2,12 @@ const NULLABLE_FIELDS = [
   'vehicle_id',
   'driver_id',
   'pickup_location',
-  'destination',
+  'Destination',
   'flight_arrival_time',
   'accommodation_name',
   'accommodation_checkin',
   'accommodation_checkout',
-  'return_date',
+  'Return Trip',
 ] as const
 
 export function sanitizeTripPayload<T extends Record<string, unknown>>(payload: T): T {
