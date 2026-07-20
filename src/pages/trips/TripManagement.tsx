@@ -227,12 +227,12 @@ export function TripManagement() {
                 <div className="mt-2 flex gap-2">
                   {viewTrip.is_cross_border && <Badge variant="info">Cross Border</Badge>}
                   {viewTrip.is_one_way && <Badge variant="warning">One Way</Badge>}
-                  {viewTrip.is_return_trip && <Badge variant="info">Return Trip</Badge>}
+                  {viewTrip.is_return_trip && <Badge variant="info">Return trip</Badge>}
                 </div>
               )}
               {viewTrip.is_return_trip && viewTrip.return_date && (
                 <div className="mt-2 text-sm">
-                  <span className="text-text-secondary">Return Date:</span> <span className="font-medium">{formatDate(viewTrip.return_date)}</span>
+                  <span className="text-text-secondary">Return trip:</span> <span className="font-medium">{formatDate(viewTrip.return_date)}</span>
                 </div>
               )}
             </div>
@@ -504,13 +504,13 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={form.is_return_trip} onChange={e => setForm(f => ({ ...f, is_return_trip: e.target.checked }))} className="rounded border-muted/60 text-primary focus:ring-primary" />
-                  <span className="text-sm">Return Trip</span>
+                  <span className="text-sm">Return trip</span>
                 </label>
               </div>
             </div>
             {form.is_return_trip && (
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1">Return Date</label>
+                <label className="block text-sm font-medium mb-1">Return trip</label>
                 <input type="date" value={form.return_date} onChange={e => setForm(f => ({ ...f, return_date: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
               </div>
             )}
