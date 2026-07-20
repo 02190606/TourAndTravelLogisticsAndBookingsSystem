@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
@@ -18,6 +18,17 @@ export function TripManagement() {
   const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<Trip | null>(null)
   const [viewTrip, setViewTrip] = useState<Trip & { vehicles?: Vehicle; drivers?: Driver } | null>(null)
   const [showCancelled, setShowCancelled] = useState(false)
+  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!actionMenuOpen) return
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setActionMenuOpen(null)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [actionMenuOpen])
 
   const { data: trips = [], isLoading } = useQuery({
     queryKey: ['trips', showCancelled],
@@ -61,8 +72,12 @@ export function TripManagement() {
         {!t.is_cross_border && !t.is_one_way && <span className="text-text-secondary text-xs">Local</span>}
       </div>
     )},
-    { key: 'vehicle', header: 'Vehicle', render: (t: any) => t.vehicles?.registration_number || '-' },
-    { key: 'driver', header: 'Driver', render: (t: any) => t.drivers?.full_name || '-' },
+    { key: 'vehicle_driver', header: 'Vehicle / Driver', render: (t: any) => (
+      <div className="leading-tight">
+        <span className="font-medium">{t.vehicles?.registration_number || '—'}</span>
+        <span className="text-text-secondary text-xs block">{t.drivers?.full_name || '—'}</span>
+      </div>
+    )},
     { key: 'amount_in_ugx', header: 'Amount (UGX)', render: (t: any) => formatUGX(t.amount_in_ugx) },
     { key: 'payment_mode', header: 'Payment', render: (t: any) => <span className="capitalize">{t.payment_mode}</span> },
     { key: 'balance', header: 'Balance', render: (t: any) => (
@@ -71,12 +86,17 @@ export function TripManagement() {
     { key: 'trip_start_date', header: 'Start', render: (t: any) => formatDate(t.trip_start_date) },
     { key: 'trip_end_date', header: 'End', render: (t: any) => formatDate(t.trip_end_date) },
     { key: 'status', header: 'Status', render: (t: any) => <StatusBadge status={computeTripStatus(t)} /> },
-    { key: 'actions', header: 'Actions', render: (t: any) => (
-      <div className="flex gap-2">
-        <button onClick={() => setViewTrip(t)} className="text-xs text-primary hover:underline cursor-pointer">View</button>
-        <button onClick={() => { setEditTrip(t); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer">Edit</button>
-        <button onClick={() => setDeleteTarget(t)} className="text-xs text-danger hover:underline cursor-pointer">Cancel</button>
-        <button onClick={() => setPermanentDeleteTarget(t)} className="text-xs text-orange-600 hover:underline cursor-pointer">Delete</button>
+    { key: 'actions', header: '', render: (t: any) => (
+      <div className="relative" ref={actionMenuOpen === t.id ? menuRef : undefined}>
+        <button onClick={() => setActionMenuOpen(actionMenuOpen === t.id ? null : t.id)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted/30 text-text-secondary cursor-pointer text-lg leading-none">⋮</button>
+        {actionMenuOpen === t.id && (
+          <div className="absolute right-0 top-full mt-1 bg-white border border-muted/40 rounded-xl shadow-lg z-50 py-1 min-w-[140px]">
+            <button onClick={() => { setViewTrip(t); setActionMenuOpen(null) }} className="w-full text-left px-3 py-2 text-sm hover:bg-muted/20 cursor-pointer">View</button>
+            <button onClick={() => { setEditTrip(t); setDrawerOpen(true); setActionMenuOpen(null) }} className="w-full text-left px-3 py-2 text-sm hover:bg-muted/20 cursor-pointer">Edit</button>
+            <button onClick={() => { setDeleteTarget(t); setActionMenuOpen(null) }} className="w-full text-left px-3 py-2 text-sm hover:bg-muted/20 cursor-pointer text-danger">Cancel</button>
+            <button onClick={() => { setPermanentDeleteTarget(t); setActionMenuOpen(null) }} className="w-full text-left px-3 py-2 text-sm hover:bg-muted/20 cursor-pointer text-orange-600">Delete</button>
+          </div>
+        )}
       </div>
     )},
   ]
@@ -102,7 +122,7 @@ export function TripManagement() {
             <thead>
               <tr className="bg-muted/20">
                 {columns.map(col => (
-                  <th key={col.key} className="px-3 py-3 text-left text-xs font-semibold text-text-secondary uppercase whitespace-nowrap">{col.header}</th>
+                  <th key={col.key} className="px-4 py-3.5 text-left text-xs font-semibold text-text-secondary uppercase whitespace-nowrap">{col.header}</th>
                 ))}
               </tr>
             </thead>
@@ -110,7 +130,7 @@ export function TripManagement() {
               {trips.map((t, i) => (
                 <tr key={t.id} className={i % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
                   {columns.map(col => (
-                    <td key={col.key} data-label={col.header} className="px-3 py-3 text-sm whitespace-nowrap">{col.render ? col.render(t) : (t as any)[col.key]}</td>
+                    <td key={col.key} data-label={col.header} className="px-4 py-3.5 text-sm whitespace-nowrap">{col.render ? col.render(t) : (t as any)[col.key]}</td>
                   ))}
                 </tr>
               ))}
