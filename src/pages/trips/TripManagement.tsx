@@ -256,6 +256,28 @@ export function TripManagement() {
                 <div className="flex justify-between text-sm border-t border-muted/30 pt-2"><span>Balance</span><span className={`font-mono font-semibold ${viewTrip.balance > 0 ? 'text-warning' : 'text-success'}`}>{formatUGX(viewTrip.balance)}</span></div>
               </div>
             </div>
+            {(() => {
+              const hasExperience = viewTrip.car_seats || viewTrip.has_gps || viewTrip.extras || viewTrip.gorilla_tracking || viewTrip.chimpanzee_tracking || viewTrip.activities
+              if (!hasExperience) return (
+                <div className="border-t border-muted/30 pt-4">
+                  <h4 className="font-medium mb-3">🧭 Experience</h4>
+                  <p className="text-sm text-text-secondary">No experience details added yet.</p>
+                </div>
+              )
+              return (
+                <div className="border-t border-muted/30 pt-4">
+                  <h4 className="font-medium mb-3">🧭 Experience</h4>
+                  <div className="bg-muted/20 rounded-xl p-4 space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="text-text-secondary">Car Seats</span><span className="font-medium">{viewTrip.car_seats ?? '—'}</span></div>
+                    <div className="flex justify-between"><span className="text-text-secondary">GPS</span><span className="font-medium">{viewTrip.has_gps ? 'Yes' : 'No'}</span></div>
+                    <div className="flex justify-between"><span className="text-text-secondary">Extras</span><span className="font-medium">{viewTrip.extras || '—'}</span></div>
+                    <div className="border-t border-muted/30 pt-2 flex justify-between"><span className="text-text-secondary">Gorilla Tracking</span><span className="font-medium">{viewTrip.gorilla_tracking ? 'Yes' : 'No'}</span></div>
+                    <div className="flex justify-between"><span className="text-text-secondary">Chimpanzee Tracking</span><span className="font-medium">{viewTrip.chimpanzee_tracking ? 'Yes' : 'No'}</span></div>
+                    {viewTrip.activities && <div className="border-t border-muted/30 pt-2"><span className="text-text-secondary">Activities</span><p className="mt-1 font-medium whitespace-pre-wrap">{viewTrip.activities}</p></div>}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         )}
       </Modal>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Modal, Button, CardSkeleton } from '@/components/common'
-import { formatDate, computeTripStatus } from '@/utils'
+import { formatDate, computeTripStatus, isActiveTrip } from '@/utils'
 import toast from 'react-hot-toast'
 import type { Trip, Vehicle, Driver } from '@/types'
 
@@ -50,7 +50,7 @@ export function Experience() {
         .from('trips')
         .select('*, vehicles(registration_number, make, model), drivers(full_name)')
         .order('trip_start_date', { ascending: false })
-      return (data || []) as TripWithJoins[]
+      return (data || []).filter(isActiveTrip) as TripWithJoins[]
     },
   })
 
