@@ -15,7 +15,7 @@ const statusColors: Record<string, string> = {
   planned: '#3B82F6',
   ongoing: '#10B981',
   ends_today: '#F59E0B',
-  completed: '#94A3B8',
+  completed: '#8B5CF6',
   cancelled: '#EF4444',
 }
 
@@ -31,7 +31,7 @@ const statusDots: Record<string, string> = {
   planned: 'bg-blue-300',
   ongoing: 'bg-emerald-300',
   ends_today: 'bg-amber-300',
-  completed: 'bg-slate-400',
+  completed: 'bg-violet-300',
   cancelled: 'bg-red-300',
 }
 
@@ -61,7 +61,6 @@ export function CalendarView() {
 
   const events = trips
     .filter(t => {
-      if (t.status === 'cancelled') return false
       const s = computeTripStatus(t)
       if (s === 'planned' || s === 'ongoing' || s === 'ends_today') return true
       if (s === 'completed') {
@@ -170,7 +169,7 @@ export function CalendarView() {
       </div>
 
       <div className="flex flex-wrap gap-4 text-xs">
-        {Object.entries(statusColors).filter(([k]) => k !== 'cancelled').map(([key, color]) => (
+        {Object.entries(statusColors).map(([key, color]) => (
           <div key={key} className="flex items-center gap-1.5">
             <span className="w-3 h-2 rounded-sm" style={{ backgroundColor: color }} />
             <span className="text-text-secondary capitalize">{statusLabels[key] || key}</span>
