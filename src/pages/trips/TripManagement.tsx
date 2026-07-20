@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
@@ -20,9 +21,22 @@ export function TripManagement() {
   const [showCancelled, setShowCancelled] = useState(false)
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 })
 
   useEffect(() => {
     if (!actionMenuOpen) return
+    const btn = buttonRefs.current[actionMenuOpen]
+    if (btn) {
+      const rect = btn.getBoundingClientRect()
+      const menuHeight = 180
+      const spaceBelow = window.innerHeight - rect.bottom
+      const openUp = spaceBelow < menuHeight
+      setMenuPos({
+        top: openUp ? rect.top - menuHeight - 4 : rect.bottom + 4,
+        left: Math.min(rect.left, window.innerWidth - 160),
+      })
+    }
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setActionMenuOpen(null)
     }
@@ -37,7 +51,11 @@ export function TripManagement() {
         .from('trips')
         .select('*, vehicles!left(registration_number, make, model), drivers!left(full_name, license_number)')
         .order('trip_start_date', { ascending: false })
-      if (!showCancelled) query.neq('status', 'cancelled')
+      if (showCancelled) {
+        query.eq('status', 'cancelled')
+      } else {
+        query.neq('status', 'cancelled')
+      }
       const { data } = await query
       return (data || []) as (Trip & { vehicles?: Vehicle; drivers?: Driver })[]
     },
@@ -87,17 +105,22 @@ export function TripManagement() {
     { key: 'trip_end_date', header: 'End', render: (t: any) => formatDate(t.trip_end_date) },
     { key: 'status', header: 'Status', render: (t: any) => <StatusBadge status={computeTripStatus(t)} /> },
     { key: 'actions', header: '', render: (t: any) => (
-      <div className="relative" ref={actionMenuOpen === t.id ? menuRef : undefined}>
-        <button onClick={() => setActionMenuOpen(actionMenuOpen === t.id ? null : t.id)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted/30 text-text-secondary cursor-pointer text-lg leading-none">⋮</button>
-        {actionMenuOpen === t.id && (
-          <div className="absolute right-0 top-full mt-1 bg-white border border-muted/40 rounded-xl shadow-lg z-50 py-1 min-w-[140px]">
+      <>
+        <button
+          ref={(el) => { buttonRefs.current[t.id] = el }}
+          onClick={() => setActionMenuOpen(actionMenuOpen === t.id ? null : t.id)}
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted/30 text-text-secondary cursor-pointer text-lg leading-none"
+        >⋮</button>
+        {actionMenuOpen === t.id && createPortal(
+          <div ref={menuRef} style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999 }} className="bg-white border border-muted/40 rounded-xl shadow-lg py-1 min-w-[140px]">
             <button onClick={() => { setViewTrip(t); setActionMenuOpen(null) }} className="w-full text-left px-3 py-2 text-sm hover:bg-muted/20 cursor-pointer">View</button>
             <button onClick={() => { setEditTrip(t); setDrawerOpen(true); setActionMenuOpen(null) }} className="w-full text-left px-3 py-2 text-sm hover:bg-muted/20 cursor-pointer">Edit</button>
             <button onClick={() => { setDeleteTarget(t); setActionMenuOpen(null) }} className="w-full text-left px-3 py-2 text-sm hover:bg-muted/20 cursor-pointer text-danger">Cancel</button>
             <button onClick={() => { setPermanentDeleteTarget(t); setActionMenuOpen(null) }} className="w-full text-left px-3 py-2 text-sm hover:bg-muted/20 cursor-pointer text-orange-600">Delete</button>
-          </div>
+          </div>,
+          document.body
         )}
-      </div>
+      </>
     )},
   ]
 
@@ -109,9 +132,10 @@ export function TripManagement() {
         title="All Trips"
         subtitle={`${trips.length} trips`}
         actions={<>
-          <button onClick={() => setShowCancelled(s => !s)} className="text-xs text-text-secondary hover:text-primary cursor-pointer underline">
-            {showCancelled ? 'Hide cancelled trips' : 'Show cancelled trips'}
-          </button>
+          <div className="flex items-center rounded-lg border border-muted/40 overflow-hidden text-xs">
+            <button onClick={() => setShowCancelled(false)} className={`px-3 py-1.5 cursor-pointer ${!showCancelled ? 'bg-primary text-white' : 'text-text-secondary hover:bg-muted/20'}`}>Active</button>
+            <button onClick={() => setShowCancelled(true)} className={`px-3 py-1.5 cursor-pointer ${showCancelled ? 'bg-primary text-white' : 'text-text-secondary hover:bg-muted/20'}`}>Cancelled</button>
+          </div>
           <Button onClick={() => { setEditTrip(null); setDrawerOpen(true) }}>Create Trip</Button>
         </>}
       />
