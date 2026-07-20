@@ -277,7 +277,8 @@ function AnimatedHeadline({ text }: { text: string }) {
       variants={wordContainer}
       initial="hidden"
       animate="visible"
-      className="max-w-2xl text-3xl font-black leading-[1.16] sm:text-4xl lg:text-5xl mt-[140px] sm:mt-[180px] lg:mt-[200px]"
+      className="max-w-2xl text-3xl font-black leading-[1.16] sm:text-4xl lg:text-5xl"
+      style={{ marginTop: '160px' }}
       aria-label={text}
     >
       {text.split(' ').map((word, index) => (
