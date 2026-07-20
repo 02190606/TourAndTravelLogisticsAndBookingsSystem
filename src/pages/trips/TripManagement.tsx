@@ -15,6 +15,7 @@ export function TripManagement() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editTrip, setEditTrip] = useState<Trip | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Trip | null>(null)
+  const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<Trip | null>(null)
   const [viewTrip, setViewTrip] = useState<Trip & { vehicles?: Vehicle; drivers?: Driver } | null>(null)
 
   const { data: trips = [], isLoading } = useQuery({
@@ -34,6 +35,15 @@ export function TripManagement() {
       if (error) throw error
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['trips'] }); setDeleteTarget(null); toast.success('Trip cancelled') },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const permanentDeleteTrip = useMutation({
+    mutationFn: async (tripId: string) => {
+      const { error } = await supabase.from('trips').delete().eq('id', tripId)
+      if (error) throw error
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['trips'] }); setPermanentDeleteTarget(null); toast.success('Trip permanently deleted') },
     onError: (err: Error) => toast.error(err.message),
   })
 
@@ -63,6 +73,7 @@ export function TripManagement() {
         <button onClick={() => setViewTrip(t)} className="text-xs text-primary hover:underline cursor-pointer">View</button>
         <button onClick={() => { setEditTrip(t); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer">Edit</button>
         <button onClick={() => setDeleteTarget(t)} className="text-xs text-danger hover:underline cursor-pointer">Cancel</button>
+        <button onClick={() => setPermanentDeleteTarget(t)} className="text-xs text-orange-600 hover:underline cursor-pointer">Delete</button>
       </div>
     )},
   ]
@@ -109,6 +120,18 @@ export function TripManagement() {
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setDeleteTarget(null)}>Back</Button>
               <Button variant="danger" onClick={() => deleteTrip.mutate(deleteTarget.id)}>Confirm Cancel</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!permanentDeleteTarget} onClose={() => setPermanentDeleteTarget(null)} title="Delete Trip">
+        {permanentDeleteTarget && (
+          <div className="space-y-4">
+            <p>Are you sure you want to permanently delete this trip for <strong>{permanentDeleteTarget.client_name}</strong>? This cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setPermanentDeleteTarget(null)}>Cancel</Button>
+              <Button variant="danger" onClick={() => permanentDeleteTrip.mutate(permanentDeleteTarget.id)} isLoading={permanentDeleteTrip.isPending}>Confirm Delete</Button>
             </div>
           </div>
         )}
