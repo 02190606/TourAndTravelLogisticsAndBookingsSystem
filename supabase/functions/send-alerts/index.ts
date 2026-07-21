@@ -26,6 +26,8 @@ interface Alert {
   type: 'logistics' | 'trip'
   tripStart?: string
   tripEnd?: string
+  destination?: string
+  permitInfo?: string
 }
 
 function daysUntil(dateStr: string, today: Date): number {
@@ -142,9 +144,15 @@ function buildEmailHtml(alerts: Alert[]): string {
     const tripRows = sorted.map(a => {
       const dates = `${formatDate(a.tripStart!)} - ${formatDate(a.tripEnd!)}`
       const dur = tripDuration(a.tripStart!, a.tripEnd!)
+      const destHtml = a.destination ? `<div style="color: #64748b; font-size: 11px; margin-top: 2px;">&#128205; ${a.destination}</div>` : ''
+      const permitHtml = a.permitInfo ? `<div style="color: #64748b; font-size: 11px; margin-top: 1px;">&#128220; ${a.permitInfo}</div>` : ''
       return `
         <tr style="border-bottom: 1px solid #e2e8f0;">
-          <td style="padding: 10px 12px; font-weight: 600; color: #1e293b; font-size: 13px;">${a.reg}</td>
+          <td style="padding: 10px 12px; font-weight: 600; color: #1e293b; font-size: 13px;">
+            ${a.reg}
+            ${destHtml}
+            ${permitHtml}
+          </td>
           <td style="padding: 10px 12px; color: #475569; font-size: 13px;">${dates}</td>
           <td style="padding: 10px 12px; color: #475569; font-size: 13px; text-align: center;">${dur} days</td>
           <td style="padding: 10px 12px;">
@@ -163,7 +171,7 @@ function buildEmailHtml(alerts: Alert[]): string {
               </td>
             </tr>
             <tr style="background: #f0fdfa;">
-              <th style="padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Client</th>
+              <th style="padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Client / Destination</th>
               <th style="padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Trip Dates</th>
               <th style="padding: 8px 12px; text-align: center; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Duration</th>
               <th style="padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #0f766e; letter-spacing: 0.05em; border-bottom: 2px solid #0f766e;">Alert</th>
@@ -247,7 +255,7 @@ serve(async (req) => {
 
   const { data: trips } = await supabase
     .from('trips')
-    .select('*, vehicles!left(registration_number), drivers!left(full_name)')
+    .select('*, vehicles!left(registration_number, driving_permit, permit_expiry_date), drivers!left(full_name)')
     .in('status', ['planned', 'ongoing'])
 
   const { data: sentAlertsRows } = await supabase.from('sent_alerts').select('*')
@@ -322,28 +330,32 @@ serve(async (req) => {
         const startDiff = daysUntil(t.trip_start_date, today)
         const endDiff = daysUntil(t.trip_end_date, today)
 
+        const tripPermitInfo = t.vehicles?.driving_permit
+          ? `${t.vehicles.driving_permit}${t.vehicles.permit_expiry_date ? ` (exp ${t.vehicles.permit_expiry_date})` : ''}`
+          : ''
+
         if (startDiff === 7 && !sentKey.has(`${user.id}:trip_7day-${t.id}:1`)) {
-          userAlerts.push({ itemId: `trip_7day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 7 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          userAlerts.push({ itemId: `trip_7day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 7 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
 
         if (startDiff === 2 && !sentKey.has(`${user.id}:trip_2day-${t.id}:1`)) {
-          userAlerts.push({ itemId: `trip_2day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 2 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          userAlerts.push({ itemId: `trip_2day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 2 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
 
         if (endDiff === 2 && !sentKey.has(`${user.id}:trip_end_2day-${t.id}:1`)) {
-          userAlerts.push({ itemId: `trip_end_2day-${t.id}`, stage: 1, label: 'Trip End', reg: t.client_name, status: 'Ends in 2 days', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          userAlerts.push({ itemId: `trip_end_2day-${t.id}`, stage: 1, label: 'Trip End', reg: t.client_name, status: 'Ends in 2 days', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
 
         if (startDiff === 0 && !sentKey.has(`${user.id}:trip_start_today-${t.id}:2`)) {
-          userAlerts.push({ itemId: `trip_start_today-${t.id}`, stage: 2, label: 'Trip Start', reg: t.client_name, status: 'Starts today', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          userAlerts.push({ itemId: `trip_start_today-${t.id}`, stage: 2, label: 'Trip Start', reg: t.client_name, status: 'Starts today', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
 
         if (startDiff < 0 && endDiff > 0 && !sentKey.has(`${user.id}:trip_ongoing-${t.id}:2`)) {
-          userAlerts.push({ itemId: `trip_ongoing-${t.id}`, stage: 2, label: 'Trip', reg: t.client_name, status: 'Trip in progress', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          userAlerts.push({ itemId: `trip_ongoing-${t.id}`, stage: 2, label: 'Trip', reg: t.client_name, status: 'Trip in progress', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
 
         if (endDiff === 0 && !sentKey.has(`${user.id}:trip_end_today-${t.id}:2`)) {
-          userAlerts.push({ itemId: `trip_end_today-${t.id}`, stage: 2, label: 'Trip End', reg: t.client_name, status: 'Ends today', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          userAlerts.push({ itemId: `trip_end_today-${t.id}`, stage: 2, label: 'Trip End', reg: t.client_name, status: 'Ends today', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
       }
     }
@@ -404,28 +416,32 @@ serve(async (req) => {
         const startDiff = daysUntil(t.trip_start_date, today)
         const endDiff = daysUntil(t.trip_end_date, today)
 
+        const tripPermitInfo = t.vehicles?.driving_permit
+          ? `${t.vehicles.driving_permit}${t.vehicles.permit_expiry_date ? ` (exp ${t.vehicles.permit_expiry_date})` : ''}`
+          : ''
+
         if (startDiff === 7 && !sentKey.has(`${recipientUserId}:trip_7day-${t.id}:1`)) {
-          recipientAlerts.push({ itemId: `trip_7day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 7 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          recipientAlerts.push({ itemId: `trip_7day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 7 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
 
         if (startDiff === 2 && !sentKey.has(`${recipientUserId}:trip_2day-${t.id}:1`)) {
-          recipientAlerts.push({ itemId: `trip_2day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 2 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          recipientAlerts.push({ itemId: `trip_2day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 2 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
 
         if (endDiff === 2 && !sentKey.has(`${recipientUserId}:trip_end_2day-${t.id}:1`)) {
-          recipientAlerts.push({ itemId: `trip_end_2day-${t.id}`, stage: 1, label: 'Trip End', reg: t.client_name, status: 'Ends in 2 days', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          recipientAlerts.push({ itemId: `trip_end_2day-${t.id}`, stage: 1, label: 'Trip End', reg: t.client_name, status: 'Ends in 2 days', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
 
         if (startDiff === 0 && !sentKey.has(`${recipientUserId}:trip_start_today-${t.id}:2`)) {
-          recipientAlerts.push({ itemId: `trip_start_today-${t.id}`, stage: 2, label: 'Trip Start', reg: t.client_name, status: 'Starts today', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          recipientAlerts.push({ itemId: `trip_start_today-${t.id}`, stage: 2, label: 'Trip Start', reg: t.client_name, status: 'Starts today', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
 
         if (startDiff < 0 && endDiff > 0 && !sentKey.has(`${recipientUserId}:trip_ongoing-${t.id}:2`)) {
-          recipientAlerts.push({ itemId: `trip_ongoing-${t.id}`, stage: 2, label: 'Trip', reg: t.client_name, status: 'Trip in progress', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          recipientAlerts.push({ itemId: `trip_ongoing-${t.id}`, stage: 2, label: 'Trip', reg: t.client_name, status: 'Trip in progress', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
 
         if (endDiff === 0 && !sentKey.has(`${recipientUserId}:trip_end_today-${t.id}:2`)) {
-          recipientAlerts.push({ itemId: `trip_end_today-${t.id}`, stage: 2, label: 'Trip End', reg: t.client_name, status: 'Ends today', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+          recipientAlerts.push({ itemId: `trip_end_today-${t.id}`, stage: 2, label: 'Trip End', reg: t.client_name, status: 'Ends today', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         }
       }
     }
