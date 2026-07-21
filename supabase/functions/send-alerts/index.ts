@@ -281,12 +281,15 @@ serve(async (req) => {
           const diff = daysUntil(dateStr, today)
           const itemId = `${type}-${v.id}`
 
-          if (diff >= 6 && diff <= 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-            userAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: `Expires in ${diff} days`, date: dateStr, type: 'logistics' })
+          if (diff === 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
+            userAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: `Expires in 7 days`, date: dateStr, type: 'logistics' })
           }
-          if (diff <= 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
-            const urgentLabel = diff <= 0 ? 'EXPIRED' : `Expires in ${diff} day(s)`
-            userAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: urgentLabel, date: dateStr, type: 'logistics' })
+          if (diff === 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
+            userAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: `Expires in 2 days`, date: dateStr, type: 'logistics' })
+          }
+          if (diff <= 0 && !sentKey.has(`${user.id}:${itemId}:3`)) {
+            const urgentLabel = diff < 0 ? 'EXPIRED' : 'Expires today'
+            userAlerts.push({ itemId, stage: 3, label, reg: v.registration_number, status: urgentLabel, date: dateStr, type: 'logistics' })
           }
         }
       }
@@ -299,12 +302,15 @@ serve(async (req) => {
         const diff = daysUntil(s.next_service_date, today)
         const itemId = `service-${s.id}`
 
-        if (diff >= 6 && diff <= 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-          userAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days`, date: s.next_service_date, type: 'logistics' })
+        if (diff === 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
+          userAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: `Due in 7 days`, date: s.next_service_date, type: 'logistics' })
         }
-        if (diff <= 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
-          const urgentLabel = diff <= 0 ? 'OVERDUE' : `Due in ${diff} day(s)`
-          userAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: urgentLabel, date: s.next_service_date, type: 'logistics' })
+        if (diff === 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
+          userAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: `Due in 2 days`, date: s.next_service_date, type: 'logistics' })
+        }
+        if (diff <= 0 && !sentKey.has(`${user.id}:${itemId}:3`)) {
+          const urgentLabel = diff < 0 ? 'OVERDUE' : 'Due today'
+          userAlerts.push({ itemId, stage: 3, label: 'Service', reg: s.vehicles.registration_number, status: urgentLabel, date: s.next_service_date, type: 'logistics' })
         }
       }
     }
@@ -322,6 +328,10 @@ serve(async (req) => {
 
         if (startDiff === 2 && !sentKey.has(`${user.id}:trip_2day-${t.id}:1`)) {
           userAlerts.push({ itemId: `trip_2day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 2 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+        }
+
+        if (endDiff === 2 && !sentKey.has(`${user.id}:trip_end_2day-${t.id}:1`)) {
+          userAlerts.push({ itemId: `trip_end_2day-${t.id}`, stage: 1, label: 'Trip End', reg: t.client_name, status: 'Ends in 2 days', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
         }
 
         if (startDiff === 0 && !sentKey.has(`${user.id}:trip_start_today-${t.id}:2`)) {
@@ -355,12 +365,15 @@ serve(async (req) => {
           if (!dateStr) continue
           const diff = daysUntil(dateStr, today)
           const itemId = `${type}-${v.id}`
-          if (diff >= 6 && diff <= 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
-            recipientAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: `Expires in ${diff} days`, date: dateStr, type: 'logistics' })
+          if (diff === 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
+            recipientAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: 'Expires in 7 days', date: dateStr, type: 'logistics' })
           }
-          if (diff <= 2 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
-            const urgentLabel = diff <= 0 ? 'EXPIRED' : `Expires in ${diff} day(s)`
-            recipientAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: urgentLabel, date: dateStr, type: 'logistics' })
+          if (diff === 2 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
+            recipientAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: 'Expires in 2 days', date: dateStr, type: 'logistics' })
+          }
+          if (diff <= 0 && !sentKey.has(`${recipientUserId}:${itemId}:3`)) {
+            const urgentLabel = diff < 0 ? 'EXPIRED' : 'Expires today'
+            recipientAlerts.push({ itemId, stage: 3, label, reg: v.registration_number, status: urgentLabel, date: dateStr, type: 'logistics' })
           }
         }
       }
@@ -371,12 +384,15 @@ serve(async (req) => {
         if (!s.next_service_date) continue
         const diff = daysUntil(s.next_service_date, today)
         const itemId = `service-${s.id}`
-        if (diff >= 6 && diff <= 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
-          recipientAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days`, date: s.next_service_date, type: 'logistics' })
+        if (diff === 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
+          recipientAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: 'Due in 7 days', date: s.next_service_date, type: 'logistics' })
         }
-        if (diff <= 2 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
-          const urgentLabel = diff <= 0 ? 'OVERDUE' : `Due in ${diff} day(s)`
-          recipientAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: urgentLabel, date: s.next_service_date, type: 'logistics' })
+        if (diff === 2 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
+          recipientAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: 'Due in 2 days', date: s.next_service_date, type: 'logistics' })
+        }
+        if (diff <= 0 && !sentKey.has(`${recipientUserId}:${itemId}:3`)) {
+          const urgentLabel = diff < 0 ? 'OVERDUE' : 'Due today'
+          recipientAlerts.push({ itemId, stage: 3, label: 'Service', reg: s.vehicles.registration_number, status: urgentLabel, date: s.next_service_date, type: 'logistics' })
         }
       }
     }
@@ -394,6 +410,10 @@ serve(async (req) => {
 
         if (startDiff === 2 && !sentKey.has(`${recipientUserId}:trip_2day-${t.id}:1`)) {
           recipientAlerts.push({ itemId: `trip_2day-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 2 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
+        }
+
+        if (endDiff === 2 && !sentKey.has(`${recipientUserId}:trip_end_2day-${t.id}:1`)) {
+          recipientAlerts.push({ itemId: `trip_end_2day-${t.id}`, stage: 1, label: 'Trip End', reg: t.client_name, status: 'Ends in 2 days', date: t.trip_end_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date })
         }
 
         if (startDiff === 0 && !sentKey.has(`${recipientUserId}:trip_start_today-${t.id}:2`)) {
@@ -424,9 +444,9 @@ serve(async (req) => {
   for (const { email, alerts } of emailsToSend) {
     if (!gmailAppPassword) break
 
-    const stage2Count = alerts.filter(a => a.stage === 2).length
-    const subject = stage2Count > 0
-      ? `SafariTour - ${stage2Count} urgent alert${stage2Count > 1 ? 's' : ''} need attention`
+    const urgentCount = alerts.filter(a => a.stage >= 2).length
+    const subject = urgentCount > 0
+      ? `SafariTour - ${urgentCount} urgent alert${urgentCount > 1 ? 's' : ''} need attention`
       : `SafariTour - ${alerts.length} upcoming alert${alerts.length > 1 ? 's' : ''}`
 
     try {
