@@ -94,7 +94,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </div>
           <div>
             <p className="font-display text-[17px] font-bold uppercase leading-tight text-white">SafariTour</p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-white/50 mt-0.5">Operations</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-white/70 mt-0.5">Operations</p>
           </div>
         </div>
       </div>
@@ -181,7 +181,7 @@ function NavEntry({ item, onClick, alertCount }: { item: NavItem; onClick: () =>
         `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150 ${
           isActive
             ? 'bg-white/15 text-white shadow-md shadow-black/10'
-            : 'text-white/80 hover:bg-white/[0.09] hover:text-white'
+            : 'text-white/85 hover:bg-white/[0.09] hover:text-white'
         }`
       }
     >
@@ -222,7 +222,7 @@ function CollapsibleGroup({
     <div>
       <button
         onClick={onToggle}
-        className="mb-1 flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-white/75 transition-colors hover:text-white/90"
+        className="mb-1 flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 font-display text-[12px] font-semibold uppercase tracking-[0.16em] text-white/85 transition-colors hover:text-white"
       >
         {title}
         <svg
