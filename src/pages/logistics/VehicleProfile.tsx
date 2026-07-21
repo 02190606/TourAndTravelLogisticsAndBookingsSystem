@@ -25,37 +25,50 @@ export function VehicleProfile() {
   if (isLoading) return <CardSkeleton />
   if (!vehicle) return <div className="text-center py-12 text-text-secondary">Vehicle not found</div>
 
-  function ComplianceChip({ label, date }: { label: string; date?: string }) {
+  function computeCompliance(label: string, date?: string) {
     if (!date) return null
-    const d = new Date(date)
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const d = new Date(date)
     const expiry = new Date(d.getFullYear(), d.getMonth(), d.getDate())
     const diffDays = Math.round((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
     let statusText: string
     let variant: 'danger' | 'warning' | 'success'
+    let group: 'expired' | 'today' | 'upcoming' | 'valid'
 
     if (diffDays < 0) {
-      variant = 'danger'
+      group = 'expired'; variant = 'danger'
       statusText = diffDays === -1 ? 'Expired yesterday' : `Expired ${Math.abs(diffDays)} days ago`
     } else if (diffDays === 0) {
-      variant = 'warning'
+      group = 'today'; variant = 'warning'
       statusText = 'Expires today'
     } else if (diffDays <= 30) {
-      variant = 'warning'
+      group = 'upcoming'; variant = 'warning'
       statusText = `Expires in ${diffDays} day${diffDays === 1 ? '' : 's'}`
     } else if (diffDays <= 365) {
-      variant = 'success'
+      group = 'upcoming'; variant = 'success'
       statusText = `Will expire ${formatDate(date)}`
     } else {
-      variant = 'success'
+      group = 'valid'; variant = 'success'
       statusText = `Valid until ${formatDate(date)}`
     }
 
+    return { label, variant, statusText, group }
+  }
+
+  function ComplianceSection({ title, items }: { title: string; items: { label: string; variant: string; statusText: string }[] }) {
+    if (items.length === 0) return null
     return (
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-muted/30 text-sm">
-        <Badge variant={variant}>{label} — {statusText}</Badge>
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-white/40 mb-1.5">{title}</p>
+        <div className="space-y-1.5">
+          {items.map(item => (
+            <div key={item.label} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-muted/30 text-sm">
+              <Badge variant={item.variant as 'danger' | 'warning' | 'success'}>{item.label} — {item.statusText}</Badge>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -93,13 +106,31 @@ export function VehicleProfile() {
           </div>
           <div>
             <StatusBadge status={vehicle.status} />
-            <div className="mt-4 space-y-2">
-              <ComplianceChip label="Driving Permit" date={vehicle.permit_expiry_date} />
-              {vehicle.insurance_commencement && <ComplianceChip label="Insurance Started" date={vehicle.insurance_commencement} />}
-              <ComplianceChip label="Insurance" date={vehicle.insurance_expiry} />
-              {vehicle.pmo_commencement && <ComplianceChip label="PMO Started" date={vehicle.pmo_commencement} />}
-              <ComplianceChip label="PMO" date={vehicle.pmo_expiry} />
-              <ComplianceChip label="PSV" date={vehicle.psv_expiry} />
+            <div className="mt-4 space-y-3">
+              {(() => {
+                const chips = [
+                  computeCompliance('Driving Permit', vehicle.permit_expiry_date),
+                  vehicle.insurance_commencement ? computeCompliance('Insurance Started', vehicle.insurance_commencement) : null,
+                  computeCompliance('Insurance', vehicle.insurance_expiry),
+                  vehicle.pmo_commencement ? computeCompliance('PMO Started', vehicle.pmo_commencement) : null,
+                  computeCompliance('PMO', vehicle.pmo_expiry),
+                  computeCompliance('PSV', vehicle.psv_expiry),
+                ].filter(Boolean) as NonNullable<ReturnType<typeof computeCompliance>>[]
+
+                const expired = chips.filter(c => c.group === 'expired')
+                const today = chips.filter(c => c.group === 'today')
+                const upcoming = chips.filter(c => c.group === 'upcoming')
+                const valid = chips.filter(c => c.group === 'valid')
+
+                return (
+                  <>
+                    <ComplianceSection title="Expired" items={expired} />
+                    <ComplianceSection title="Expires Today" items={today} />
+                    <ComplianceSection title="Upcoming" items={upcoming} />
+                    <ComplianceSection title="Valid" items={valid} />
+                  </>
+                )
+              })()}
             </div>
           </div>
         </div>
