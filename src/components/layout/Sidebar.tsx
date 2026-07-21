@@ -78,7 +78,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const initials = user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'
 
   const sidebar = (
-    <div className="relative flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#1c2740] to-[#141e30] text-white">
+    <div className="relative flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#7D2AE8] to-[#2F6FED] text-white">
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.025]"
         style={{
@@ -89,12 +89,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Logo */}
       <div className="relative z-10 border-b border-white/10 px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/90 shadow-lg shadow-primary/20">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-white/15 shadow-lg shadow-black/15">
             <span className="text-lg font-black text-white">S</span>
           </div>
           <div>
-            <p className="text-[15px] font-bold text-white leading-tight">SafariTour</p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30 mt-0.5">Operations</p>
+            <p className="font-display text-[17px] font-bold uppercase leading-tight text-white">SafariTour</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-white/50 mt-0.5">Operations</p>
           </div>
         </div>
       </div>
@@ -134,8 +134,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <span className="text-xs font-bold text-white/80">{initials}</span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-semibold text-white/90">{user?.full_name || 'User'}</p>
-            <p className="text-[11px] capitalize text-white/35">{user?.role || '-'}</p>
+            <p className="truncate text-[13px] font-semibold text-white/95">{user?.full_name || 'User'}</p>
+            <p className="text-[11px] capitalize text-white/55">{user?.role || '-'}</p>
           </div>
         </div>
       </div>
@@ -180,8 +180,8 @@ function NavEntry({ item, onClick, alertCount }: { item: NavItem; onClick: () =>
       className={({ isActive }) =>
         `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150 ${
           isActive
-            ? 'bg-primary text-white shadow-md shadow-primary/25'
-            : 'text-white/50 hover:bg-white/[0.07] hover:text-white/80'
+            ? 'bg-white/15 text-white shadow-md shadow-black/10'
+            : 'text-white/65 hover:bg-white/[0.09] hover:text-white/90'
         }`
       }
     >
@@ -222,7 +222,7 @@ function CollapsibleGroup({
     <div>
       <button
         onClick={onToggle}
-        className="mb-1 flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/25 transition-colors hover:text-white/40"
+        className="mb-1 flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 font-display text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55 transition-colors hover:text-white/80"
       >
         {title}
         <svg
