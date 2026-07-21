@@ -59,7 +59,7 @@ async function run() {
   await client.query(`
     SELECT cron.schedule(
       'send-alerts-daily',
-      '0 12 * * *',
+      '20 12 * * *',
       $$SELECT net.http_post(
         url:='https://ymjmqubbmeryqzolszvr.supabase.co/functions/v1/send-alerts',
         headers:=jsonb_build_object(
