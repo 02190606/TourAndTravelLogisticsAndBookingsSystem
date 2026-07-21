@@ -55,8 +55,7 @@ export function VehicleProfile() {
 
     return (
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-muted/30 text-sm">
-        <span className="font-semibold text-white/80 w-28">{label}</span>
-        <Badge variant={variant}>{statusText}</Badge>
+        <Badge variant={variant}>{label} — {statusText}</Badge>
       </div>
     )
   }
