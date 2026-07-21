@@ -118,18 +118,18 @@ CREATE POLICY "service_records_delete" ON service_records
 
 
 -- ============================================================
--- MAINTENANCE RECORDS: admin + logistics only
+-- REPAIRS: admin + logistics only
 -- ============================================================
-CREATE POLICY "maintenance_records_select" ON maintenance_records
+CREATE POLICY "repairs_select" ON repairs
   FOR SELECT USING (user_role() IN ('admin', 'logistics'));
 
-CREATE POLICY "maintenance_records_insert" ON maintenance_records
+CREATE POLICY "repairs_insert" ON repairs
   FOR INSERT WITH CHECK (user_role() IN ('admin', 'logistics'));
 
-CREATE POLICY "maintenance_records_update" ON maintenance_records
+CREATE POLICY "repairs_update" ON repairs
   FOR UPDATE USING (user_role() IN ('admin', 'logistics'));
 
-CREATE POLICY "maintenance_records_delete" ON maintenance_records
+CREATE POLICY "repairs_delete" ON repairs
   FOR DELETE USING (user_role() IN ('admin', 'logistics'));
 
 

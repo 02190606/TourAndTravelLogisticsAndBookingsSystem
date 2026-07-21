@@ -5,9 +5,9 @@ import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, Badge, Modal, Drawer, StatusBadge, CardSkeleton } from '@/components/common'
 import { formatDate, formatUGX, generateId } from '@/utils'
 import toast from 'react-hot-toast'
-import type { Vehicle, ServiceRecord, MaintenanceRecord, Complaint, Repair } from '@/types'
+import type { Vehicle, ServiceRecord, Complaint, Repair } from '@/types'
 
-type SubTab = 'service' | 'maintenance' | 'complaints' | 'repairs'
+type SubTab = 'service' | 'complaints' | 'repairs'
 
 export function VehicleProfile() {
   const { id } = useParams()
@@ -85,19 +85,18 @@ export function VehicleProfile() {
       </div>
 
       <div className="flex gap-2 border-b border-muted/30 pb-2">
-        {(['service', 'maintenance', 'complaints', 'repairs'] as SubTab[]).map(tab => (
+        {(['service', 'complaints', 'repairs'] as SubTab[]).map(tab => (
           <button
             key={tab}
             onClick={() => setSubTab(tab)}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer capitalize ${subTab === tab ? 'bg-primary/10 text-primary' : 'text-text-secondary hover:text-text-primary'}`}
           >
-            {tab === 'service' ? '📋 Service Records' : tab === 'maintenance' ? '🔧 Maintenance Records' : tab === 'complaints' ? '⚠️ Complaints' : '🔧 Repairs'}
+            {tab === 'service' ? '📋 Service Records' : tab === 'complaints' ? '⚠️ Complaints' : '🔧 Repairs'}
           </button>
         ))}
       </div>
 
       {subTab === 'service' && <ServiceRecordsTable vehicleId={vehicle.id} />}
-      {subTab === 'maintenance' && <MaintenanceRecordsTable vehicleId={vehicle.id} />}
       {subTab === 'complaints' && <ComplaintsTable vehicleId={vehicle.id} />}
       {subTab === 'repairs' && <RepairsTable vehicleId={vehicle.id} />}
     </div>
@@ -217,145 +216,6 @@ function ServiceDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: (
         <div>
           <label className="block text-sm font-medium mb-1">Next Service Date</label>
           <input type="date" value={form.next_service_date} onChange={e => setForm(f => ({ ...f, next_service_date: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-        </div>
-        <div className="flex gap-3 pt-4">
-          <Button type="submit" isLoading={saveMutation.isPending}>Save</Button>
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-        </div>
-      </form>
-    </Drawer>
-  )
-}
-
-function MaintenanceRecordsTable({ vehicleId }: { vehicleId: string }) {
-  const queryClient = useQueryClient()
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<MaintenanceRecord | null>(null)
-
-  const { data: records = [] } = useQuery({
-    queryKey: ['maintenance', vehicleId],
-    queryFn: async () => {
-      const { data } = await supabase.from('maintenance_records').select('*').eq('vehicle_id', vehicleId).order('repair_date', { ascending: false })
-      return (data || []) as MaintenanceRecord[]
-    },
-  })
-
-  const deleteRecord = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('maintenance_records').delete().eq('id', id)
-      if (error) throw error
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['maintenance', vehicleId] }); setDeleteTarget(null); toast.success('Record deleted') },
-    onError: (err: Error) => toast.error(err.message),
-  })
-
-  return (
-    <div>
-      <div className="flex justify-end mb-4">
-        <Button size="sm" onClick={() => setDrawerOpen(true)}>Log Maintenance</Button>
-      </div>
-      <div className="bg-white rounded-xl border border-muted/30 overflow-hidden">
-        <table className="w-full responsive-table">
-          <thead>
-            <tr className="bg-muted/20">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">ID</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Mechanic</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Repair Types</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Date</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Garage</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Cost</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-muted/30">
-            {records.map((r, i) => (
-              <tr key={r.id} className={i % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
-                <td data-label="ID" className="px-4 py-3 font-mono text-sm">{r.id.slice(0, 8)}</td>
-                <td data-label="Mechanic" className="px-4 py-3 text-sm">{r.mechanic_id}</td>
-                <td data-label="Repairs" className="px-4 py-3 text-sm">{r.repair_types?.join(', ')}</td>
-                <td data-label="Date" className="px-4 py-3 text-sm">{formatDate(r.repair_date)}</td>
-                <td data-label="Garage" className="px-4 py-3 text-sm">{r.garage}</td>
-                <td data-label="Cost" className="px-4 py-3 text-sm font-mono">{formatUGX(r.cost)}</td>
-                <td data-label="" className="px-4 py-3">
-                  <button onClick={() => setDeleteTarget(r)} className="text-xs text-danger hover:underline cursor-pointer">Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <MaintenanceDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} vehicleId={vehicleId} />
-
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Record">
-        <div className="space-y-4">
-          <p>Delete this maintenance record? This cannot be undone.</p>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-            <Button variant="danger" onClick={() => deleteTarget && deleteRecord.mutate(deleteTarget.id)}>Delete</Button>
-          </div>
-        </div>
-      </Modal>
-    </div>
-  )
-}
-
-function MaintenanceDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: () => void; vehicleId: string }) {
-  const queryClient = useQueryClient()
-  const [form, setForm] = useState({ mechanic_id: '', repair_types: [] as string[], repair_date: '', garage: '', cost: 0 })
-  const [tagInput, setTagInput] = useState('')
-
-  const addTag = () => {
-    if (tagInput.trim() && !form.repair_types.includes(tagInput.trim())) {
-      setForm(f => ({ ...f, repair_types: [...f.repair_types, tagInput.trim()] }))
-      setTagInput('')
-    }
-  }
-
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from('maintenance_records').insert({
-        id: generateId('MNT'), vehicle_id: vehicleId, ...form, cost: Number(form.cost), repair_types: form.repair_types,
-      })
-      if (error) throw error
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['maintenance', vehicleId] }); onClose(); toast.success('Maintenance record added') },
-    onError: (err: Error) => toast.error(err.message),
-  })
-
-  return (
-    <Drawer open={open} onClose={onClose} title="Log Maintenance">
-      <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Mechanic ID</label>
-          <input value={form.mechanic_id} onChange={e => setForm(f => ({ ...f, mechanic_id: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Repair Types</label>
-          <div className="flex gap-2">
-            <input value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag())} placeholder="Type and press Enter" className="flex-1 px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-            <button type="button" onClick={addTag} className="px-3 py-2 bg-primary/10 text-primary rounded-xl text-sm cursor-pointer">Add</button>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {form.repair_types.map((t, i) => (
-              <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs">
-                {t}
-                <button type="button" onClick={() => setForm(f => ({ ...f, repair_types: f.repair_types.filter((_, j) => j !== i) }))} className="hover:text-danger cursor-pointer">×</button>
-              </span>
-            ))}
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Date</label>
-          <input type="date" value={form.repair_date} onChange={e => setForm(f => ({ ...f, repair_date: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Garage Name</label>
-          <input value={form.garage} onChange={e => setForm(f => ({ ...f, garage: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Cost (UGX)</label>
-          <input type="number" value={form.cost} onChange={e => setForm(f => ({ ...f, cost: Number(e.target.value) }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div className="flex gap-3 pt-4">
           <Button type="submit" isLoading={saveMutation.isPending}>Save</Button>
