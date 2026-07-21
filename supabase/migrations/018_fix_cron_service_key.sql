@@ -7,7 +7,7 @@ SELECT cron.unschedule('send-alerts-daily');
 
 SELECT cron.schedule(
   'send-alerts-daily',
-  '30 12 * * *',
+  '0 12 * * *',
   $$
   SELECT net.http_post(
     url:='https://ymjmqubbmeryqzolszvr.supabase.co/functions/v1/send-alerts',
