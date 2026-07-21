@@ -29,12 +29,34 @@ export function VehicleProfile() {
     if (!date) return null
     const d = new Date(date)
     const now = new Date()
-    const variant = d < now ? 'danger' : d < new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000) ? 'warning' : 'success'
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const expiry = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    const diffDays = Math.round((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+
+    let statusText: string
+    let variant: 'danger' | 'warning' | 'success'
+
+    if (diffDays < 0) {
+      variant = 'danger'
+      statusText = diffDays === -1 ? 'Expired yesterday' : `Expired ${Math.abs(diffDays)} days ago`
+    } else if (diffDays === 0) {
+      variant = 'warning'
+      statusText = 'Expires today'
+    } else if (diffDays <= 30) {
+      variant = 'warning'
+      statusText = `Expires in ${diffDays} day${diffDays === 1 ? '' : 's'}`
+    } else if (diffDays <= 365) {
+      variant = 'success'
+      statusText = `Will expire ${formatDate(date)}`
+    } else {
+      variant = 'success'
+      statusText = `Valid until ${formatDate(date)}`
+    }
+
     return (
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-muted/30 text-sm">
-        <span className="font-medium">{label}</span>
-        <Badge variant={variant}>{variant === 'danger' ? 'Expired' : variant === 'warning' ? 'Expiring' : 'Valid'}</Badge>
-        <span className="text-text-secondary">{formatDate(date)}</span>
+        <span className="font-semibold text-white/80 w-28">{label}</span>
+        <Badge variant={variant}>{statusText}</Badge>
       </div>
     )
   }
