@@ -12,6 +12,7 @@ export function DriverDetails() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editDriver, setEditDriver] = useState<Driver | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Driver | null>(null)
+  const [deleteBlockReason, setDeleteBlockReason] = useState<string | null>(null)
 
   const { data: drivers = [], isLoading } = useQuery({
     queryKey: ['drivers'],
@@ -23,11 +24,25 @@ export function DriverDetails() {
 
   const deleteDriver = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('drivers').update({ is_active: false }).eq('id', id)
+      const { count: tripCount } = await supabase.from('trips').select('*', { count: 'exact', head: true }).eq('driver_id', id)
+      const { count: vehicleCount } = await supabase.from('vehicles').select('*', { count: 'exact', head: true }).eq('current_driver_id', id)
+
+      const refs: string[] = []
+      if (tripCount && tripCount > 0) refs.push(`${tripCount} trip${tripCount === 1 ? '' : 's'}`)
+      if (vehicleCount && vehicleCount > 0) refs.push(`${vehicleCount} vehicle${vehicleCount === 1 ? '' : 's'}`)
+
+      if (refs.length > 0) {
+        throw new Error(`This driver has ${refs.join(' and ')} assigned — reassign or cancel those first`)
+      }
+
+      const { error } = await supabase.from('drivers').delete().eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['drivers'] }); setDeleteTarget(null); toast.success('Driver deactivated') },
-    onError: (err: Error) => toast.error(err.message),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['drivers'] }); setDeleteTarget(null); toast.success('Driver permanently deleted') },
+    onError: (err: Error) => {
+      setDeleteBlockReason(err.message)
+      toast.error(err.message)
+    },
   })
 
   function getInitials(name: string) {
@@ -86,16 +101,25 @@ export function DriverDetails() {
 
       <DriverDrawer key={editDriver?.id || 'new'} open={drawerOpen} onClose={() => { setDrawerOpen(false); setEditDriver(null) }} editDriver={editDriver} />
 
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Deactivate Driver">
+      <Modal open={!!deleteTarget} onClose={() => { setDeleteTarget(null); setDeleteBlockReason(null) }} title="Delete Driver">
         {deleteTarget && (
           <div className="space-y-4">
-            <p>Deactivate <strong>{deleteTarget.full_name}</strong>? They will no longer be assignable to trips.</p>
+            <p>Are you sure you want to permanently delete <strong>{deleteTarget.full_name}</strong>? This cannot be undone.</p>
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-              <Button variant="danger" onClick={() => deleteDriver.mutate(deleteTarget.id)}>Deactivate</Button>
+              <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteBlockReason(null) }}>Cancel</Button>
+              <Button variant="danger" onClick={() => deleteDriver.mutate(deleteTarget.id)} isLoading={deleteDriver.isPending}>Confirm Delete</Button>
             </div>
           </div>
         )}
+      </Modal>
+
+      <Modal open={!!deleteBlockReason} onClose={() => setDeleteBlockReason(null)} title="Cannot Delete Driver">
+        <div className="space-y-4">
+          <p className="text-text-secondary">{deleteBlockReason}</p>
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => setDeleteBlockReason(null)}>OK</Button>
+          </div>
+        </div>
       </Modal>
     </div>
   )
