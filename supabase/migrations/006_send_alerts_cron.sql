@@ -2,17 +2,16 @@
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Schedule send-alerts edge function daily at 12:20 PM
--- Replace YOUR_SERVICE_ROLE_KEY with your service_role key before running
+-- Schedule send-alerts edge function daily at 11:00 AM
 SELECT cron.schedule(
   'send-alerts-daily',
-  '20 12 * * *',
+  '0 11 * * *',
   $$
   SELECT net.http_post(
     url:='https://ymjmqubbmeryqzolszvr.supabase.co/functions/v1/send-alerts',
     headers:=jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY'
+      'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inltam1xdWJibWVyeXF6b2xzenZyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjM4NTc3MCwiZXhwIjoyMDk3OTYxNzcwfQ.18uxZKglZuVSoZQYtVQ2HEwWLyXjvogBiVgbIF3kX-8'
     )
   ) AS request_id;
   $$

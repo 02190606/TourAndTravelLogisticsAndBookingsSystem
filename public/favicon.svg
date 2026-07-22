@@ -1,8 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Gold circle background -->
   <circle cx="50" cy="50" r="48" fill="#D4A017"/>
-  <path d="M30 55 L50 30 L70 55 Z" fill="#0D1B2A" opacity="0.9"/>
-  <circle cx="50" cy="55" r="12" fill="#D4A017"/>
-  <rect x="28" y="58" width="44" height="4" rx="2" fill="#0D1B2A" opacity="0.9"/>
-  <circle cx="38" cy="64" r="4" fill="#0D1B2A" opacity="0.9"/>
-  <circle cx="62" cy="64" r="4" fill="#0D1B2A" opacity="0.9"/>
+
+  <!-- Mountains -->
+  <path d="M15 58 L35 32 L55 58 Z" fill="#0D1B2A" opacity="0.85"/>
+  <path d="M40 58 L60 28 L80 58 Z" fill="#0D1B2A" opacity="0.95"/>
+
+  <!-- Sun behind mountains -->
+  <circle cx="62" cy="38" r="10" fill="#F5D060" opacity="0.9"/>
+
+  <!-- Road -->
+  <rect x="10" y="60" width="80" height="3" rx="1.5" fill="#0D1B2A" opacity="0.9"/>
+
+  <!-- Safari van body -->
+  <rect x="30" y="48" width="28" height="11" rx="3" fill="#0D1B2A" opacity="0.95"/>
+
+  <!-- Van roof / luggage rack -->
+  <rect x="32" y="45" width="24" height="4" rx="2" fill="#0D1B2A" opacity="0.9"/>
+
+  <!-- Van windows -->
+  <rect x="33" y="50" width="7" height="6" rx="1" fill="#D4A017" opacity="0.8"/>
+  <rect x="42" y="50" width="7" height="6" rx="1" fill="#D4A017" opacity="0.8"/>
+  <rect x="51" y="50" width="5" height="6" rx="1" fill="#D4A017" opacity="0.8"/>
+
+  <!-- Van wheels -->
+  <circle cx="37" cy="61" r="3.5" fill="#0D1B2A" opacity="0.95"/>
+  <circle cx="37" cy="61" r="1.5" fill="#D4A017"/>
+  <circle cx="51" cy="61" r="3.5" fill="#0D1B2A" opacity="0.95"/>
+  <circle cx="51" cy="61" r="1.5" fill="#D4A017"/>
+
+  <!-- Ground dust / motion lines -->
+  <line x1="22" y1="63" x2="28" y2="63" stroke="#0D1B2A" stroke-width="1" opacity="0.5"/>
+  <line x1="18" y1="65" x2="25" y2="65" stroke="#0D1B2A" stroke-width="0.8" opacity="0.4"/>
 </svg>

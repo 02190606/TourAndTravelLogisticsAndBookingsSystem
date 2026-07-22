@@ -89,7 +89,7 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-[#fff7ed] lg:grid lg:grid-cols-[1.08fr_0.92fr]">
-      <section className="relative min-h-[48vh] lg:min-h-screen">
+      <section className="relative max-[480px]:min-h-[28vh] min-h-[48vh] lg:min-h-screen">
         <div className="absolute inset-0 overflow-hidden">
           <img
             src={heroImage}
@@ -99,25 +99,25 @@ export function Login() {
           <div className="absolute inset-0 bg-gradient-to-r from-orange-950/45 via-orange-900/10 to-slate-950/20" />
         </div>
 
-        <div className="relative z-10 flex min-h-[48vh] items-start px-6 pt-16 pb-10 sm:px-10 sm:pt-20 lg:min-h-screen lg:px-20 lg:pt-28">
+        <div className="relative z-10 flex max-[480px]:min-h-[28vh] max-[480px]:pt-5 max-[480px]:pb-4 max-[480px]:px-4 min-h-[48vh] items-start px-6 pt-16 pb-10 sm:px-10 sm:pt-20 lg:min-h-screen lg:px-20 lg:pt-28">
           <motion.div
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
             className="max-w-2xl text-white drop-shadow"
           >
-            <div className="mb-8 flex items-center gap-4" style={{ marginTop: '28px' }}>
-              <div className="grid h-16 w-16 place-items-center rounded-[22px] bg-white text-3xl font-black text-primary shadow-xl shadow-orange-950/20">
+            <div className="mb-8 max-[480px]:mb-4 flex items-center gap-4" style={{ marginTop: '28px' }}>
+              <div className="grid max-[480px]:h-12 max-[480px]:w-12 max-[480px]:rounded-[16px] max-[480px]:text-xl h-16 w-16 place-items-center rounded-[22px] bg-white text-3xl font-black text-primary shadow-xl shadow-orange-950/20">
                 S
               </div>
               <div>
-                <h1 className="text-3xl font-black tracking-tight">SafariTour</h1>
+                <h1 className="max-[480px]:text-2xl text-3xl font-black tracking-tight">SafariTour</h1>
                 <p className="text-sm font-medium text-white/80">Operations Management</p>
               </div>
             </div>
 
             <AnimatedHeadline text={heroTitle} />
-            <div className="mt-5 max-w-xl space-y-1 text-base font-medium leading-7 text-white/90 sm:text-lg">
+            <div className="mt-5 max-[480px]:mt-3 max-w-xl space-y-1 max-[480px]:space-y-0.5 text-base font-medium leading-7 max-[480px]:leading-6 text-white/90 max-[480px]:text-sm sm:text-lg">
               {heroMessages.map((message, index) => (
                 <motion.p
                   key={message}
@@ -135,7 +135,7 @@ export function Login() {
         </div>
       </section>
 
-      <section className="flex min-h-[52vh] items-center justify-center bg-[radial-gradient(circle_at_top_right,#FFEDD5_0%,#F8FAFC_36%,#ECFEFF_100%)] px-5 py-10 lg:min-h-screen lg:px-12">
+      <section className="flex max-[480px]:min-h-0 max-[480px]:px-4 max-[480px]:py-5 min-h-[52vh] items-center justify-center bg-[radial-gradient(circle_at_top_right,#FFEDD5_0%,#F8FAFC_36%,#ECFEFF_100%)] px-5 py-10 lg:min-h-screen lg:px-12">
         <motion.div
           initial={{ opacity: 0, x: 28 }}
           animate={{ opacity: 1, x: 0 }}
@@ -144,11 +144,11 @@ export function Login() {
         >
           <div className="overflow-hidden rounded-2xl border border-white bg-white/88 shadow-2xl shadow-slate-300/50 backdrop-blur">
             <div className="h-2 bg-gradient-to-r from-orange-400 via-primary to-cyan-400" />
-            <div className="p-7 sm:p-9">
-              <div className="mb-7">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Secure portal</p>
-                <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950">Welcome back</h2>
-                <p className="mt-2 text-sm text-slate-600">Sign in to manage tours, vehicles, bookings, and payments.</p>
+            <div className="max-[480px]:p-5 p-7 sm:p-9">
+              <div className="mb-7 max-[480px]:mb-5">
+                <p className="max-[480px]:text-[10px] text-xs font-bold uppercase tracking-[0.22em] text-primary">SECURE PORTAL</p>
+                <h2 className="mt-2 max-[480px]:text-2xl text-3xl font-black tracking-tight text-slate-950">Welcome back</h2>
+                <p className="mt-2 max-[480px]:text-xs text-sm text-slate-600">Sign in to manage tours, vehicles, bookings, and payments.</p>
               </div>
 
               <AnimatePresence mode="wait">
@@ -158,7 +158,7 @@ export function Login() {
                     initial={{ opacity: 0, scale: 0.94 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex flex-col items-center py-14 text-center"
+                    className="flex flex-col items-center max-[480px]:py-8 py-14 text-center"
                   >
                     <div className="mb-5 grid h-20 w-20 place-items-center rounded-full bg-emerald-50 text-success ring-8 ring-emerald-100">
                       <motion.svg
@@ -182,7 +182,7 @@ export function Login() {
                     initial={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onSubmit={handleSubmit}
-                    className="space-y-5"
+                    className="max-[480px]:space-y-3 space-y-5"
                   >
                     <FieldShell label="Email" icon={<MailIcon />}>
                       <input
@@ -191,7 +191,7 @@ export function Login() {
                         onChange={e => setEmail(e.target.value)}
                         placeholder="you@example.com"
                         required
-                        className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/12"
+                        className="max-[480px]:h-11 h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 max-[480px]:text-sm text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/12"
                       />
                     </FieldShell>
 
@@ -203,12 +203,12 @@ export function Login() {
                           onChange={e => setPassword(e.target.value)}
                           placeholder="Enter your password"
                           required
-                          className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 pr-12 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/12"
+                          className="max-[480px]:h-11 h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 pr-12 max-[480px]:text-sm text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/12"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-primary"
+                          className="absolute right-2 top-1/2 grid max-[480px]:h-10 max-[480px]:w-10 h-8 w-8 -translate-y-1/2 place-items-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-primary"
                           aria-label={showPassword ? 'Hide password' : 'Show password'}
                         >
                           {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -217,14 +217,14 @@ export function Login() {
                     </FieldShell>
 
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-600">
+                      <label className="max-[480px]:py-1.5 flex cursor-pointer items-center gap-2.5 max-[480px]:text-xs text-sm font-medium text-slate-600">
                         <input
                           type="checkbox"
-                          className="h-5 w-5 rounded-md border-slate-300 text-primary focus:ring-primary/25"
+                          className="max-[480px]:h-5 max-[480px]:w-5 h-5 w-5 rounded-md border-slate-300 text-primary focus:ring-primary/25"
                         />
                         Remember me
                       </label>
-                      <button type="button" className="text-sm font-bold text-primary transition hover:text-orange-600">
+                      <button type="button" className="max-[480px]:py-1.5 max-[480px]:text-xs text-sm font-bold text-primary transition hover:text-orange-600">
                         Forgot password?
                       </button>
                     </div>
@@ -246,7 +246,7 @@ export function Login() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-teal-600 text-base font-black text-white shadow-lg shadow-primary/25 transition hover:from-orange-500 hover:to-primary disabled:cursor-not-allowed disabled:opacity-60"
+                      className="max-[480px]:h-12 max-[480px]:text-sm max-[480px]:rounded-lg flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-teal-600 text-base font-black text-white shadow-lg shadow-primary/25 transition hover:from-orange-500 hover:to-primary disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isLoading ? (
                         <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
@@ -277,8 +277,7 @@ function AnimatedHeadline({ text }: { text: string }) {
       variants={wordContainer}
       initial="hidden"
       animate="visible"
-      className="max-w-2xl text-3xl font-black leading-[1.16] sm:text-4xl lg:text-5xl"
-      style={{ marginTop: '170px' }}
+      className="max-w-2xl max-[480px]:text-2xl max-[480px]:mt-8 max-[480px]:leading-[1.2] text-3xl font-black leading-[1.16] sm:text-4xl lg:text-5xl mt-[170px]"
       aria-label={text}
     >
       {text.split(' ').map((word, index) => (
@@ -299,9 +298,9 @@ function AnimatedHeadline({ text }: { text: string }) {
 function FieldShell({ label, icon, children }: { label: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-bold text-slate-800">{label}</label>
-      <div className="grid grid-cols-[52px_1fr] gap-3">
-        <div className="grid h-12 place-items-center rounded-lg bg-gradient-to-br from-orange-100 to-teal-50 text-primary ring-1 ring-orange-200/70">
+      <label className="mb-2 max-[480px]:mb-1.5 block max-[480px]:text-xs text-sm font-bold text-slate-800">{label}</label>
+      <div className="grid max-[480px]:grid-cols-[40px_1fr] max-[480px]:gap-1.5 grid-cols-[52px_1fr] gap-3">
+        <div className="grid max-[480px]:h-11 h-12 place-items-center rounded-lg bg-gradient-to-br from-orange-100 to-teal-50 text-primary ring-1 ring-orange-200/70">
           {icon}
         </div>
         {children}

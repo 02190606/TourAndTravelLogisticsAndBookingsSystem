@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { addDays, parseISO, isBefore, isAfter } from 'date-fns'
 import { useAuth } from '@/context/AuthContext'
+import { useEffect } from 'react'
 import type { AlertSetting, ServiceRecord, Vehicle } from '@/types'
 
 interface Alert {
@@ -15,8 +16,9 @@ interface Alert {
 
 export function useAlerts() {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['alerts', user?.id],
     queryFn: async (): Promise<{ alerts: Alert[]; count: number }> => {
       if (!user) return { alerts: [], count: 0 }
@@ -155,4 +157,38 @@ export function useAlerts() {
     },
     refetchInterval: 10 * 60 * 1000,
   })
+
+  useEffect(() => {
+    if (!user || !query.data) return
+
+    const allAlertIds = query.data.alerts.map(a => a.id)
+    if (allAlertIds.length === 0) return
+
+    const syncAcknowledge = async () => {
+      const { data: sentAlerts } = await supabase
+        .from('sent_alerts')
+        .select('alert_item_id')
+        .eq('user_id', user.id)
+
+      if (!sentAlerts || sentAlerts.length === 0) return
+
+      const { data: acknowledged } = await supabase
+        .from('acknowledged_alerts')
+        .select('alert_id')
+        .eq('user_id', user.id)
+
+      const ackedSet = new Set(acknowledged?.map(a => a.alert_id) || [])
+      const toAck = sentAlerts.filter(s => allAlertIds.includes(s.alert_item_id) && !ackedSet.has(s.alert_item_id))
+
+      if (toAck.length > 0) {
+        const ackRows = toAck.map(s => ({ user_id: user.id, alert_id: s.alert_item_id }))
+        await supabase.from('acknowledged_alerts').upsert(ackRows, { onConflict: 'user_id,alert_id', ignoreDuplicates: true })
+        queryClient.invalidateQueries({ queryKey: ['alerts'] })
+      }
+    }
+
+    syncAcknowledge()
+  }, [user, query.data])
+
+  return query
 }

@@ -66,6 +66,28 @@ export function TripAlerts() {
     },
   })
 
+  const { data: sentAlerts } = useQuery({
+    queryKey: ['sent-trip-alerts', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('sent_alerts')
+        .select('alert_item_id')
+        .eq('user_id', user?.id)
+      return data?.map(a => a.alert_item_id) || []
+    },
+  })
+
+  useEffect(() => {
+    if (sentAlerts && sentAlerts.length > 0) {
+      const toAck = sentAlerts.filter(id => !acknowledgedIds?.has(id))
+      if (toAck.length > 0) {
+        const ackRows = toAck.map(alert_id => ({ user_id: user?.id, alert_id }))
+        supabase.from('acknowledged_alerts').upsert(ackRows, { onConflict: 'user_id,alert_id', ignoreDuplicates: true })
+          .then(() => queryClient.invalidateQueries({ queryKey: ['acknowledged-trip-alerts'] }))
+      }
+    }
+  }, [sentAlerts, acknowledgedIds, user?.id])
+
   const acknowledgeTripAlert = useMutation({
     mutationFn: async (alertId: string) => {
       await supabase.from('acknowledged_alerts').insert({ user_id: user?.id, alert_id: alertId })
