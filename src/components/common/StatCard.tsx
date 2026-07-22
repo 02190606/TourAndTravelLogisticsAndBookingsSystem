@@ -27,17 +27,17 @@ export function StatCard({ title, value, icon, color = 'primary', subtitle, inde
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.4 }}
-      className={`group relative overflow-hidden rounded-lg border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg hover:shadow-slate-200/70 ${className}`}
+      className={`group relative overflow-hidden rounded-lg border border-slate-200/80 bg-white p-3 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg hover:shadow-slate-200/70 ${className}`}
     >
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/50 via-primary/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <div className="mb-4 flex items-start justify-between">
-        <div className={`grid h-11 w-11 place-items-center rounded-lg ring-1 ${colorMap[color]}`}>
-          <span className="text-lg leading-none [&_svg]:h-5 [&_svg]:w-5">{icon}</span>
+      <div className="mb-2 sm:mb-4 flex items-start justify-between">
+        <div className={`grid h-8 w-8 sm:h-11 sm:w-11 place-items-center rounded-lg ring-1 ${colorMap[color]}`}>
+          <span className="text-base sm:text-lg leading-none [&_svg]:h-4 [&_svg]:w-4 sm:[&_svg]:h-5 sm:[&_svg]:w-5">{icon}</span>
         </div>
       </div>
-      <div className="space-y-1">
-        <p className="truncate text-xl font-bold text-text-primary sm:text-2xl lg:text-3xl">{value}</p>
-        <p className="text-xs sm:text-sm font-medium text-text-secondary">{title}</p>
+      <div className="space-y-0.5 sm:space-y-1">
+        <p className="truncate text-lg sm:text-xl font-bold text-text-primary sm:text-2xl lg:text-3xl">{value}</p>
+        <p className="text-[10px] sm:text-xs sm:text-sm font-medium text-text-secondary">{title}</p>
         {subtitle && <p className="text-xs text-text-secondary/70">{subtitle}</p>}
       </div>
     </motion.div>

@@ -11,36 +11,36 @@ export function TripsDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['trips-dashboard'],
     queryFn: async () => {
-      const { data: trips } = await supabase.from('trips').select('*')
+      const { data: trips, error } = await supabase.from('trips').select('*')
       const t = (trips || []) as Trip[]
 
-      const planned = t.filter(t => computeTripStatus(t) === 'planned').length
-      const ongoing = t.filter(t => computeTripStatus(t) === 'ongoing').length
-      const endsToday = t.filter(t => computeTripStatus(t) === 'ends_today').length
-      const completed = t.filter(t => computeTripStatus(t) === 'completed').length
-      const cancelled = t.filter(t => computeTripStatus(t) === 'cancelled').length
+      const planned = t.filter(tr => computeTripStatus(tr) === 'planned').length
+      const ongoing = t.filter(tr => computeTripStatus(tr) === 'ongoing').length
+      const endsToday = t.filter(tr => computeTripStatus(tr) === 'ends_today').length
+      const completed = t.filter(tr => computeTripStatus(tr) === 'completed').length
+      const cancelled = t.filter(tr => computeTripStatus(tr) === 'cancelled').length
 
       const thisMonth = new Date().getMonth()
       const thisYear = new Date().getFullYear()
       const monthlyRevenue = t
-        .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getMonth() === thisMonth && new Date(t.trip_start_date).getFullYear() === thisYear)
-        .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
+        .filter(tr => isActiveTrip(tr) && new Date(tr.trip_start_date).getMonth() === thisMonth && new Date(tr.trip_start_date).getFullYear() === thisYear)
+        .reduce((sum, tr) => sum + (tr.amount_in_ugx || 0), 0)
 
       const yearlyRevenue = t
-        .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getFullYear() === thisYear)
-        .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
+        .filter(tr => isActiveTrip(tr) && new Date(tr.trip_start_date).getFullYear() === thisYear)
+        .reduce((sum, tr) => sum + (tr.amount_in_ugx || 0), 0)
 
       const now = new Date()
       const weekStart = startOfWeek(now, { weekStartsOn: 1 })
       const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
-      const upcomingThisWeek = t.filter(t => {
-        const start = parseISO(t.trip_start_date)
-        return isWithinInterval(start, { start: weekStart, end: weekEnd }) && computeTripStatus(t) !== 'cancelled'
+      const upcomingThisWeek = t.filter(tr => {
+        const start = parseISO(tr.trip_start_date)
+        return isWithinInterval(start, { start: weekStart, end: weekEnd }) && computeTripStatus(tr) !== 'cancelled'
       })
 
       const upcomingTrips = t
-        .filter(t => {
-          const s = computeTripStatus(t)
+        .filter(tr => {
+          const s = computeTripStatus(tr)
           return s === 'planned' || s === 'ongoing' || s === 'ends_today'
         })
         .sort((a, b) => new Date(a.trip_start_date).getTime() - new Date(b.trip_start_date).getTime())
@@ -50,8 +50,8 @@ export function TripsDashboard() {
       const revenueByMonth = months.map((name, i) => ({
         name,
         value: t
-          .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getMonth() === i && new Date(t.trip_start_date).getFullYear() === thisYear)
-          .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0),
+          .filter(tr => isActiveTrip(tr) && new Date(tr.trip_start_date).getMonth() === i && new Date(tr.trip_start_date).getFullYear() === thisYear)
+          .reduce((sum, tr) => sum + (tr.amount_in_ugx || 0), 0),
       }))
 
       return { planned, ongoing, endsToday, completed, cancelled, monthlyRevenue, yearlyRevenue, upcomingThisWeek: upcomingThisWeek.length, upcomingTrips, revenueByMonth, total: t.length }
@@ -63,15 +63,15 @@ export function TripsDashboard() {
   const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader title="Trips Dashboard" subtitle="Trip flow, revenue, and near-term scheduling" />
 
-      <section className="rounded-lg border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm">
-        <div className="grid gap-4 sm:items-center lg:grid-cols-[1.4fr_0.8fr]">
+      <section className="rounded-lg border border-slate-200/80 bg-white p-3 sm:p-5 shadow-sm">
+        <div className="grid gap-3 sm:gap-4 sm:items-center lg:grid-cols-[1.4fr_0.8fr]">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">Bookings performance</p>
-            <h2 className="mt-2 text-xl sm:text-2xl font-bold text-slate-950">Track demand, delivery, and revenue momentum</h2>
-            <p className="mt-2 max-w-2xl text-sm text-text-secondary">
+            <h2 className="mt-1.5 sm:mt-2 text-lg sm:text-2xl font-bold text-slate-950">Track demand, delivery, and revenue momentum</h2>
+            <p className="mt-1.5 sm:mt-2 max-w-2xl text-xs sm:text-sm text-text-secondary">
               Keep planned tours, active trips, and completed revenue visible for the operations team.
             </p>
           </div>
@@ -83,8 +83,8 @@ export function TripsDashboard() {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <StatCard title="Total Trips" value={stats.total} icon={<Icon name="plane" />} color="primary" />
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <StatCard title="Total" value={stats.total} icon={<Icon name="plane" />} color="primary" />
         <StatCard title="Planned" value={stats.planned} icon={<Icon name="clipboard" />} color="info" />
         <StatCard title="Ongoing" value={stats.ongoing} icon={<Icon name="sync" />} color="success" />
         <StatCard title="Ends Today" value={stats.endsToday} icon={<Icon name="calendar" />} color="warning" />
@@ -92,17 +92,17 @@ export function TripsDashboard() {
         <StatCard title="Cancelled" value={stats.cancelled} icon={<Icon name="x" />} color="danger" />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard title="Completed Revenue (Month)" value={formatUGX(stats.monthlyRevenue)} icon={<Icon name="cash" />} color="primary" />
-        <StatCard title="Completed Revenue (Year)" value={formatUGX(stats.yearlyRevenue)} icon={<Icon name="trend" />} color="secondary" />
-        <StatCard title="Upcoming This Week" value={stats.upcomingThisWeek} icon={<Icon name="calendar" />} color="info" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <StatCard title="Revenue (Month)" value={formatUGX(stats.monthlyRevenue)} icon={<Icon name="cash" />} color="primary" />
+        <StatCard title="Revenue (Year)" value={formatUGX(stats.yearlyRevenue)} icon={<Icon name="trend" />} color="secondary" />
+        <StatCard title="This Week" value={stats.upcomingThisWeek} icon={<Icon name="calendar" />} color="info" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-        <section className="rounded-lg border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
-          <div className="mb-5">
-            <h3 className="text-lg font-bold text-slate-950">Trips by Status</h3>
-            <p className="text-sm text-text-secondary">Current distribution across all bookings</p>
+        <section className="rounded-lg border border-slate-200/80 bg-white p-3 sm:p-6 shadow-sm">
+          <div className="mb-3 sm:mb-5">
+            <h3 className="text-base sm:text-lg font-bold text-slate-950">Trips by Status</h3>
+            <p className="text-xs sm:text-sm text-text-secondary">Current distribution across all bookings</p>
           </div>
           <DonutChart
             data={[
@@ -114,24 +114,24 @@ export function TripsDashboard() {
             ]}
           />
         </section>
-        <section className="rounded-lg border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
-          <div className="mb-5">
-            <h3 className="text-lg font-bold text-slate-950">Monthly Revenue</h3>
-            <p className="text-sm text-text-secondary">Revenue booked by trip start month</p>
+        <section className="rounded-lg border border-slate-200/80 bg-white p-3 sm:p-6 shadow-sm">
+          <div className="mb-3 sm:mb-5">
+            <h3 className="text-base sm:text-lg font-bold text-slate-950">Monthly Revenue</h3>
+            <p className="text-xs sm:text-sm text-text-secondary">Revenue booked by trip start month</p>
           </div>
-          <LineChart data={stats.revenueByMonth} />
+          <LineChart data={stats.revenueByMonth} height={220} />
         </section>
       </div>
 
       {stats.upcomingTrips.length > 0 && (
-        <section className="rounded-lg border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm">
-          <div className="mb-5">
-            <h3 className="text-lg font-bold text-slate-950">Upcoming Trips</h3>
-            <p className="text-sm text-text-secondary">Next planned or ongoing client movements</p>
+        <section className="rounded-lg border border-slate-200/80 bg-white p-3 sm:p-6 shadow-sm">
+          <div className="mb-3 sm:mb-5">
+            <h3 className="text-base sm:text-lg font-bold text-slate-950">Upcoming Trips</h3>
+            <p className="text-xs sm:text-sm text-text-secondary">Next planned or ongoing client movements</p>
           </div>
           <div className="divide-y divide-slate-100">
             {stats.upcomingTrips.map((trip) => (
-              <div key={trip.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div key={trip.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-medium text-sm text-slate-950">{trip.client_name}</p>
                   <p className="text-xs text-text-secondary">
@@ -156,9 +156,9 @@ export function TripsDashboard() {
 
 function MiniMetric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-4">
-      <p className="truncate text-xl font-bold text-slate-950">{value}</p>
-      <p className="mt-1 text-xs font-medium text-text-secondary">{label}</p>
+    <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-3 sm:px-3 sm:py-4">
+      <p className="truncate text-base sm:text-xl font-bold text-slate-950">{value}</p>
+      <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs font-medium text-text-secondary">{label}</p>
     </div>
   )
 }
