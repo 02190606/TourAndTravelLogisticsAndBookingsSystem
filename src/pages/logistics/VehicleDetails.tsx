@@ -132,11 +132,11 @@ export function VehicleDetails() {
                     <span>👤</span> {v.current_driver.full_name}
                   </p>
                 )}
-                <div className="flex gap-2 pt-2 border-t border-muted/30">
-                  <button onClick={() => navigate(`/logistics/vehicles/${v.id}`)} className="text-xs text-primary hover:underline cursor-pointer">View</button>
-                  <button onClick={() => { setEditVehicle(v); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer">Edit</button>
-                  <button onClick={() => setDeleteTarget(v)} className="text-xs text-text-secondary hover:underline cursor-pointer" title="Mark as sold">Sold</button>
-                  <button onClick={() => setPermanentDeleteTarget(v)} className="text-xs text-danger hover:underline cursor-pointer" title="Permanently delete">Delete</button>
+                <div className="flex gap-1 sm:gap-2 pt-2 border-t border-muted/30">
+                  <button onClick={() => navigate(`/logistics/vehicles/${v.id}`)} className="text-xs text-primary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-primary/5">View</button>
+                  <button onClick={() => { setEditVehicle(v); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-muted/50">Edit</button>
+                  <button onClick={() => setDeleteTarget(v)} className="text-xs text-text-secondary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-muted/50" title="Mark as sold">Sold</button>
+                  <button onClick={() => setPermanentDeleteTarget(v)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5" title="Permanently delete">Delete</button>
                 </div>
               </div>
             </motion.div>
@@ -168,11 +168,11 @@ export function VehicleDetails() {
                   <td data-label="Location" className="px-4 py-3 text-sm text-text-secondary">{v.current_location || '-'}</td>
                   <td data-label="Driver" className="px-4 py-3 text-sm text-text-secondary">{v.current_driver?.full_name || '-'}</td>
                   <td data-label="" className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button onClick={() => navigate(`/logistics/vehicles/${v.id}`)} className="text-xs text-primary hover:underline cursor-pointer">View</button>
-                      <button onClick={() => { setEditVehicle(v); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer">Edit</button>
-                      <button onClick={() => setDeleteTarget(v)} className="text-xs text-text-secondary hover:underline cursor-pointer" title="Mark as sold">Sold</button>
-                      <button onClick={() => setPermanentDeleteTarget(v)} className="text-xs text-danger hover:underline cursor-pointer" title="Permanently delete">Delete</button>
+                    <div className="flex gap-1 sm:gap-2">
+                      <button onClick={() => navigate(`/logistics/vehicles/${v.id}`)} className="text-xs text-primary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-primary/5">View</button>
+                      <button onClick={() => { setEditVehicle(v); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-muted/50">Edit</button>
+                      <button onClick={() => setDeleteTarget(v)} className="text-xs text-text-secondary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-muted/50" title="Mark as sold">Sold</button>
+                      <button onClick={() => setPermanentDeleteTarget(v)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5" title="Permanently delete">Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -253,6 +253,10 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
         id: editVehicle?.id || generateId('VEH'),
         mileage: Number(form.mileage),
         year: Number(form.year),
+        driving_permit: form.driving_permit || null,
+        current_location: form.current_location || null,
+        engine_capacity: form.engine_capacity || null,
+        additional_requirements: form.additional_requirements || null,
         current_driver_id: form.current_driver_id || null,
         permit_expiry_date: form.permit_expiry_date || null,
         insurance_commencement: form.insurance_commencement || null,

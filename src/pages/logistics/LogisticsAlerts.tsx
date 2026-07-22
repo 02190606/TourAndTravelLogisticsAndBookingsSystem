@@ -150,7 +150,7 @@ export function LogisticsAlerts() {
               <button
                 onClick={() => acknowledgeAlert.mutate(alert.id)}
                 disabled={acknowledgeAlert.isPending}
-                className="px-3 py-1.5 text-xs bg-secondary/10 text-secondary rounded-lg hover:bg-secondary/20 transition-colors cursor-pointer flex-shrink-0 disabled:opacity-50"
+                className="px-3 py-2 min-h-[36px] text-xs bg-secondary/10 text-secondary rounded-lg hover:bg-secondary/20 transition-colors cursor-pointer flex-shrink-0 disabled:opacity-50"
               >
                 {acknowledgeAlert.isPending ? '...' : 'Acknowledge'}
               </button>

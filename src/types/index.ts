@@ -67,11 +67,14 @@ export interface MaintenanceRecord {
 export interface Complaint {
   id: string
   vehicle_id: string
+  driver_id: string | null
+  incident_date: string | null
   complaint_items: string[]
   date_filed: string
   status: 'open' | 'resolved'
   created_at: string
   vehicles?: Vehicle
+  drivers?: Driver
 }
 
 export interface Driver {
@@ -167,6 +170,8 @@ export type PenaltyStatus = 'unpaid' | 'paid' | 'disputed'
 export interface Penalty {
   id: string
   vehicle_id: string
+  driver_id: string | null
+  incident_date: string | null
   date_issued: string
   amount: number
   reason: string
@@ -174,4 +179,6 @@ export interface Penalty {
   issued_by: string
   notes: string
   created_at: string
+  vehicles?: Vehicle
+  drivers?: Driver
 }

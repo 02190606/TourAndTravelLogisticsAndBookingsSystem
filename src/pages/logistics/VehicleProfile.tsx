@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, Badge, Modal, Drawer, StatusBadge, CardSkeleton } from '@/components/common'
 import { formatDate, formatUGX, generateId } from '@/utils'
 import toast from 'react-hot-toast'
-import type { Vehicle, ServiceRecord, Complaint, Repair } from '@/types'
+import type { Vehicle, ServiceRecord, Complaint, Repair, Driver } from '@/types'
 
 type SubTab = 'service' | 'complaints' | 'repairs'
 
@@ -208,7 +208,7 @@ function ServiceRecordsTable({ vehicleId }: { vehicleId: string }) {
                 <td data-label="Cost" className="px-4 py-3 text-sm font-mono">{formatUGX(r.cost)}</td>
                 <td data-label="Next" className="px-4 py-3 text-sm">{r.next_service_date ? formatDate(r.next_service_date) : '-'}</td>
                 <td data-label="" className="px-4 py-3">
-                  <button onClick={() => setDeleteTarget(r)} className="text-xs text-danger hover:underline cursor-pointer">Delete</button>
+                  <button onClick={() => setDeleteTarget(r)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
                 </td>
               </tr>
             ))}
@@ -239,6 +239,9 @@ function ServiceDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: (
     mutationFn: async () => {
       const { error } = await supabase.from('service_records').insert({
         id: generateId('SRV'), vehicle_id: vehicleId, ...form, cost: Number(form.cost),
+        description: form.description || null,
+        place_done: form.place_done || null,
+        next_service_date: form.next_service_date || null,
       })
       if (error) throw error
     },
@@ -324,7 +327,7 @@ function ComplaintsTable({ vehicleId }: { vehicleId: string }) {
                 <td data-label="Items" className="px-4 py-3 text-sm">{c.complaint_items?.length || 0} items</td>
                 <td data-label="Status" className="px-4 py-3"><StatusBadge status={c.status} /></td>
                 <td data-label="" className="px-4 py-3">
-                  <button onClick={() => setDeleteTarget(c)} className="text-xs text-danger hover:underline cursor-pointer">Delete</button>
+                  <button onClick={() => setDeleteTarget(c)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
                 </td>
               </tr>
             ))}
@@ -349,14 +352,24 @@ function ComplaintsTable({ vehicleId }: { vehicleId: string }) {
 
 function ComplaintDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: () => void; vehicleId: string }) {
   const queryClient = useQueryClient()
+  const [driver_id, setDriverId] = useState('')
+  const [incident_date, setIncidentDate] = useState('')
   const [items, setItems] = useState<string[]>([])
   const [itemInput, setItemInput] = useState('')
   const [status, setStatus] = useState<'open' | 'resolved'>('open')
 
+  const { data: drivers = [] } = useQuery({
+    queryKey: ['active-drivers'],
+    queryFn: async () => {
+      const { data } = await supabase.from('drivers').select('id, full_name').eq('is_active', true).order('full_name')
+      return (data || []) as Pick<Driver, 'id' | 'full_name'>[]
+    },
+  })
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from('complaints').insert({
-        id: generateId('CMP'), vehicle_id: vehicleId, complaint_items: items, date_filed: new Date().toISOString(), status,
+        id: generateId('CMP'), vehicle_id: vehicleId, driver_id: driver_id || null, incident_date: incident_date || null, complaint_items: items, date_filed: new Date().toISOString(), status,
       })
       if (error) throw error
     },
@@ -367,6 +380,19 @@ function ComplaintDrawer({ open, onClose, vehicleId }: { open: boolean; onClose:
   return (
     <Drawer open={open} onClose={onClose} title="File Complaint">
       <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Driver</label>
+          <select value={driver_id} onChange={e => setDriverId(e.target.value)} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
+            <option value="">None</option>
+            {drivers.map(d => (
+              <option key={d.id} value={d.id}>{d.full_name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Incident Date</label>
+          <input type="date" value={incident_date} onChange={e => setIncidentDate(e.target.value)} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+        </div>
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium">Status:</span>
           <button type="button" onClick={() => setStatus(s => s === 'open' ? 'resolved' : 'open')} className={`px-3 py-1.5 rounded-lg text-sm cursor-pointer ${status === 'open' ? 'bg-warning/15 text-warning' : 'bg-success/15 text-success'}`}>
@@ -463,7 +489,7 @@ function RepairsTable({ vehicleId }: { vehicleId: string }) {
                 <td data-label="Cost" className="px-4 py-3 text-sm font-mono">{formatUGX(r.cost)}</td>
                 <td data-label="Status" className="px-4 py-3"><span className={`inline-block px-2 py-0.5 rounded-lg text-xs capitalize ${statusColors[r.status]}`}>{r.status.replace('_', ' ')}</span></td>
                 <td data-label="" className="px-4 py-3">
-                  <button onClick={() => setDeleteTarget(r)} className="text-xs text-danger hover:underline cursor-pointer">Delete</button>
+                  <button onClick={() => setDeleteTarget(r)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
                 </td>
               </tr>
             ))}
@@ -505,6 +531,8 @@ function RepairDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: ()
         vehicle_id: vehicleId,
         ...form,
         cost: Number(form.cost),
+        repair_description: form.repair_description || null,
+        workshop_mechanic: form.workshop_mechanic || null,
       })
       if (insertError) throw insertError
 

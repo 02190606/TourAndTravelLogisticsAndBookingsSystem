@@ -269,7 +269,7 @@ export function TripAlerts() {
                       <button
                         onClick={() => acknowledgeTripAlert.mutate(`trip-start-${trip.id}`)}
                         disabled={acknowledgeTripAlert.isPending}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 transition-all cursor-pointer flex-shrink-0 disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] text-xs font-medium bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 transition-all cursor-pointer flex-shrink-0 disabled:opacity-50"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

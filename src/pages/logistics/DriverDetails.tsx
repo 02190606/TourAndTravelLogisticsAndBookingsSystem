@@ -91,9 +91,9 @@ export function DriverDetails() {
               <p><span className="text-text-secondary">Experience:</span> {d.driving_experience_years} years</p>
             </div>
             <StatusBadge status={d.is_active ? 'active' : 'inactive'} />
-            <div className="flex gap-3 pt-2 border-t border-muted/30">
-              <button onClick={() => { setEditDriver(d); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer">Edit</button>
-              <button onClick={() => setDeleteTarget(d)} className="text-xs text-danger hover:underline cursor-pointer">Delete</button>
+            <div className="flex gap-1 sm:gap-2 pt-2 border-t border-muted/30">
+              <button onClick={() => { setEditDriver(d); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-muted/50">Edit</button>
+              <button onClick={() => setDeleteTarget(d)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
             </div>
           </motion.div>
         ))}

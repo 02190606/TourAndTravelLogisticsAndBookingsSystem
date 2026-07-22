@@ -4,12 +4,12 @@ import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, Drawer, Modal, StatusBadge, CardSkeleton } from '@/components/common'
 import { formatDate, generateId } from '@/utils'
 import toast from 'react-hot-toast'
-import type { Complaint, Vehicle } from '@/types'
+import type { Complaint, Vehicle, Driver } from '@/types'
 
 export function Complaints() {
   const queryClient = useQueryClient()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [viewComplaint, setViewComplaint] = useState<(Complaint & { vehicles?: Vehicle }) | null>(null)
+  const [viewComplaint, setViewComplaint] = useState<Complaint | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Complaint | null>(null)
 
   const { data: complaints = [], isLoading } = useQuery({
@@ -17,9 +17,9 @@ export function Complaints() {
     queryFn: async () => {
       const { data } = await supabase
         .from('complaints')
-        .select('*, vehicles!inner(registration_number, make, model)')
+        .select('*, vehicles!inner(registration_number, make, model), drivers(full_name)')
         .order('date_filed', { ascending: false })
-      return (data || []) as (Complaint & { vehicles: Vehicle })[]
+      return (data || []) as Complaint[]
     },
   })
 
@@ -46,9 +46,9 @@ export function Complaints() {
         <table className="w-full responsive-table">
           <thead>
             <tr className="bg-muted/20">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">ID</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Vehicle</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Date Filed</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Driver</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Incident Date</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Items</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Status</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Actions</th>
@@ -57,15 +57,15 @@ export function Complaints() {
           <tbody className="divide-y divide-muted/30">
             {complaints.map((c, i) => (
               <tr key={c.id} className={i % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
-                <td data-label="ID" className="px-4 py-3 font-mono text-sm">{c.id.slice(0, 8)}</td>
                 <td data-label="Vehicle" className="px-4 py-3 text-sm font-medium">{c.vehicles?.registration_number}</td>
-                <td data-label="Date" className="px-4 py-3 text-sm">{formatDate(c.date_filed)}</td>
+                <td data-label="Driver" className="px-4 py-3 text-sm text-text-secondary">{c.drivers?.full_name || '-'}</td>
+                <td data-label="Incident Date" className="px-4 py-3 text-sm text-text-secondary">{c.incident_date || '-'}</td>
                 <td data-label="Items" className="px-4 py-3 text-sm">{c.complaint_items?.length || 0} items</td>
                 <td data-label="Status" className="px-4 py-3"><StatusBadge status={c.status} /></td>
                 <td data-label="" className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <button onClick={() => setViewComplaint(c)} className="text-xs text-primary hover:underline cursor-pointer">View</button>
-                    <button onClick={() => setDeleteTarget(c)} className="text-xs text-danger hover:underline cursor-pointer">Delete</button>
+                  <div className="flex gap-1 sm:gap-2">
+                    <button onClick={() => setViewComplaint(c)} className="text-xs text-primary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-primary/5">View</button>
+                    <button onClick={() => setDeleteTarget(c)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
                   </div>
                 </td>
               </tr>
@@ -81,7 +81,9 @@ export function Complaints() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div><span className="text-text-secondary">Vehicle:</span> {viewComplaint.vehicles?.registration_number}</div>
-              <div><span className="text-text-secondary">Date:</span> {formatDate(viewComplaint.date_filed)}</div>
+              <div><span className="text-text-secondary">Driver:</span> {viewComplaint.drivers?.full_name || '-'}</div>
+              <div><span className="text-text-secondary">Incident Date:</span> {viewComplaint.incident_date || '-'}</div>
+              <div><span className="text-text-secondary">Filed:</span> {formatDate(viewComplaint.date_filed)}</div>
               <div><span className="text-text-secondary">Status:</span> <StatusBadge status={viewComplaint.status} /></div>
             </div>
             <div>
@@ -112,6 +114,8 @@ export function Complaints() {
 function ComplaintDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const queryClient = useQueryClient()
   const [vehicle_id, setVehicleId] = useState('')
+  const [driver_id, setDriverId] = useState('')
+  const [incident_date, setIncidentDate] = useState('')
   const [items, setItems] = useState<string[]>([])
   const [itemInput, setItemInput] = useState('')
   const [status, setStatus] = useState<'open' | 'resolved'>('open')
@@ -124,10 +128,24 @@ function ComplaintDrawer({ open, onClose }: { open: boolean; onClose: () => void
     },
   })
 
+  const { data: drivers = [] } = useQuery({
+    queryKey: ['active-drivers'],
+    queryFn: async () => {
+      const { data } = await supabase.from('drivers').select('id, full_name').eq('is_active', true).order('full_name')
+      return (data || []) as Pick<Driver, 'id' | 'full_name'>[]
+    },
+  })
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from('complaints').insert({
-        id: generateId('CMP'), vehicle_id, complaint_items: items, date_filed: new Date().toISOString(), status,
+        id: generateId('CMP'),
+        vehicle_id,
+        driver_id: driver_id || null,
+        incident_date: incident_date || null,
+        complaint_items: items,
+        date_filed: new Date().toISOString(),
+        status,
       })
       if (error) throw error
     },
@@ -146,6 +164,19 @@ function ComplaintDrawer({ open, onClose }: { open: boolean; onClose: () => void
               <option key={v.id} value={v.id}>{v.registration_number} — {v.make} {v.model}</option>
             ))}
           </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Driver</label>
+          <select value={driver_id} onChange={e => setDriverId(e.target.value)} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
+            <option value="">None</option>
+            {drivers.map(d => (
+              <option key={d.id} value={d.id}>{d.full_name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Incident Date</label>
+          <input type="date" value={incident_date} onChange={e => setIncidentDate(e.target.value)} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium">Status:</span>

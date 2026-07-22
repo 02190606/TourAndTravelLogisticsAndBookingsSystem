@@ -235,7 +235,13 @@ function ServiceDrawer({ open, onClose, record }: { open: boolean; onClose: () =
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!form.service_date) throw new Error('Service Date is required')
-      const payload = { ...form, cost: Number(form.cost), next_service_date: form.next_service_date || null }
+      const payload = {
+        ...form,
+        cost: Number(form.cost),
+        description: form.description || null,
+        place_done: form.place_done || null,
+        next_service_date: form.next_service_date || null,
+      }
       if (isEdit) {
         const { error } = await supabase.from('service_records').update(payload).eq('id', record.id)
         if (error) throw error
@@ -452,7 +458,12 @@ function RepairDrawer({ open, onClose, record }: { open: boolean; onClose: () =>
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!form.date_of_repair) throw new Error('Date of Repair is required')
-      const payload = { ...form, cost: Number(form.cost) }
+      const payload = {
+        ...form,
+        cost: Number(form.cost),
+        repair_description: form.repair_description || null,
+        workshop_mechanic: form.workshop_mechanic || null,
+      }
       if (isEdit) {
         const { error } = await supabase.from('repairs').update(payload).eq('id', record.id)
         if (error) throw error

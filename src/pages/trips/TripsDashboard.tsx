@@ -158,7 +158,7 @@ function MiniMetric({ label, value }: { label: string; value: string | number })
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-3 sm:px-3 sm:py-4">
       <p className="truncate text-base sm:text-xl font-bold text-slate-950">{value}</p>
-      <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs font-medium text-text-secondary">{label}</p>
+      <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs font-medium text-text-secondary">{label}</p>
     </div>
   )
 }

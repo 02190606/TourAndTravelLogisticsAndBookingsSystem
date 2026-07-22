@@ -5,13 +5,13 @@ import { PageHeader, Button, Drawer, Modal, StatusBadge, CardSkeleton } from '@/
 import { formatDate, formatUGX, generateId } from '@/utils'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
-import type { Penalty, PenaltyStatus, Vehicle } from '@/types'
+import type { Penalty, PenaltyStatus, Vehicle, Driver } from '@/types'
 
 export function Penalties() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [viewPenalty, setViewPenalty] = useState<(Penalty & { vehicles?: Vehicle }) | null>(null)
+  const [viewPenalty, setViewPenalty] = useState<Penalty | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Penalty | null>(null)
 
   const { data: penalties = [], isLoading } = useQuery({
@@ -19,9 +19,9 @@ export function Penalties() {
     queryFn: async () => {
       const { data } = await supabase
         .from('penalties')
-        .select('*, vehicles!inner(registration_number, make, model)')
+        .select('*, vehicles!inner(registration_number, make, model), drivers(full_name)')
         .order('date_issued', { ascending: false })
-      return (data || []) as (Penalty & { vehicles: Vehicle })[]
+      return (data || []) as Penalty[]
     },
   })
 
@@ -51,7 +51,8 @@ export function Penalties() {
           <thead>
             <tr className="bg-muted/20">
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Vehicle</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Date Issued</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Driver</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Incident Date</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Reason</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Amount</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Status</th>
@@ -66,14 +67,15 @@ export function Penalties() {
                     {p.vehicles?.registration_number}
                   </button>
                 </td>
-                <td data-label="Date Issued" className="px-4 py-3 text-sm">{formatDate(p.date_issued)}</td>
+                <td data-label="Driver" className="px-4 py-3 text-sm text-text-secondary">{p.drivers?.full_name || '-'}</td>
+                <td data-label="Incident Date" className="px-4 py-3 text-sm text-text-secondary">{p.incident_date || '-'}</td>
                 <td data-label="Reason" className="px-4 py-3 text-sm">{p.reason}</td>
                 <td data-label="Amount" className="px-4 py-3 text-sm font-medium">{formatUGX(p.amount)}</td>
                 <td data-label="Status" className="px-4 py-3"><StatusBadge status={p.status} /></td>
                 <td data-label="" className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <button onClick={() => setViewPenalty(p)} className="text-xs text-primary hover:underline cursor-pointer">View</button>
-                    <button onClick={() => setDeleteTarget(p)} className="text-xs text-danger hover:underline cursor-pointer">Delete</button>
+                  <div className="flex gap-1 sm:gap-2">
+                    <button onClick={() => setViewPenalty(p)} className="text-xs text-primary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-primary/5">View</button>
+                    <button onClick={() => setDeleteTarget(p)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
                   </div>
                 </td>
               </tr>
@@ -89,7 +91,9 @@ export function Penalties() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div><span className="text-text-secondary">Vehicle:</span> {viewPenalty.vehicles?.registration_number}</div>
+              <div><span className="text-text-secondary">Driver:</span> {viewPenalty.drivers?.full_name || '-'}</div>
               <div><span className="text-text-secondary">Date Issued:</span> {formatDate(viewPenalty.date_issued)}</div>
+              <div><span className="text-text-secondary">Incident Date:</span> {viewPenalty.incident_date || '-'}</div>
               <div><span className="text-text-secondary">Amount:</span> <span className="font-semibold">{formatUGX(viewPenalty.amount)}</span></div>
               <div><span className="text-text-secondary">Status:</span> <StatusBadge status={viewPenalty.status} /></div>
               <div><span className="text-text-secondary">Issued By:</span> {viewPenalty.issued_by}</div>
@@ -124,6 +128,8 @@ export function Penalties() {
 function PenaltyDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const queryClient = useQueryClient()
   const [vehicle_id, setVehicleId] = useState('')
+  const [driver_id, setDriverId] = useState('')
+  const [incident_date, setIncidentDate] = useState('')
   const [amount, setAmount] = useState('')
   const [reason, setReason] = useState('')
   const [status, setStatus] = useState<PenaltyStatus>('unpaid')
@@ -138,16 +144,26 @@ function PenaltyDrawer({ open, onClose }: { open: boolean; onClose: () => void }
     },
   })
 
+  const { data: drivers = [] } = useQuery({
+    queryKey: ['active-drivers'],
+    queryFn: async () => {
+      const { data } = await supabase.from('drivers').select('id, full_name').eq('is_active', true).order('full_name')
+      return (data || []) as Pick<Driver, 'id' | 'full_name'>[]
+    },
+  })
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from('penalties').insert({
         id: generateId('PEN'),
         vehicle_id,
+        driver_id: driver_id || null,
+        incident_date: incident_date || null,
         amount: Number(amount),
         reason,
         status,
         issued_by,
-        notes,
+        notes: notes || null,
         date_issued: new Date().toISOString(),
       })
       if (error) throw error
@@ -167,6 +183,19 @@ function PenaltyDrawer({ open, onClose }: { open: boolean; onClose: () => void }
               <option key={v.id} value={v.id}>{v.registration_number} — {v.make} {v.model}</option>
             ))}
           </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Driver</label>
+          <select value={driver_id} onChange={e => setDriverId(e.target.value)} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
+            <option value="">None</option>
+            {drivers.map(d => (
+              <option key={d.id} value={d.id}>{d.full_name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Incident Date</label>
+          <input type="date" value={incident_date} onChange={e => setIncidentDate(e.target.value)} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Amount (UGX)</label>
