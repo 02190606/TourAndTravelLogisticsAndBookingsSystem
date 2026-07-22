@@ -244,10 +244,6 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const permitPattern = /^[A-Za-z]{2,3}\s?\d{3}\s?[A-Za-z]$/
-      if (form.driving_permit && !permitPattern.test(form.driving_permit.trim())) {
-        throw new Error('Driving Permit should follow plate format like "UAT 659U"')
-      }
       const payload = {
         ...form,
         id: editVehicle?.id || generateId('VEH'),
@@ -308,8 +304,8 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
               <input value={form.registration_number} onChange={e => setForm(f => ({ ...f, registration_number: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Chassis Number *</label>
-              <input value={form.chassis_number} onChange={e => setForm(f => ({ ...f, chassis_number: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              <label className="block text-sm font-medium text-text-primary mb-1">Chassis Number</label>
+              <input value={form.chassis_number} onChange={e => setForm(f => ({ ...f, chassis_number: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Make</label>
@@ -320,8 +316,8 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
               <input value={form.model} onChange={e => setForm(f => ({ ...f, model: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Year *</label>
-              <input type="number" value={form.year} onChange={e => setForm(f => ({ ...f, year: Number(e.target.value) }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              <label className="block text-sm font-medium text-text-primary mb-1">Year</label>
+              <input type="number" value={form.year} onChange={e => setForm(f => ({ ...f, year: Number(e.target.value) }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
           </div>
         </div>

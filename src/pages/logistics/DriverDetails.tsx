@@ -160,11 +160,11 @@ function DriverDrawer({ open, onClose, editDriver }: { open: boolean; onClose: (
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">License Number</label>
-          <input value={form.license_number} onChange={e => setForm(f => ({ ...f, license_number: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+          <input value={form.license_number} onChange={e => setForm(f => ({ ...f, license_number: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Phone Number</label>
-          <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+          <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Date Joined</label>

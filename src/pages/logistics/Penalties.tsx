@@ -199,11 +199,11 @@ function PenaltyDrawer({ open, onClose }: { open: boolean; onClose: () => void }
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Amount (UGX)</label>
-          <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required min={0} placeholder="e.g. 500000" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                     <input type="number" value={amount} onChange={e => setAmount(e.target.value)} min={0} placeholder="e.g. 500000" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Reason</label>
-          <textarea value={reason} onChange={e => setReason(e.target.value)} required rows={3} placeholder="Reason for the penalty" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                     <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Reason for the penalty" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Status</label>
@@ -215,7 +215,7 @@ function PenaltyDrawer({ open, onClose }: { open: boolean; onClose: () => void }
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Issued By</label>
-          <input value={issued_by} onChange={e => setIssuedBy(e.target.value)} required placeholder="Name or ID of issuer" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                     <input value={issued_by} onChange={e => setIssuedBy(e.target.value)} placeholder="Name or ID of issuer" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Notes</label>

@@ -158,7 +158,7 @@ function ComplaintDrawer({ open, onClose }: { open: boolean; onClose: () => void
       <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Vehicle</label>
-          <select value={vehicle_id} onChange={e => setVehicleId(e.target.value)} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
+                     <select value={vehicle_id} onChange={e => setVehicleId(e.target.value)} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
             <option value="">Select vehicle</option>
             {vehicles.map(v => (
               <option key={v.id} value={v.id}>{v.registration_number} — {v.make} {v.model}</option>

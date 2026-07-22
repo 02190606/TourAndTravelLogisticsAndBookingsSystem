@@ -234,7 +234,6 @@ function ServiceDrawer({ open, onClose, record }: { open: boolean; onClose: () =
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!form.service_date) throw new Error('Service Date is required')
       const payload = {
         ...form,
         cost: Number(form.cost),
@@ -264,7 +263,7 @@ function ServiceDrawer({ open, onClose, record }: { open: boolean; onClose: () =
       <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Vehicle</label>
-          <select value={form.vehicle_id} onChange={e => setForm(f => ({ ...f, vehicle_id: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
+          <select value={form.vehicle_id} onChange={e => setForm(f => ({ ...f, vehicle_id: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
             <option value="">Select vehicle</option>
             {vehicles.map(v => (
               <option key={v.id} value={v.id}>{v.registration_number} — {v.make} {v.model}</option>
@@ -273,7 +272,7 @@ function ServiceDrawer({ open, onClose, record }: { open: boolean; onClose: () =
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Service Date</label>
-          <input type="date" value={form.service_date} onChange={e => setForm(f => ({ ...f, service_date: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+          <input type="date" value={form.service_date} onChange={e => setForm(f => ({ ...f, service_date: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Description</label>
@@ -457,7 +456,6 @@ function RepairDrawer({ open, onClose, record }: { open: boolean; onClose: () =>
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!form.date_of_repair) throw new Error('Date of Repair is required')
       const payload = {
         ...form,
         cost: Number(form.cost),
@@ -494,8 +492,8 @@ function RepairDrawer({ open, onClose, record }: { open: boolean; onClose: () =>
     <Drawer open={open} onClose={onClose} title={isEdit ? 'Edit Repair' : 'Log Repair'} width="max-w-2xl">
       <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium mb-1">Vehicle *</label>
-          <select value={form.vehicle_id} onChange={e => setForm(f => ({ ...f, vehicle_id: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+          <label className="block text-sm font-medium mb-1">Vehicle</label>
+          <select value={form.vehicle_id} onChange={e => setForm(f => ({ ...f, vehicle_id: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
             <option value="">Select vehicle</option>
             {vehicles.map(v => (
               <option key={v.id} value={v.id}>{v.registration_number} — {v.make} {v.model}</option>
@@ -505,12 +503,12 @@ function RepairDrawer({ open, onClose, record }: { open: boolean; onClose: () =>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Date of Repair *</label>
-            <input type="date" value={form.date_of_repair} onChange={e => setForm(f => ({ ...f, date_of_repair: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            <label className="block text-sm font-medium mb-1">Date of Repair</label>
+            <input type="date" value={form.date_of_repair} onChange={e => setForm(f => ({ ...f, date_of_repair: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Urgency *</label>
-            <select value={form.urgency} onChange={e => setForm(f => ({ ...f, urgency: e.target.value as Repair['urgency'] }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+            <label className="block text-sm font-medium mb-1">Urgency</label>
+            <select value={form.urgency} onChange={e => setForm(f => ({ ...f, urgency: e.target.value as Repair['urgency'] }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
@@ -520,8 +518,8 @@ function RepairDrawer({ open, onClose, record }: { open: boolean; onClose: () =>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Issue Description *</label>
-          <textarea value={form.issue_description} onChange={e => setForm(f => ({ ...f, issue_description: e.target.value }))} rows={3} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          <label className="block text-sm font-medium mb-1">Issue Description</label>
+          <textarea value={form.issue_description} onChange={e => setForm(f => ({ ...f, issue_description: e.target.value }))} rows={3} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
         </div>
 
         <div>
@@ -535,14 +533,14 @@ function RepairDrawer({ open, onClose, record }: { open: boolean; onClose: () =>
             <input value={form.workshop_mechanic} onChange={e => setForm(f => ({ ...f, workshop_mechanic: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Cost (UGX) *</label>
-            <input type="number" value={form.cost} onChange={e => setForm(f => ({ ...f, cost: Number(e.target.value) }))} required min={0} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            <label className="block text-sm font-medium mb-1">Cost (UGX)</label>
+            <input type="number" value={form.cost} onChange={e => setForm(f => ({ ...f, cost: Number(e.target.value) }))} min={0} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Status *</label>
-          <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as Repair['status'] }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+          <label className="block text-sm font-medium mb-1">Status</label>
+          <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as Repair['status'] }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
             <option value="scheduled">Scheduled</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
