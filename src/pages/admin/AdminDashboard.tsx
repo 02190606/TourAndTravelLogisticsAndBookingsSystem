@@ -1,7 +1,6 @@
-import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
-import { PageHeader, StatCard, Button, CardSkeleton } from '@/components/common'
+import { PageHeader, StatCard, CardSkeleton } from '@/components/common'
 import { BarChart } from '@/components/charts/BarChart'
 import { formatUGX, formatDate, computeTripStatus, isActiveTrip } from '@/utils'
 import type { Trip, Vehicle, Complaint, Penalty } from '@/types'
@@ -28,8 +27,6 @@ function computeExpiry(date: string | null | undefined, label: string, reg: stri
 }
 
 export function AdminDashboard() {
-  const navigate = useNavigate()
-
   const { data: stats, isLoading } = useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: async () => {
@@ -285,13 +282,6 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* ═══════════════ QUICK ACTIONS ═══════════════════════════════ */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-        <Button onClick={() => navigate('/logistics/vehicles')}>Add Vehicle</Button>
-        <Button onClick={() => navigate('/logistics/drivers')}>Add Driver</Button>
-        <Button onClick={() => navigate('/trips/manage')}>Create Trip</Button>
-        <Button onClick={() => navigate('/admin/users')}>Add User</Button>
-      </div>
     </div>
   )
 }
