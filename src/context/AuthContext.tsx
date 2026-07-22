@@ -1,5 +1,6 @@
-import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useReducer, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { useMobileAutoLogout } from '@/hooks/useMobileAutoLogout'
 import type { User, UserRole } from '@/types'
 
 interface AuthState {
@@ -108,6 +109,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
     dispatch({ type: 'LOGOUT' })
   }
+
+  const logoutRef = useRef(logout)
+  logoutRef.current = logout
+
+  const stableLogout = useCallback(() => { logoutRef.current() }, [])
+  useMobileAutoLogout(stableLogout)
 
   function hasRole(roles: UserRole[]): boolean {
     if (!state.user) return false
