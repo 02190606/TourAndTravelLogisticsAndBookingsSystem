@@ -238,7 +238,10 @@ function ServiceDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: (
   const saveMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from('service_records').insert({
-        id: generateId('SRV'), vehicle_id: vehicleId, ...form, cost: Number(form.cost),
+        id: generateId('SRV'),
+        vehicle_id: vehicleId,
+        service_date: form.service_date || null,
+        cost: Number(form.cost) || 0,
         description: form.description || null,
         place_done: form.place_done || null,
         next_service_date: form.next_service_date || null,
@@ -529,10 +532,13 @@ function RepairDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: ()
       const { error: insertError } = await supabase.from('repairs').insert({
         id: generateId('REP'),
         vehicle_id: vehicleId,
-        ...form,
-        cost: Number(form.cost),
+        date_of_repair: form.date_of_repair || null,
+        issue_description: form.issue_description || null,
         repair_description: form.repair_description || null,
+        urgency: form.urgency || null,
         workshop_mechanic: form.workshop_mechanic || null,
+        cost: Number(form.cost) || 0,
+        status: form.status || null,
       })
       if (insertError) throw insertError
 

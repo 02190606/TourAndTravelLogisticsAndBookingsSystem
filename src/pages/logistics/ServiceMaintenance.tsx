@@ -235,8 +235,9 @@ function ServiceDrawer({ open, onClose, record }: { open: boolean; onClose: () =
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
-        ...form,
-        cost: Number(form.cost),
+        vehicle_id: form.vehicle_id || null,
+        service_date: form.service_date || null,
+        cost: Number(form.cost) || 0,
         description: form.description || null,
         place_done: form.place_done || null,
         next_service_date: form.next_service_date || null,
@@ -457,10 +458,14 @@ function RepairDrawer({ open, onClose, record }: { open: boolean; onClose: () =>
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
-        ...form,
-        cost: Number(form.cost),
+        vehicle_id: form.vehicle_id || null,
+        date_of_repair: form.date_of_repair || null,
+        issue_description: form.issue_description || null,
         repair_description: form.repair_description || null,
+        urgency: form.urgency || null,
         workshop_mechanic: form.workshop_mechanic || null,
+        cost: Number(form.cost) || 0,
+        status: form.status || null,
       }
       if (isEdit) {
         const { error } = await supabase.from('repairs').update(payload).eq('id', record.id)

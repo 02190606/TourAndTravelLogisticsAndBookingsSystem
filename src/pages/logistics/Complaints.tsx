@@ -17,7 +17,7 @@ export function Complaints() {
     queryFn: async () => {
       const { data } = await supabase
         .from('complaints')
-        .select('*, vehicles!inner(registration_number, make, model), drivers(full_name)')
+        .select('*, vehicles(registration_number, make, model), drivers(full_name)')
         .order('date_filed', { ascending: false })
       return (data || []) as Complaint[]
     },
@@ -140,7 +140,7 @@ function ComplaintDrawer({ open, onClose }: { open: boolean; onClose: () => void
     mutationFn: async () => {
       const { error } = await supabase.from('complaints').insert({
         id: generateId('CMP'),
-        vehicle_id,
+        vehicle_id: vehicle_id || null,
         driver_id: driver_id || null,
         incident_date: incident_date || null,
         complaint_items: items,
@@ -158,7 +158,7 @@ function ComplaintDrawer({ open, onClose }: { open: boolean; onClose: () => void
       <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Vehicle</label>
-                     <select value={vehicle_id} onChange={e => setVehicleId(e.target.value)} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
+                     <select value={vehicle_id} onChange={e => setVehicleId(e.target.value)} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
             <option value="">Select vehicle</option>
             {vehicles.map(v => (
               <option key={v.id} value={v.id}>{v.registration_number} — {v.make} {v.model}</option>

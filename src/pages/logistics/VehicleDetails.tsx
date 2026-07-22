@@ -245,21 +245,27 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
-        ...form,
+        registration_number: form.registration_number,
         id: editVehicle?.id || generateId('VEH'),
-        mileage: Number(form.mileage),
-        year: Number(form.year),
-        driving_permit: form.driving_permit || null,
+        chassis_number: form.chassis_number || null,
+        make: form.make || null,
+        model: form.model || null,
+        year: Number(form.year) || null,
+        status: form.status,
         current_location: form.current_location || null,
-        engine_capacity: form.engine_capacity || null,
-        additional_requirements: form.additional_requirements || null,
         current_driver_id: form.current_driver_id || null,
+        mileage: Number(form.mileage) || 0,
+        driving_permit: form.driving_permit || null,
         permit_expiry_date: form.permit_expiry_date || null,
         insurance_commencement: form.insurance_commencement || null,
         insurance_expiry: form.insurance_expiry || null,
         pmo_commencement: form.pmo_commencement || null,
         pmo_expiry: form.pmo_expiry || null,
         psv_expiry: form.psv_expiry || null,
+        fuel_type: form.fuel_type || null,
+        engine_capacity: form.engine_capacity || null,
+        has_toolbox: form.has_toolbox,
+        additional_requirements: form.additional_requirements || null,
       }
       if (editVehicle) {
         const { error } = await supabase.from('vehicles').update(payload).eq('id', editVehicle.id)

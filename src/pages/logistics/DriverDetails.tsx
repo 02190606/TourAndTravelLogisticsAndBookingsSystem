@@ -138,7 +138,14 @@ function DriverDrawer({ open, onClose, editDriver }: { open: boolean; onClose: (
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const payload = { ...form, driving_experience_years: Number(form.driving_experience_years), date_joined: form.date_joined || null }
+      const payload = {
+        full_name: form.full_name,
+        license_number: form.license_number || null,
+        phone: form.phone || null,
+        date_joined: form.date_joined || null,
+        driving_experience_years: Number(form.driving_experience_years) || 0,
+        is_active: form.is_active,
+      }
       if (editDriver) {
         const { error } = await supabase.from('drivers').update(payload).eq('id', editDriver.id)
         if (error) throw error
