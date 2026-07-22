@@ -33,11 +33,11 @@ export function LogisticsDashboard() {
     <div className="space-y-6">
       <PageHeader title="Logistics Dashboard" subtitle="Fleet readiness, driver coverage, and service exceptions" />
 
-      <section className="rounded-lg border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm">
-        <div className="grid gap-4 sm:items-center lg:grid-cols-[1.4fr_0.8fr]">
+      <section className="rounded-lg border border-slate-200/80 bg-white p-5 shadow-sm">
+        <div className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr] lg:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">Fleet command center</p>
-            <h2 className="mt-2 text-xl sm:text-2xl font-bold text-slate-950">Vehicles, drivers, and issues at a glance</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-950">Vehicles, drivers, and issues at a glance</h2>
             <p className="mt-2 max-w-2xl text-sm text-text-secondary">
               Monitor trip readiness and maintenance pressure before it affects scheduled tours.
             </p>
@@ -64,7 +64,7 @@ export function LogisticsDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <section className="rounded-lg border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
+        <section className="rounded-lg border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="mb-5">
             <h3 className="text-lg font-bold text-slate-950">Vehicle Status</h3>
             <p className="text-sm text-text-secondary">Operational mix across the fleet</p>
@@ -78,7 +78,7 @@ export function LogisticsDashboard() {
           />
         </section>
 
-        <section className="rounded-lg border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm">
+        <section className="rounded-lg border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="mb-5">
             <h3 className="text-lg font-bold text-slate-950">Operational Focus</h3>
             <p className="text-sm text-text-secondary">Quick signals for daily dispatch planning</p>

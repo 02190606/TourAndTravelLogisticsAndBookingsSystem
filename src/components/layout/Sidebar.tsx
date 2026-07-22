@@ -100,7 +100,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="relative z-10 flex-1 overflow-y-auto py-3 px-3 space-y-1">
+      <nav className="relative z-10 flex-1 overflow-y-auto py-2 px-3 space-y-1">
         {role === 'admin' && (
           <CollapsibleGroup
             title="Admin"
@@ -178,7 +178,7 @@ function NavEntry({ item, onClick, alertCount }: { item: NavItem; onClick: () =>
       to={item.path}
       onClick={onClick}
       className={({ isActive }) =>
-        `group flex items-center gap-3 rounded-lg px-3 py-3 min-h-[44px] text-[13px] font-medium transition-all duration-150 ${
+        `group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-all duration-150 ${
           isActive
             ? 'bg-white/15 text-white shadow-md shadow-black/10'
             : 'text-white/85 hover:bg-white/[0.09] hover:text-white'
@@ -222,7 +222,7 @@ function CollapsibleGroup({
     <div>
       <button
         onClick={onToggle}
-        className="mb-1 flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-3 min-h-[44px] font-display text-[13px] font-semibold uppercase tracking-[0.16em] text-white/85 transition-colors hover:text-white"
+        className="mb-0.5 flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-1.5 font-display text-[12px] font-semibold uppercase tracking-[0.16em] text-white/85 transition-colors hover:text-white"
       >
         {title}
         <svg
