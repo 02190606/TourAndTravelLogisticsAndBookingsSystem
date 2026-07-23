@@ -78,7 +78,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const initials = user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'
 
   const sidebar = (
-    <div className="relative flex h-full flex-col overflow-hidden bg-gradient-to-b from-[#7D2AE8] to-[#2F6FED] text-white">
+    <div className="relative flex h-full flex-col overflow-hidden bg-[#141414] text-white">
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.025]"
         style={{
