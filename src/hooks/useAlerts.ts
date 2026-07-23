@@ -30,32 +30,33 @@ function checkDocumentExpiry(
   const dueDate = parseISO(dueDateStr)
   const today = new Date()
   const diff = differenceInCalendarDays(dueDate, today)
-  const alerts: Alert[] = []
 
+  if (diff < 0) {
+    return [{
+      id: `${prefix}-overdue-${vehicleId}`,
+      type,
+      vehicle_reg: vehicleReg,
+      message: `${type.charAt(0).toUpperCase() + type.slice(1)} expired on ${dueDateStr}`,
+      due_date: dueDateStr,
+      severity: 'overdue',
+    }]
+  }
+
+  const alerts: Alert[] = []
   for (const interval of INTERVALS) {
     if (diff <= interval.days) {
-      const isOverdue = diff < 0
-      let message: string
-
-      if (isOverdue) {
-        message = `${type.charAt(0).toUpperCase() + type.slice(1)} expired on ${dueDateStr}`
-      } else if (diff === 0) {
-        message = `${type.charAt(0).toUpperCase() + type.slice(1)} expires today`
-      } else {
-        message = `${type.charAt(0).toUpperCase() + type.slice(1)} expires in ${diff} day${diff === 1 ? '' : 's'}`
-      }
-
       alerts.push({
         id: `${prefix}-${interval.days}-${vehicleId}`,
         type,
         vehicle_reg: vehicleReg,
-        message,
+        message: diff === 0
+          ? `${type.charAt(0).toUpperCase() + type.slice(1)} expires today`
+          : `${type.charAt(0).toUpperCase() + type.slice(1)} expires in ${diff} day${diff === 1 ? '' : 's'}`,
         due_date: dueDateStr,
-        severity: isOverdue ? 'overdue' : interval.severity,
+        severity: interval.severity,
       })
     }
   }
-
   return alerts
 }
 
