@@ -11,6 +11,7 @@ export function MileageDetails() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editRecord, setEditRecord] = useState<MileageRecord | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<MileageRecord | null>(null)
+  const [viewTarget, setViewTarget] = useState<MileageRecord | null>(null)
   const [filterVehicle, setFilterVehicle] = useState('')
 
   const { data: vehicles = [] } = useQuery({
@@ -110,6 +111,7 @@ export function MileageDetails() {
                 <td data-label="Service Due" className="px-4 py-3 text-sm font-mono">{r.service_due.toLocaleString()}</td>
                 <td data-label="" className="px-4 py-3">
                   <div className="flex gap-1 sm:gap-2">
+                    <button onClick={() => setViewTarget(r)} className="text-xs text-primary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-primary/5">View</button>
                     <button onClick={() => { setEditRecord(r); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-muted/50">Edit</button>
                     <button onClick={() => setDeleteTarget(r)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
                   </div>
@@ -118,7 +120,7 @@ export function MileageDetails() {
             ))}
             {records.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-text-secondary text-sm">
+                <td colSpan={10} className="px-4 py-12 text-center text-text-secondary text-sm">
                   No mileage records found. Click "Add Mileage" to log your first entry.
                 </td>
               </tr>
@@ -141,6 +143,27 @@ export function MileageDetails() {
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
               <Button variant="danger" onClick={() => deleteRecord.mutate(deleteTarget.id)} isLoading={deleteRecord.isPending}>Delete</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!viewTarget} onClose={() => setViewTarget(null)} title="Mileage Record">
+        {viewTarget && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div><span className="text-text-secondary">Vehicle:</span> <span className="font-medium">{getVehicleLabel(viewTarget.vehicles)}</span></div>
+              <div><span className="text-text-secondary">Date:</span> <span className="font-medium">{formatDate(viewTarget.date)}</span></div>
+              <div><span className="text-text-secondary">Status:</span> <span className="font-medium capitalize">{viewTarget.status?.replace('_', ' ') || '-'}</span></div>
+              <div><span className="text-text-secondary">Location:</span> <span className="font-medium">{viewTarget.current_location || '-'}</span></div>
+              <div><span className="text-text-secondary">Opening Mileage:</span> <span className="font-mono font-medium">{viewTarget.opening_mileage.toLocaleString()}</span></div>
+              <div><span className="text-text-secondary">Closing Mileage:</span> <span className="font-mono font-medium">{viewTarget.closing_mileage.toLocaleString()}</span></div>
+              <div><span className="text-text-secondary">Distance Covered:</span> <span className="font-mono font-semibold">{viewTarget.distance_covered.toLocaleString()}</span></div>
+              <div><span className="text-text-secondary">Service Given:</span> <span className="font-mono font-medium">{viewTarget.service_given.toLocaleString()}</span></div>
+              <div><span className="text-text-secondary">Service Due:</span> <span className="font-mono font-medium">{viewTarget.service_due.toLocaleString()}</span></div>
+            </div>
+            <div className="flex justify-end pt-2">
+              <Button variant="outline" onClick={() => setViewTarget(null)}>Close</Button>
             </div>
           </div>
         )}
