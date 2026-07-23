@@ -29,7 +29,6 @@ export function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { variant: BadgeProps['variant']; label: string }> = {
     available: { variant: 'success', label: 'Available' },
     on_trip: { variant: 'warning', label: 'On Trip' },
-    in_service: { variant: 'danger', label: 'In Service' },
     sold: { variant: 'danger', label: 'Sold' },
     planned: { variant: 'info', label: 'Planned' },
     ongoing: { variant: 'success', label: 'Ongoing' },

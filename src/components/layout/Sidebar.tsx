@@ -5,7 +5,7 @@ import { useAlerts } from '@/hooks/useAlerts'
 import type { UserRole } from '@/types'
 import { useState, type ReactNode } from 'react'
 
-type IconName = 'chart' | 'vehicle' | 'tool' | 'alert' | 'fine' | 'user' | 'bell' | 'plane' | 'calendar' | 'cash' | 'users' | 'compass'
+type IconName = 'chart' | 'vehicle' | 'tool' | 'alert' | 'fine' | 'user' | 'bell' | 'plane' | 'calendar' | 'cash' | 'users' | 'compass' | 'gauge'
 
 interface NavItem {
   label: string
@@ -21,6 +21,7 @@ const sections: { title: string; items: NavItem[] }[] = [
     items: [
       { label: 'Dashboard', path: '/logistics', icon: 'chart', roles: ['admin', 'logistics'] },
       { label: 'Fleet', path: '/logistics/vehicles', icon: 'vehicle', roles: ['admin', 'logistics'] },
+      { label: 'Mileage', path: '/logistics/mileage', icon: 'gauge', roles: ['admin', 'logistics'] },
       { label: 'Maintenance', path: '/logistics/service', icon: 'tool', roles: ['admin', 'logistics'] },
       { label: 'Complaints', path: '/logistics/complaints', icon: 'alert', roles: ['admin', 'logistics'] },
       { label: 'Penalties', path: '/logistics/penalties', icon: 'fine', roles: ['admin', 'logistics'] },
@@ -267,6 +268,7 @@ function SidebarIcon({ name }: { name: IconName }) {
     cash: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16v10H4V7Zm3 3h.01M17 14h.01M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />,
     users: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11a3 3 0 1 0-2.8-4M11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-8 11a5 5 0 0 1 10 0m2 0a4.5 4.5 0 0 1 6 0" />,
     compass: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 0 3.5 3.5M12 12l-3.5 3.5M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22" />,
+    gauge: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10Zm0-14v4l3 3" />,
   }
 
   return (

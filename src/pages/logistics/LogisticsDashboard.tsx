@@ -15,7 +15,6 @@ export function LogisticsDashboard() {
         total: vehicles?.length || 0,
         available: vehicles?.filter(v => v.status === 'available').length || 0,
         onTrip: vehicles?.filter(v => v.status === 'on_trip').length || 0,
-        inService: vehicles?.filter(v => v.status === 'in_service').length || 0,
         totalDrivers: drivers?.length || 0,
         activeDrivers: drivers?.filter(d => d.is_active).length || 0,
         openComplaints: complaints?.filter(c => c.status === 'open').length || 0,
@@ -54,7 +53,6 @@ export function LogisticsDashboard() {
         <StatCard title="Total Vehicles" value={vehicleStats.total} icon={<Icon name="vehicle" />} color="primary" />
         <StatCard title="Available" value={vehicleStats.available} icon={<Icon name="check" />} color="success" />
         <StatCard title="On Trip" value={vehicleStats.onTrip} icon={<Icon name="route" />} color="warning" />
-        <StatCard title="In Service" value={vehicleStats.inService} icon={<Icon name="tool" />} color="danger" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -73,7 +71,6 @@ export function LogisticsDashboard() {
             data={[
               { name: 'Available', value: vehicleStats.available, color: '#10B981' },
               { name: 'On Trip', value: vehicleStats.onTrip, color: '#F59E0B' },
-              { name: 'In Service', value: vehicleStats.inService, color: '#EF4444' },
             ]}
           />
         </section>
@@ -91,9 +88,9 @@ export function LogisticsDashboard() {
               tone="success"
             />
             <ProgressRow
-              label="Service load"
-              value={vehicleStats.total > 0 ? Math.round((vehicleStats.inService / vehicleStats.total) * 100) : 0}
-              tone="danger"
+              label="Fleet utilization"
+              value={vehicleStats.total > 0 ? Math.round((vehicleStats.onTrip / vehicleStats.total) * 100) : 0}
+              tone="success"
             />
           </div>
         </section>

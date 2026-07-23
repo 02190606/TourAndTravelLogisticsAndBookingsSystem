@@ -482,7 +482,7 @@ function RepairDrawer({ open, onClose, record }: { open: boolean; onClose: () =>
         if (insertError) throw insertError
 
         if (form.status === 'in_progress') {
-          const { error: updateError } = await supabase.from('vehicles').update({ status: 'in_service' }).eq('id', form.vehicle_id)
+          const { error: updateError } = await supabase.from('vehicles').update({ status: 'on_trip' }).eq('id', form.vehicle_id)
           if (updateError) throw updateError
         }
       }

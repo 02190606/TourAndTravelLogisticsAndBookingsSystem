@@ -103,6 +103,19 @@ export interface Repair {
   vehicles?: Vehicle
 }
 
+export interface MileageRecord {
+  id: string
+  vehicle_id: string
+  date: string
+  opening_mileage: number
+  closing_mileage: number
+  distance_covered: number
+  service_given: number
+  service_due: number
+  created_at: string
+  vehicles?: Vehicle
+}
+
 export interface AlertSetting {
   id: string
   user_id: string

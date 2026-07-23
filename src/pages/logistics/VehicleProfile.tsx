@@ -5,9 +5,9 @@ import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, Badge, Modal, Drawer, StatusBadge, CardSkeleton } from '@/components/common'
 import { formatDate, formatUGX, generateId } from '@/utils'
 import toast from 'react-hot-toast'
-import type { Vehicle, ServiceRecord, Complaint, Repair, Driver } from '@/types'
+import type { Vehicle, ServiceRecord, Complaint, Repair, Driver, MileageRecord } from '@/types'
 
-type SubTab = 'service' | 'complaints' | 'repairs'
+type SubTab = 'service' | 'complaints' | 'repairs' | 'mileage'
 
 export function VehicleProfile() {
   const { id } = useParams()
@@ -136,13 +136,13 @@ export function VehicleProfile() {
       </div>
 
       <div className="flex gap-2 border-b border-muted/30 pb-2">
-        {(['service', 'complaints', 'repairs'] as SubTab[]).map(tab => (
+        {(['service', 'complaints', 'repairs', 'mileage'] as SubTab[]).map(tab => (
           <button
             key={tab}
             onClick={() => setSubTab(tab)}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer capitalize ${subTab === tab ? 'bg-primary/10 text-primary' : 'text-text-secondary hover:text-text-primary'}`}
           >
-            {tab === 'service' ? '📋 Service Records' : tab === 'complaints' ? '⚠️ Complaints' : '🔧 Repairs'}
+            {tab === 'service' ? '📋 Service Records' : tab === 'complaints' ? '⚠️ Complaints' : tab === 'repairs' ? '🔧 Repairs' : '🛣️ Mileage'}
           </button>
         ))}
       </div>
@@ -150,6 +150,7 @@ export function VehicleProfile() {
       {subTab === 'service' && <ServiceRecordsTable vehicleId={vehicle.id} />}
       {subTab === 'complaints' && <ComplaintsTable vehicleId={vehicle.id} />}
       {subTab === 'repairs' && <RepairsTable vehicleId={vehicle.id} />}
+      {subTab === 'mileage' && <MileageRecordsTable vehicleId={vehicle.id} />}
     </div>
   )
 }
@@ -542,7 +543,7 @@ function RepairDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: ()
       if (insertError) throw insertError
 
       if (form.status === 'in_progress') {
-        const { error: updateError } = await supabase.from('vehicles').update({ status: 'in_service' }).eq('id', vehicleId)
+        const { error: updateError } = await supabase.from('vehicles').update({ status: 'on_trip' }).eq('id', vehicleId)
         if (updateError) throw updateError
       }
     },
@@ -606,6 +607,165 @@ function RepairDrawer({ open, onClose, vehicleId }: { open: boolean; onClose: ()
 
         <div className="flex gap-3 pt-4">
           <Button type="submit" isLoading={saveMutation.isPending}>Save Repair</Button>
+          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+        </div>
+      </form>
+    </Drawer>
+  )
+}
+
+function MileageRecordsTable({ vehicleId }: { vehicleId: string }) {
+  const queryClient = useQueryClient()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<MileageRecord | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<MileageRecord | null>(null)
+
+  const { data: records = [] } = useQuery({
+    queryKey: ['mileage', vehicleId],
+    queryFn: async () => {
+      const { data } = await supabase.from('mileage_records').select('*').eq('vehicle_id', vehicleId).order('date', { ascending: false })
+      return (data || []) as MileageRecord[]
+    },
+  })
+
+  const deleteRecord = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('mileage_records').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['mileage', vehicleId] }); setDeleteTarget(null); toast.success('Record deleted') },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  return (
+    <div>
+      <div className="flex justify-end mb-4">
+        <Button size="sm" onClick={() => { setEditTarget(null); setDrawerOpen(true) }}>Log Mileage</Button>
+      </div>
+      <div className="bg-white rounded-xl border border-muted/30 overflow-hidden">
+        <table className="w-full responsive-table">
+          <thead>
+            <tr className="bg-muted/20">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Date</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Opening</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Closing</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Distance</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Service Given</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Service Due</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-muted/30">
+            {records.map((r, i) => (
+              <tr key={r.id} className={i % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
+                <td data-label="Date" className="px-4 py-3 text-sm">{formatDate(r.date)}</td>
+                <td data-label="Opening" className="px-4 py-3 text-sm font-mono">{r.opening_mileage.toLocaleString()}</td>
+                <td data-label="Closing" className="px-4 py-3 text-sm font-mono">{r.closing_mileage.toLocaleString()}</td>
+                <td data-label="Distance" className="px-4 py-3 text-sm font-mono font-semibold">{r.distance_covered.toLocaleString()}</td>
+                <td data-label="Service Given" className="px-4 py-3 text-sm font-mono">{r.service_given.toLocaleString()}</td>
+                <td data-label="Service Due" className="px-4 py-3 text-sm font-mono">{r.service_due.toLocaleString()}</td>
+                <td data-label="" className="px-4 py-3">
+                  <div className="flex gap-1 sm:gap-2">
+                    <button onClick={() => { setEditTarget(r); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-muted/50">Edit</button>
+                    <button onClick={() => setDeleteTarget(r)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {records.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-text-secondary text-sm">
+                  No mileage records yet. Click "Log Mileage" to add one.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <VehicleMileageDrawer open={drawerOpen} onClose={() => { setDrawerOpen(false); setEditTarget(null) }} vehicleId={vehicleId} editRecord={editTarget} />
+
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Mileage Record">
+        <div className="space-y-4">
+          <p>Delete this mileage record? This cannot be undone.</p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="danger" onClick={() => deleteTarget && deleteRecord.mutate(deleteTarget.id)}>Delete</Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  )
+}
+
+function VehicleMileageDrawer({ open, onClose, vehicleId, editRecord }: { open: boolean; onClose: () => void; vehicleId: string; editRecord: MileageRecord | null }) {
+  const queryClient = useQueryClient()
+  const [form, setForm] = useState({
+    date: editRecord?.date || new Date().toISOString().split('T')[0],
+    opening_mileage: editRecord?.opening_mileage || 0,
+    closing_mileage: editRecord?.closing_mileage || 0,
+    service_given: editRecord?.service_given || 0,
+  })
+
+  const distanceCovered = Math.max(0, form.closing_mileage - form.opening_mileage)
+  const serviceDue = Math.max(0, form.service_given - distanceCovered)
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        vehicle_id: vehicleId,
+        date: form.date || null,
+        opening_mileage: Number(form.opening_mileage) || 0,
+        closing_mileage: Number(form.closing_mileage) || 0,
+        distance_covered: distanceCovered,
+        service_given: Number(form.service_given) || 0,
+        service_due: serviceDue,
+      }
+      if (editRecord) {
+        const { error } = await supabase.from('mileage_records').update(payload).eq('id', editRecord.id)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('mileage_records').insert({ id: generateId('MLG'), ...payload })
+        if (error) throw error
+      }
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['mileage', vehicleId] }); onClose(); toast.success(editRecord ? 'Mileage updated' : 'Mileage added') },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  return (
+    <Drawer open={open} onClose={onClose} title={editRecord ? 'Edit Mileage' : 'Log Mileage'}>
+      <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Date *</label>
+          <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Opening Mileage *</label>
+            <input type="number" value={form.opening_mileage} onChange={e => setForm(f => ({ ...f, opening_mileage: Number(e.target.value) }))} required min={0} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Closing Mileage *</label>
+            <input type="number" value={form.closing_mileage} onChange={e => setForm(f => ({ ...f, closing_mileage: Number(e.target.value) }))} required min={0} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Distance Covered</label>
+          <input type="number" value={distanceCovered} readOnly className="w-full px-3 py-2.5 border border-muted/30 rounded-xl text-sm bg-muted/20 text-text-secondary font-mono" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Service Given *</label>
+            <input type="number" value={form.service_given} onChange={e => setForm(f => ({ ...f, service_given: Number(e.target.value) }))} required min={0} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Service Due</label>
+            <input type="number" value={serviceDue} readOnly className="w-full px-3 py-2.5 border border-muted/30 rounded-xl text-sm bg-muted/20 text-text-secondary font-mono" />
+          </div>
+        </div>
+        <div className="flex gap-3 pt-4">
+          <Button type="submit" isLoading={saveMutation.isPending}>Save</Button>
           <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
         </div>
       </form>
