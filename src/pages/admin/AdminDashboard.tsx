@@ -67,14 +67,12 @@ export function AdminDashboard() {
 
       const available = vehicles.filter(v => v.status === 'available').length
       const onTrip = vehicles.filter(v => v.status === 'on_trip').length
-      const inService = vehicles.filter(v => v.status === 'in_service').length
       const totalDrivers = drivers.length
 
       const expiring: ExpiryItem[] = []
       for (const v of vehicles) {
         const reg = v.registration_number
         const items = [
-          computeExpiry(v.permit_expiry_date, 'Permit', reg),
           computeExpiry(v.insurance_expiry, 'Insurance', reg),
           computeExpiry(v.pmo_expiry, 'PMO', reg),
           computeExpiry(v.psv_expiry, 'PSV', reg),
@@ -84,7 +82,7 @@ export function AdminDashboard() {
 
       return {
         trips: { planned, ongoing, endsToday, completed, cancelled, activeTrips, monthlyRevenue, yearlyRevenue, total: trips.length, upcomingTrips },
-        fleet: { total: vehicles.length, available, onTrip, inService, totalDrivers, openComplaints, openPenalties, expiring },
+        fleet: { total: vehicles.length, available, onTrip, totalDrivers, openComplaints, openPenalties, expiring },
       }
     },
   })
@@ -194,7 +192,6 @@ export function AdminDashboard() {
               data={[
                 { name: 'Available', value: fleet.available, color: '#10B981' },
                 { name: 'On Trip', value: fleet.onTrip, color: '#F59E0B' },
-                { name: 'In Service', value: fleet.inService, color: '#EF4444' },
               ]}
             />
           </section>

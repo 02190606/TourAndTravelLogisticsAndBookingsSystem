@@ -109,7 +109,6 @@ export function VehicleProfile() {
             <div className="mt-4 space-y-3">
               {(() => {
                 const chips = [
-                  computeCompliance('Driving Permit', vehicle.permit_expiry_date),
                   vehicle.insurance_commencement ? computeCompliance('Insurance Started', vehicle.insurance_commencement) : null,
                   computeCompliance('Insurance', vehicle.insurance_expiry),
                   vehicle.pmo_commencement ? computeCompliance('PMO Started', vehicle.pmo_commencement) : null,

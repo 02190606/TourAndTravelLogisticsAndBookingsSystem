@@ -12,7 +12,7 @@ export interface User {
   last_login: string | null
 }
 
-export type VehicleStatus = 'available' | 'on_trip' | 'in_service' | 'sold'
+export type VehicleStatus = 'available' | 'on_trip' | 'sold'
 
 export interface Vehicle {
   id: string
@@ -22,8 +22,7 @@ export interface Vehicle {
   year: number
   mileage: number
   status: VehicleStatus
-  driving_permit: string
-  permit_expiry_date: string
+  date_added: string
   current_location: string
   insurance_commencement: string
   insurance_expiry: string
@@ -84,6 +83,8 @@ export interface Driver {
   phone: string
   date_joined: string
   driving_experience_years: number
+  driving_permit: string
+  driving_permit_expiry: string
   created_at: string
   is_active: boolean
 }
