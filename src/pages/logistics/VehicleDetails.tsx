@@ -229,7 +229,6 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
     status: editVehicle?.status || 'available' as VehicleStatus,
     current_location: editVehicle?.current_location || '',
     current_driver_id: editVehicle?.current_driver_id || '',
-    mileage: editVehicle?.mileage || 0,
     insurance_commencement: editVehicle?.insurance_commencement || '',
     insurance_expiry: editVehicle?.insurance_expiry || '',
     pmo_commencement: editVehicle?.pmo_commencement || '',
@@ -254,7 +253,6 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
         status: form.status,
         current_location: form.current_location || null,
         current_driver_id: form.current_driver_id || null,
-        mileage: Number(form.mileage) || 0,
         insurance_commencement: form.insurance_commencement || null,
         insurance_expiry: form.insurance_expiry || null,
         pmo_commencement: form.pmo_commencement || null,
@@ -344,10 +342,6 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Current Location</label>
               <input value={form.current_location} onChange={e => setForm(f => ({ ...f, current_location: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Mileage (km)</label>
-              <input type="number" value={form.mileage} onChange={e => setForm(f => ({ ...f, mileage: Number(e.target.value) }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Current Driver</label>
