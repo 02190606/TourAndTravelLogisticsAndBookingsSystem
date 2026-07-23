@@ -180,7 +180,7 @@ function NavEntry({ item, onClick, alertCount }: { item: NavItem; onClick: () =>
       className={({ isActive }) =>
         `group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-all duration-150 ${
           isActive
-            ? 'bg-white/15 text-white shadow-md shadow-black/10'
+            ? 'bg-[#2A2A2A] text-white shadow-md shadow-black/10'
             : 'text-white/85 hover:bg-white/[0.09] hover:text-white'
         }`
       }

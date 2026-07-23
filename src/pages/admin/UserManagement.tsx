@@ -102,7 +102,7 @@ export function UserManagement() {
   const columns: Column<User>[] = [
     { key: 'full_name', header: 'Name', render: (u) => (
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-secondary text-white text-xs font-bold flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-[#141414] text-white text-xs font-bold flex items-center justify-center">
           {u.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
         </div>
         <span className="font-medium">{u.full_name}</span>
