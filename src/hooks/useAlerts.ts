@@ -1,9 +1,15 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
-import { addDays, parseISO, isBefore, isAfter } from 'date-fns'
+import { parseISO, differenceInCalendarDays } from 'date-fns'
 import { useAuth } from '@/context/AuthContext'
 import { useEffect } from 'react'
-import type { AlertSetting, ServiceRecord, Vehicle } from '@/types'
+import type { ServiceRecord, Vehicle } from '@/types'
+
+const INTERVALS = [
+  { days: 14, label: '2 weeks', severity: 'upcoming' as const },
+  { days: 7, label: '1 week', severity: 'upcoming' as const },
+  { days: 0, label: 'today', severity: 'upcoming' as const },
+]
 
 interface Alert {
   id: string
@@ -12,6 +18,45 @@ interface Alert {
   message: string
   due_date: string
   severity: 'upcoming' | 'overdue'
+}
+
+function checkDocumentExpiry(
+  dueDateStr: string,
+  type: Alert['type'],
+  vehicleReg: string,
+  vehicleId: string,
+  prefix: string,
+): Alert[] {
+  const dueDate = parseISO(dueDateStr)
+  const today = new Date()
+  const diff = differenceInCalendarDays(dueDate, today)
+  const alerts: Alert[] = []
+
+  for (const interval of INTERVALS) {
+    if (diff <= interval.days) {
+      const isOverdue = diff < 0
+      let message: string
+
+      if (isOverdue) {
+        message = `${type.charAt(0).toUpperCase() + type.slice(1)} expired on ${dueDateStr}`
+      } else if (diff === 0) {
+        message = `${type.charAt(0).toUpperCase() + type.slice(1)} expires today`
+      } else {
+        message = `${type.charAt(0).toUpperCase() + type.slice(1)} expires in ${diff} day${diff === 1 ? '' : 's'}`
+      }
+
+      alerts.push({
+        id: `${prefix}-${interval.days}-${vehicleId}`,
+        type,
+        vehicle_reg: vehicleReg,
+        message,
+        due_date: dueDateStr,
+        severity: isOverdue ? 'overdue' : interval.severity,
+      })
+    }
+  }
+
+  return alerts
 }
 
 export function useAlerts() {
@@ -23,27 +68,7 @@ export function useAlerts() {
     queryFn: async (): Promise<{ alerts: Alert[]; count: number }> => {
       if (!user) return { alerts: [], count: 0 }
 
-      const { data: settings } = await supabase
-        .from('alert_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_enabled', true)
-
-      const settingsMap: Record<string, number> = {}
-      if (settings) {
-        settings.forEach((s: AlertSetting) => {
-          settingsMap[s.alert_type] = s.days_before
-        })
-      }
-
-      const daysBeforeService = settingsMap.service || 7
-      const daysBeforePermit = settingsMap.permit || 30
-      const daysBeforeInsurance = settingsMap.insurance || 30
-      const daysBeforePMO = settingsMap.pmo || 30
-      const daysBeforePSV = settingsMap.psv || 30
-
       const alerts: Alert[] = []
-      const today = new Date()
 
       const { data: acknowledged } = await supabase
         .from('acknowledged_alerts')
@@ -56,71 +81,16 @@ export function useAlerts() {
 
       for (const v of vehicles) {
         if (v.permit_expiry_date) {
-          const dueDate = parseISO(v.permit_expiry_date)
-          const threshold = addDays(today, daysBeforePermit)
-          if (isBefore(dueDate, threshold)) {
-            alerts.push({
-              id: `permit-${v.id}`,
-              type: 'permit',
-              vehicle_reg: v.registration_number,
-              message: isBefore(dueDate, today)
-                ? `Permit expired on ${v.permit_expiry_date}`
-                : `Permit expires in ${Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))} days`,
-              due_date: v.permit_expiry_date,
-              severity: isBefore(dueDate, today) ? 'overdue' : 'upcoming',
-            })
-          }
+          alerts.push(...checkDocumentExpiry(v.permit_expiry_date, 'permit', v.registration_number, v.id, 'permit'))
         }
-
         if (v.insurance_expiry) {
-          const dueDate = parseISO(v.insurance_expiry)
-          const threshold = addDays(today, daysBeforeInsurance)
-          if (isBefore(dueDate, threshold)) {
-            alerts.push({
-              id: `insurance-${v.id}`,
-              type: 'insurance',
-              vehicle_reg: v.registration_number,
-              message: isBefore(dueDate, today)
-                ? `Insurance expired on ${v.insurance_expiry}`
-                : `Insurance expires in ${Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))} days`,
-              due_date: v.insurance_expiry,
-              severity: isBefore(dueDate, today) ? 'overdue' : 'upcoming',
-            })
-          }
+          alerts.push(...checkDocumentExpiry(v.insurance_expiry, 'insurance', v.registration_number, v.id, 'insurance'))
         }
-
         if (v.pmo_expiry) {
-          const dueDate = parseISO(v.pmo_expiry)
-          const threshold = addDays(today, daysBeforePMO)
-          if (isBefore(dueDate, threshold)) {
-            alerts.push({
-              id: `pmo-${v.id}`,
-              type: 'pmo',
-              vehicle_reg: v.registration_number,
-              message: isBefore(dueDate, today)
-                ? `PMO expired on ${v.pmo_expiry}`
-                : `PMO expires in ${Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))} days`,
-              due_date: v.pmo_expiry,
-              severity: isBefore(dueDate, today) ? 'overdue' : 'upcoming',
-            })
-          }
+          alerts.push(...checkDocumentExpiry(v.pmo_expiry, 'pmo', v.registration_number, v.id, 'pmo'))
         }
-
         if (v.psv_expiry) {
-          const dueDate = parseISO(v.psv_expiry)
-          const threshold = addDays(today, daysBeforePSV)
-          if (isBefore(dueDate, threshold)) {
-            alerts.push({
-              id: `psv-${v.id}`,
-              type: 'psv',
-              vehicle_reg: v.registration_number,
-              message: isBefore(dueDate, today)
-                ? `PSV expired on ${v.psv_expiry}`
-                : `PSV expires in ${Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))} days`,
-              due_date: v.psv_expiry,
-              severity: isBefore(dueDate, today) ? 'overdue' : 'upcoming',
-            })
-          }
+          alerts.push(...checkDocumentExpiry(v.psv_expiry, 'psv', v.registration_number, v.id, 'psv'))
         }
       }
 
@@ -131,26 +101,12 @@ export function useAlerts() {
       if (services) {
         for (const s of services as (ServiceRecord & { vehicles: Vehicle })[]) {
           if (s.next_service_date) {
-            const dueDate = parseISO(s.next_service_date)
-            const threshold = addDays(today, daysBeforeService)
-            if (isBefore(dueDate, threshold)) {
-              alerts.push({
-                id: `service-${s.id}`,
-                type: 'service',
-                vehicle_reg: s.vehicles.registration_number,
-                message: isBefore(dueDate, today)
-                  ? `Service was due on ${s.next_service_date}`
-                  : `Service due in ${Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))} days`,
-                due_date: s.next_service_date,
-                severity: isBefore(dueDate, today) ? 'overdue' : 'upcoming',
-              })
-            }
+            alerts.push(...checkDocumentExpiry(s.next_service_date, 'service', s.vehicles.registration_number, s.vehicles.id, `service-${s.id}`))
           }
         }
       }
 
       const filteredAlerts = alerts.filter(a => !acknowledgedIds.has(a.id))
-
       filteredAlerts.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
 
       return { alerts: filteredAlerts, count: filteredAlerts.length }
