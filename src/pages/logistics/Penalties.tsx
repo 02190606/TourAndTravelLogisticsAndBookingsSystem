@@ -11,6 +11,7 @@ export function Penalties() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [editPenalty, setEditPenalty] = useState<Penalty | null>(null)
   const [viewPenalty, setViewPenalty] = useState<Penalty | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Penalty | null>(null)
 
@@ -43,7 +44,7 @@ export function Penalties() {
       <PageHeader
         title="Penalties & Fines"
         subtitle={`${formatUGX(unpaidTotal)} unpaid`}
-        actions={<Button variant="outline" onClick={() => setDrawerOpen(true)}>Log Penalty</Button>}
+        actions={<Button variant="outline" onClick={() => { setEditPenalty(null); setDrawerOpen(true) }}>Log Penalty</Button>}
       />
 
       <div className="bg-white rounded-xl border border-muted/30 overflow-hidden">
@@ -75,6 +76,7 @@ export function Penalties() {
                 <td data-label="" className="px-4 py-3">
                   <div className="flex gap-1 sm:gap-2">
                     <button onClick={() => setViewPenalty(p)} className="text-xs text-primary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-primary/5">View</button>
+                    <button onClick={() => { setEditPenalty(p); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-muted/50">Edit</button>
                     <button onClick={() => setDeleteTarget(p)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
                   </div>
                 </td>
@@ -84,7 +86,7 @@ export function Penalties() {
         </table>
       </div>
 
-      <PenaltyDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <PenaltyDrawer open={drawerOpen} onClose={() => { setDrawerOpen(false); setEditPenalty(null) }} editPenalty={editPenalty} />
 
       <Modal open={!!viewPenalty} onClose={() => setViewPenalty(null)} title="Penalty Details">
         {viewPenalty && (
@@ -125,16 +127,16 @@ export function Penalties() {
   )
 }
 
-function PenaltyDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+function PenaltyDrawer({ open, onClose, editPenalty }: { open: boolean; onClose: () => void; editPenalty: Penalty | null }) {
   const queryClient = useQueryClient()
-  const [vehicle_id, setVehicleId] = useState('')
-  const [driver_id, setDriverId] = useState('')
-  const [incident_date, setIncidentDate] = useState('')
-  const [amount, setAmount] = useState('')
-  const [reason, setReason] = useState('')
-  const [status, setStatus] = useState<PenaltyStatus>('unpaid')
-  const [issued_by, setIssuedBy] = useState('')
-  const [notes, setNotes] = useState('')
+  const [vehicle_id, setVehicleId] = useState(editPenalty?.vehicle_id || '')
+  const [driver_id, setDriverId] = useState(editPenalty?.driver_id || '')
+  const [incident_date, setIncidentDate] = useState(editPenalty?.incident_date || '')
+  const [amount, setAmount] = useState(editPenalty?.amount?.toString() || '')
+  const [reason, setReason] = useState(editPenalty?.reason || '')
+  const [status, setStatus] = useState<PenaltyStatus>(editPenalty?.status || 'unpaid')
+  const [issued_by, setIssuedBy] = useState(editPenalty?.issued_by || '')
+  const [notes, setNotes] = useState(editPenalty?.notes || '')
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicle-list'],
@@ -154,8 +156,7 @@ function PenaltyDrawer({ open, onClose }: { open: boolean; onClose: () => void }
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('penalties').insert({
-        id: generateId('PEN'),
+      const payload = {
         vehicle_id: vehicle_id || null,
         driver_id: driver_id || null,
         incident_date: incident_date || null,
@@ -164,16 +165,25 @@ function PenaltyDrawer({ open, onClose }: { open: boolean; onClose: () => void }
         status,
         issued_by: issued_by || null,
         notes: notes || null,
-        date_issued: new Date().toISOString(),
-      })
-      if (error) throw error
+      }
+      if (editPenalty) {
+        const { error } = await supabase.from('penalties').update(payload).eq('id', editPenalty.id)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('penalties').insert({
+          id: generateId('PEN'),
+          ...payload,
+          date_issued: new Date().toISOString(),
+        })
+        if (error) throw error
+      }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-penalties'] }); onClose(); toast.success('Penalty logged') },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-penalties'] }); onClose(); toast.success(editPenalty ? 'Penalty updated' : 'Penalty logged') },
     onError: (err: Error) => toast.error(err.message),
   })
 
   return (
-    <Drawer open={open} onClose={onClose} title="Log Penalty">
+    <Drawer open={open} onClose={onClose} title={editPenalty ? 'Edit Penalty' : 'Log Penalty'}>
       <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Vehicle</label>

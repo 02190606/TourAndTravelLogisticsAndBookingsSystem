@@ -175,8 +175,10 @@ function ServiceTab() {
                 <td data-label="Cost" className="px-4 py-3 text-sm font-mono">{formatUGX(r.cost)}</td>
                 <td data-label="Next" className="px-4 py-3 text-sm">{r.next_service_date ? formatDate(r.next_service_date) : '-'}</td>
                 <td data-label="Actions" className="px-4 py-3">
-                  <button onClick={() => openDrawer(r)} className="text-primary hover:text-primary/80 mr-2 cursor-pointer" title="Edit">✏️</button>
-                  <button onClick={() => setDeleteTarget(r)} className="text-danger hover:text-danger/80 cursor-pointer" title="Delete">🗑️</button>
+                  <div className="flex gap-1 sm:gap-2">
+                    <button onClick={() => openDrawer(r)} className="text-xs text-text-secondary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-muted/50">Edit</button>
+                    <button onClick={() => setDeleteTarget(r)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -385,8 +387,10 @@ function RepairsTab() {
                 <td data-label="Cost" className="px-4 py-3 text-sm font-mono">{formatUGX(r.cost)}</td>
                 <td data-label="Status" className="px-4 py-3"><span className={`inline-block px-2 py-0.5 rounded-lg text-xs capitalize ${statusColors[r.status]}`}>{r.status.replace('_', ' ')}</span></td>
                 <td data-label="Actions" className="px-4 py-3">
-                  <button onClick={() => openDrawer(r)} className="text-primary hover:text-primary/80 mr-2 cursor-pointer" title="Edit">✏️</button>
-                  <button onClick={() => setDeleteTarget(r)} className="text-danger hover:text-danger/80 cursor-pointer" title="Delete">🗑️</button>
+                  <div className="flex gap-1 sm:gap-2">
+                    <button onClick={() => openDrawer(r)} className="text-xs text-text-secondary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-muted/50">Edit</button>
+                    <button onClick={() => setDeleteTarget(r)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
+                  </div>
                 </td>
               </tr>
             ))}

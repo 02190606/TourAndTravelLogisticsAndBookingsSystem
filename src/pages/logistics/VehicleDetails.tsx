@@ -225,12 +225,11 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
     make: editVehicle?.make || '',
     model: editVehicle?.model || '',
     year: editVehicle?.year || new Date().getFullYear(),
+    date_added: editVehicle?.date_added || new Date().toISOString().split('T')[0],
     status: editVehicle?.status || 'available' as VehicleStatus,
     current_location: editVehicle?.current_location || '',
     current_driver_id: editVehicle?.current_driver_id || '',
     mileage: editVehicle?.mileage || 0,
-    driving_permit: editVehicle?.driving_permit || '',
-    permit_expiry_date: editVehicle?.permit_expiry_date || '',
     insurance_commencement: editVehicle?.insurance_commencement || '',
     insurance_expiry: editVehicle?.insurance_expiry || '',
     pmo_commencement: editVehicle?.pmo_commencement || '',
@@ -251,12 +250,11 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
         make: form.make || null,
         model: form.model || null,
         year: Number(form.year) || null,
+        date_added: form.date_added || null,
         status: form.status,
         current_location: form.current_location || null,
         current_driver_id: form.current_driver_id || null,
         mileage: Number(form.mileage) || 0,
-        driving_permit: form.driving_permit || null,
-        permit_expiry_date: form.permit_expiry_date || null,
         insurance_commencement: form.insurance_commencement || null,
         insurance_expiry: form.insurance_expiry || null,
         pmo_commencement: form.pmo_commencement || null,
@@ -325,6 +323,10 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
               <label className="block text-sm font-medium text-text-primary mb-1">Year</label>
               <input type="number" value={form.year} onChange={e => setForm(f => ({ ...f, year: Number(e.target.value) }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">Date Added</label>
+              <input type="date" value={form.date_added} onChange={e => setForm(f => ({ ...f, date_added: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            </div>
           </div>
         </div>
 
@@ -336,7 +338,6 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
               <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as VehicleStatus }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
                 <option value="available">🟢 Available</option>
                 <option value="on_trip">🟡 On Trip</option>
-                <option value="in_service">🔴 In Service</option>
                 <option value="sold">⚫ Sold</option>
               </select>
             </div>
@@ -364,8 +365,6 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
           <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Documentation & Compliance</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {([
-              { key: 'driving_permit' as const, label: 'Driving Permit', type: 'text' as const },
-              { key: 'permit_expiry_date' as const, label: 'Permit Expiry', type: 'date' as const },
               { key: 'insurance_commencement' as const, label: 'Insurance Commencement', type: 'date' as const },
               { key: 'insurance_expiry' as const, label: 'Insurance Expiry', type: 'date' as const },
               { key: 'pmo_commencement' as const, label: 'PMO Commencement', type: 'date' as const },
@@ -381,7 +380,6 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
                   type={type}
                   value={form[key]}
                   onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                  placeholder={key === 'driving_permit' ? 'e.g. UAT 659U' : undefined}
                   className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>

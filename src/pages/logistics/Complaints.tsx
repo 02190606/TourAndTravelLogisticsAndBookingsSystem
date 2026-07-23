@@ -9,6 +9,7 @@ import type { Complaint, Vehicle, Driver } from '@/types'
 export function Complaints() {
   const queryClient = useQueryClient()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [editComplaint, setEditComplaint] = useState<Complaint | null>(null)
   const [viewComplaint, setViewComplaint] = useState<Complaint | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Complaint | null>(null)
 
@@ -39,7 +40,7 @@ export function Complaints() {
       <PageHeader
         title="Vehicle Complaints Log"
         subtitle={`${complaints.filter(c => c.status === 'open').length} open complaints`}
-        actions={<Button variant="outline" onClick={() => setDrawerOpen(true)}>File Complaint</Button>}
+        actions={<Button variant="outline" onClick={() => { setEditComplaint(null); setDrawerOpen(true) }}>File Complaint</Button>}
       />
 
       <div className="bg-white rounded-xl border border-muted/30 overflow-hidden">
@@ -65,6 +66,7 @@ export function Complaints() {
                 <td data-label="" className="px-4 py-3">
                   <div className="flex gap-1 sm:gap-2">
                     <button onClick={() => setViewComplaint(c)} className="text-xs text-primary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-primary/5">View</button>
+                    <button onClick={() => { setEditComplaint(c); setDrawerOpen(true) }} className="text-xs text-text-secondary hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-muted/50">Edit</button>
                     <button onClick={() => setDeleteTarget(c)} className="text-xs text-danger hover:underline cursor-pointer px-2 py-1.5 min-h-[36px] rounded hover:bg-danger/5">Delete</button>
                   </div>
                 </td>
@@ -74,7 +76,7 @@ export function Complaints() {
         </table>
       </div>
 
-      <ComplaintDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <ComplaintDrawer open={drawerOpen} onClose={() => { setDrawerOpen(false); setEditComplaint(null) }} editComplaint={editComplaint} />
 
       <Modal open={!!viewComplaint} onClose={() => setViewComplaint(null)} title="Complaint Details">
         {viewComplaint && (
@@ -111,14 +113,14 @@ export function Complaints() {
   )
 }
 
-function ComplaintDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+function ComplaintDrawer({ open, onClose, editComplaint }: { open: boolean; onClose: () => void; editComplaint: Complaint | null }) {
   const queryClient = useQueryClient()
-  const [vehicle_id, setVehicleId] = useState('')
-  const [driver_id, setDriverId] = useState('')
-  const [incident_date, setIncidentDate] = useState('')
-  const [items, setItems] = useState<string[]>([])
+  const [vehicle_id, setVehicleId] = useState(editComplaint?.vehicle_id || '')
+  const [driver_id, setDriverId] = useState(editComplaint?.driver_id || '')
+  const [incident_date, setIncidentDate] = useState(editComplaint?.incident_date || '')
+  const [items, setItems] = useState<string[]>(editComplaint?.complaint_items || [])
   const [itemInput, setItemInput] = useState('')
-  const [status, setStatus] = useState<'open' | 'resolved'>('open')
+  const [status, setStatus] = useState<'open' | 'resolved'>(editComplaint?.status as 'open' | 'resolved' || 'open')
 
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicle-list'],
@@ -138,23 +140,31 @@ function ComplaintDrawer({ open, onClose }: { open: boolean; onClose: () => void
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('complaints').insert({
-        id: generateId('CMP'),
+      const payload = {
         vehicle_id: vehicle_id || null,
         driver_id: driver_id || null,
         incident_date: incident_date || null,
         complaint_items: items,
-        date_filed: new Date().toISOString(),
         status,
-      })
-      if (error) throw error
+      }
+      if (editComplaint) {
+        const { error } = await supabase.from('complaints').update(payload).eq('id', editComplaint.id)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('complaints').insert({
+          id: generateId('CMP'),
+          ...payload,
+          date_filed: new Date().toISOString(),
+        })
+        if (error) throw error
+      }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-complaints'] }); onClose(); toast.success('Complaint filed') },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['all-complaints'] }); onClose(); toast.success(editComplaint ? 'Complaint updated' : 'Complaint filed') },
     onError: (err: Error) => toast.error(err.message),
   })
 
   return (
-    <Drawer open={open} onClose={onClose} title="File Complaint">
+    <Drawer open={open} onClose={onClose} title={editComplaint ? 'Edit Complaint' : 'File Complaint'}>
       <form onSubmit={e => { e.preventDefault(); saveMutation.mutate() }} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Vehicle</label>

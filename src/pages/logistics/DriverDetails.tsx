@@ -133,6 +133,8 @@ function DriverDrawer({ open, onClose, editDriver }: { open: boolean; onClose: (
     phone: editDriver?.phone || '',
     date_joined: editDriver?.date_joined?.split('T')[0] || '',
     driving_experience_years: editDriver?.driving_experience_years || 0,
+    driving_permit: editDriver?.driving_permit || '',
+    driving_permit_expiry: editDriver?.driving_permit_expiry || '',
     is_active: editDriver?.is_active ?? true,
   })
 
@@ -144,6 +146,8 @@ function DriverDrawer({ open, onClose, editDriver }: { open: boolean; onClose: (
         phone: form.phone || null,
         date_joined: form.date_joined || null,
         driving_experience_years: Number(form.driving_experience_years) || 0,
+        driving_permit: form.driving_permit || null,
+        driving_permit_expiry: form.driving_permit_expiry || null,
         is_active: form.is_active,
       }
       if (editDriver) {
@@ -180,6 +184,14 @@ function DriverDrawer({ open, onClose, editDriver }: { open: boolean; onClose: (
         <div>
           <label className="block text-sm font-medium mb-1">Years of Driving Experience</label>
           <input type="number" value={form.driving_experience_years} onChange={e => setForm(f => ({ ...f, driving_experience_years: Number(e.target.value) }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Driving Permit</label>
+          <input value={form.driving_permit} onChange={e => setForm(f => ({ ...f, driving_permit: e.target.value }))} placeholder="e.g. UAT 659U" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Driving Permit Expiry</label>
+          <input type="date" value={form.driving_permit_expiry} onChange={e => setForm(f => ({ ...f, driving_permit_expiry: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Active</span>
