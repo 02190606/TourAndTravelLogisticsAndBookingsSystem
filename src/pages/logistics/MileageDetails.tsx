@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, Drawer, Modal, CardSkeleton } from '@/components/common'
 import { formatDate, generateId } from '@/utils'
 import toast from 'react-hot-toast'
-import type { MileageRecord, Vehicle } from '@/types'
+import type { MileageRecord, Vehicle, VehicleStatus, Driver } from '@/types'
 
 export function MileageDetails() {
   const queryClient = useQueryClient()
@@ -16,8 +16,16 @@ export function MileageDetails() {
   const { data: vehicles = [] } = useQuery({
     queryKey: ['vehicles-list'],
     queryFn: async () => {
-      const { data } = await supabase.from('vehicles').select('id, registration_number, make, model').order('registration_number')
-      return (data || []) as Pick<Vehicle, 'id' | 'registration_number' | 'make' | 'model'>[]
+      const { data } = await supabase.from('vehicles').select('id, registration_number, make, model, status, current_location, current_driver_id').order('registration_number')
+      return (data || []) as Pick<Vehicle, 'id' | 'registration_number' | 'make' | 'model' | 'status' | 'current_location' | 'current_driver_id'>[]
+    },
+  })
+
+  const { data: drivers = [] } = useQuery({
+    queryKey: ['drivers-list'],
+    queryFn: async () => {
+      const { data } = await supabase.from('drivers').select('id, full_name').eq('is_active', true).order('full_name')
+      return (data || []) as Pick<Driver, 'id' | 'full_name'>[]
     },
   })
 
@@ -78,6 +86,8 @@ export function MileageDetails() {
             <tr className="bg-muted/20">
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Vehicle</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Date</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Location</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Opening</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Closing</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase">Distance</th>
@@ -91,6 +101,8 @@ export function MileageDetails() {
               <tr key={r.id} className={i % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
                 <td data-label="Vehicle" className="px-4 py-3 text-sm font-medium">{getVehicleLabel(r.vehicles)}</td>
                 <td data-label="Date" className="px-4 py-3 text-sm">{formatDate(r.date)}</td>
+                <td data-label="Status" className="px-4 py-3 text-sm capitalize">{r.status?.replace('_', ' ') || '-'}</td>
+                <td data-label="Location" className="px-4 py-3 text-sm">{r.current_location || '-'}</td>
                 <td data-label="Opening" className="px-4 py-3 text-sm font-mono">{r.opening_mileage.toLocaleString()}</td>
                 <td data-label="Closing" className="px-4 py-3 text-sm font-mono">{r.closing_mileage.toLocaleString()}</td>
                 <td data-label="Distance" className="px-4 py-3 text-sm font-mono font-semibold">{r.distance_covered.toLocaleString()}</td>
@@ -137,11 +149,13 @@ export function MileageDetails() {
   )
 }
 
-function MileageDrawer({ open, onClose, editRecord, vehicles }: { open: boolean; onClose: () => void; editRecord: MileageRecord | null; vehicles: Pick<Vehicle, 'id' | 'registration_number' | 'make' | 'model'>[] }) {
+function MileageDrawer({ open, onClose, editRecord, vehicles }: { open: boolean; onClose: () => void; editRecord: MileageRecord | null; vehicles: Pick<Vehicle, 'id' | 'registration_number' | 'make' | 'model' | 'status' | 'current_location'>[] }) {
   const queryClient = useQueryClient()
   const [form, setForm] = useState({
     vehicle_id: editRecord?.vehicle_id || '',
     date: editRecord?.date || new Date().toISOString().split('T')[0],
+    status: (editRecord?.status || '') as VehicleStatus | '',
+    current_location: editRecord?.current_location || '',
     opening_mileage: editRecord?.opening_mileage || 0,
     closing_mileage: editRecord?.closing_mileage || 0,
     service_given: editRecord?.service_given || 0,
@@ -150,11 +164,15 @@ function MileageDrawer({ open, onClose, editRecord, vehicles }: { open: boolean;
   const distanceCovered = Math.max(0, form.closing_mileage - form.opening_mileage)
   const serviceDue = Math.max(0, form.service_given - distanceCovered)
 
+  const selectedVehicle = vehicles.find(v => v.id === form.vehicle_id)
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
         vehicle_id: form.vehicle_id,
         date: form.date || null,
+        status: form.status || null,
+        current_location: form.current_location || null,
         opening_mileage: Number(form.opening_mileage) || 0,
         closing_mileage: Number(form.closing_mileage) || 0,
         distance_covered: distanceCovered,
@@ -168,9 +186,18 @@ function MileageDrawer({ open, onClose, editRecord, vehicles }: { open: boolean;
         const { error } = await supabase.from('mileage_records').insert({ id: generateId('MLG'), ...payload })
         if (error) throw error
       }
+
+      if (form.vehicle_id && form.status) {
+        const vehicleUpdate: Record<string, unknown> = { status: form.status }
+        if (form.current_location) vehicleUpdate.current_location = form.current_location
+        const { error: vehicleError } = await supabase.from('vehicles').update(vehicleUpdate).eq('id', form.vehicle_id)
+        if (vehicleError) throw vehicleError
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mileage'] })
+      queryClient.invalidateQueries({ queryKey: ['vehicles-list'] })
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] })
       onClose()
       toast.success(editRecord ? 'Mileage updated' : 'Mileage added')
     },
@@ -195,6 +222,25 @@ function MileageDrawer({ open, onClose, editRecord, vehicles }: { open: boolean;
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Date *</label>
               <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-muted/30 pt-4">
+          <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Status & Location</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">Status</label>
+              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as VehicleStatus }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+                <option value="">— Keep current —</option>
+                <option value="available">🟢 Available</option>
+                <option value="on_trip">🟡 On Trip</option>
+                <option value="sold">⚫ Sold</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">Current Location</label>
+              <input value={form.current_location} onChange={e => setForm(f => ({ ...f, current_location: e.target.value }))} placeholder={selectedVehicle?.current_location || 'e.g. Kampala'} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
           </div>
         </div>

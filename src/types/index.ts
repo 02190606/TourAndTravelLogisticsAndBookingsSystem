@@ -107,6 +107,8 @@ export interface MileageRecord {
   id: string
   vehicle_id: string
   date: string
+  status: string | null
+  current_location: string | null
   opening_mileage: number
   closing_mileage: number
   distance_covered: number
