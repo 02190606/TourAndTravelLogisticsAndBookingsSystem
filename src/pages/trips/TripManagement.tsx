@@ -251,9 +251,6 @@ export function TripManagement() {
                   {viewTrip.return_trip && <Badge variant="info">Return Trip</Badge>}
                 </div>
               )}
-              {viewTrip.return_trip && (
-                <p className="mt-2 text-sm text-text-secondary">Return: <span className="font-medium text-text-primary">{formatDate(viewTrip.return_trip)}</span></p>
-              )}
             </div>
 
             {/* Payment */}
@@ -345,8 +342,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     destination: editTrip?.Destination || '',
     is_cross_border: editTrip?.is_cross_border || false,
     is_one_way: editTrip?.is_one_way || false,
-    is_return_trip: !!editTrip?.return_trip,
-    return_trip: editTrip?.return_trip?.split('T')[0] || '',
+    is_return_trip: editTrip?.return_trip ?? false,
     needs_accommodation: editTrip?.needs_accommodation || false,
     accommodation_name: editTrip?.accommodation_name || '',
     accommodation_checkin: editTrip?.accommodation_checkin?.split('T')[0] || '',
@@ -455,7 +451,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
         Destination: form.destination || null,
         is_cross_border: form.is_cross_border,
         is_one_way: form.is_one_way,
-        return_trip: form.return_trip || null,
+        return_trip: form.is_return_trip || null,
         needs_accommodation: form.needs_accommodation,
         accommodation_name: form.accommodation_name || null,
         accommodation_checkin: form.accommodation_checkin || null,
@@ -610,12 +606,6 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
                 </label>
               </div>
             </div>
-            {form.is_return_trip && (
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1">Return Trip</label>
-                <input type="date" value={form.return_trip} onChange={e => setForm(f => ({ ...f, return_trip: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-              </div>
-            )}
             <div>
               <label className="block text-sm font-medium mb-1">Flight Arrival Time 🛫</label>
               <input type="time" value={form.flight_arrival_time} onChange={e => setForm(f => ({ ...f, flight_arrival_time: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
