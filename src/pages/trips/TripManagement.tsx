@@ -530,11 +530,11 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Number of Rooms</label>
-                  <input type="number" value={form.accommodation_rooms} onChange={e => setForm(f => ({ ...f, accommodation_rooms: Number(e.target.value) }))} min={1} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                  <input type="number" value={form.accommodation_rooms ?? ''} onChange={e => setForm(f => ({ ...f, accommodation_rooms: Number(e.target.value) || null }))} min={1} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Accommodation Cost (UGX)</label>
-                  <input type="number" value={form.accommodation_cost} onChange={e => setForm(f => ({ ...f, accommodation_cost: Number(e.target.value) }))} min={0} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                  <input type="number" value={form.accommodation_cost ?? ''} onChange={e => setForm(f => ({ ...f, accommodation_cost: Number(e.target.value) || null }))} min={0} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
                 </div>
               </>
             )}
@@ -653,7 +653,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             {form.currency !== 'UGX' && (
               <div>
                 <label className="block text-sm font-medium mb-1">Amount (UGX)</label>
-                <div className="w-full px-3 py-2.5 bg-muted/20 rounded-xl text-sm font-mono font-semibold text-primary">{form.amount_in_ugx.toLocaleString()} UGX</div>
+                <div className="w-full px-3 py-2.5 bg-muted/20 rounded-xl text-sm font-mono font-semibold text-primary">{(form.amount_in_ugx ?? 0).toLocaleString()} UGX</div>
               </div>
             )}
             <div>
@@ -669,12 +669,12 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Amount Paid</label>
-              <input type="number" value={form.amount_paid} onChange={e => updateAmountPaid(Number(e.target.value))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+              <input type="number" value={form.amount_paid ?? ''} onChange={e => updateAmountPaid(Number(e.target.value))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Balance</label>
-              <div className={`w-full px-3 py-2.5 rounded-xl text-sm font-mono font-semibold ${form.balance > 0 ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'}`}>
-                {form.balance.toLocaleString()} UGX
+              <div className={`w-full px-3 py-2.5 rounded-xl text-sm font-mono font-semibold ${(form.balance ?? 0) > 0 ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'}`}>
+                {(form.balance ?? 0).toLocaleString()} UGX
               </div>
             </div>
           </div>
