@@ -1,0 +1,1 @@
+ALTER TABLE drivers ALTER COLUMN license_number DROP NOT NULL;
