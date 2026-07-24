@@ -2,10 +2,10 @@
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Schedule send-alerts edge function daily at 11:00 AM
+-- Schedule send-alerts edge function daily at 5:20 PM
 SELECT cron.schedule(
   'send-alerts-daily',
-  '0 11 * * *',
+  '30 17 * * *',
   $$
   SELECT net.http_post(
     url:='https://ymjmqubbmeryqzolszvr.supabase.co/functions/v1/send-alerts',

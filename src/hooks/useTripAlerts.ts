@@ -39,6 +39,7 @@ export function useTripAlerts() {
       let count = 0
 
       for (const t of trips as Trip[]) {
+        if (!t.trip_start_date || !t.trip_end_date) continue
         const status = computeTripStatus(t)
         if (status !== 'planned' && status !== 'ongoing' && status !== 'ends_today') continue
 

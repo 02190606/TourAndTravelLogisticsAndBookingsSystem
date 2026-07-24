@@ -17,7 +17,7 @@ export function DriverDetails() {
   const { data: drivers = [], isLoading } = useQuery({
     queryKey: ['drivers'],
     queryFn: async () => {
-      const { data } = await supabase.from('drivers').select('*').order('created_at', { ascending: false })
+      const { data } = await supabase.from('drivers').select('*').or('source.eq.logistics,source.is.null').order('created_at', { ascending: false })
       return (data || []) as Driver[]
     },
   })
@@ -46,11 +46,12 @@ export function DriverDetails() {
   })
 
   function getInitials(name: string) {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    return (name || '').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?'
   }
 
   function getColor(name: string) {
     const colors = ['bg-primary', 'bg-secondary', 'bg-accent', 'bg-blue-500', 'bg-purple-500']
+    if (!name) return colors[0]
     let hash = 0
     for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
     return colors[Math.abs(hash) % colors.length]
@@ -85,10 +86,10 @@ export function DriverDetails() {
               </div>
             </div>
             <div className="text-sm space-y-1">
-              <p><span className="text-text-secondary">License:</span> {d.license_number}</p>
-              <p><span className="text-text-secondary">Phone:</span> <a href={`tel:${d.phone}`} className="text-primary hover:underline">{d.phone}</a></p>
-              <p><span className="text-text-secondary">Joined:</span> {formatDate(d.date_joined, 'MMM yyyy')}</p>
-              <p><span className="text-text-secondary">Experience:</span> {d.driving_experience_years} years</p>
+              <p><span className="text-text-secondary">License:</span> {d.license_number || '—'}</p>
+              <p><span className="text-text-secondary">Phone:</span> <a href={`tel:${d.phone}`} className="text-primary hover:underline">{d.phone || '—'}</a></p>
+              <p><span className="text-text-secondary">Joined:</span> {d.date_joined ? formatDate(d.date_joined, 'MMM yyyy') : '—'}</p>
+              <p><span className="text-text-secondary">Experience:</span> {d.driving_experience_years ? `${d.driving_experience_years} years` : '—'}</p>
             </div>
             <StatusBadge status={d.is_active ? 'active' : 'inactive'} />
             <div className="flex gap-1 sm:gap-2 pt-2 border-t border-muted/30">
@@ -154,7 +155,7 @@ function DriverDrawer({ open, onClose, editDriver }: { open: boolean; onClose: (
         const { error } = await supabase.from('drivers').update(payload).eq('id', editDriver.id)
         if (error) throw error
       } else {
-        const { error } = await supabase.from('drivers').insert({ id: generateId('DRV'), ...payload })
+        const { error } = await supabase.from('drivers').insert({ id: generateId('DRV'), ...payload, source: 'logistics' })
         if (error) throw error
       }
     },

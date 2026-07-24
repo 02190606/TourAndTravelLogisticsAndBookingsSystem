@@ -6,6 +6,7 @@ export function isActiveTrip(trip: { status: string }): boolean {
 
 export function computeTripStatus(trip: Pick<Trip, 'status' | 'trip_start_date' | 'trip_end_date'>): TripStatus {
   if (trip.status === 'cancelled') return 'cancelled'
+  if (!trip.trip_start_date || !trip.trip_end_date) return 'planned'
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const start = new Date(trip.trip_start_date); start.setHours(0, 0, 0, 0)
   const end = new Date(trip.trip_end_date); end.setHours(0, 0, 0, 0)

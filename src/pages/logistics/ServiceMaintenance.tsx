@@ -39,10 +39,18 @@ export function ServiceMaintenance() {
 
   const combinedMonthlyData = months.map((name, i) => {
     const s = serviceRecords
-      .filter(r => { const d = new Date(r.service_date); return d.getMonth() === i && d.getFullYear() === year })
+      .filter(r => {
+        if (!r.service_date) return false
+        const d = new Date(r.service_date)
+        return d.getMonth() === i && d.getFullYear() === year
+      })
       .reduce((sum, r) => sum + (r.cost || 0), 0)
     const r = repairRecords
-      .filter(r => { const d = new Date(r.date_of_repair); return d.getMonth() === i && d.getFullYear() === year })
+      .filter(r => {
+        if (!r.date_of_repair) return false
+        const d = new Date(r.date_of_repair)
+        return d.getMonth() === i && d.getFullYear() === year
+      })
       .reduce((sum, r) => sum + (r.cost || 0), 0)
     return { name, service: Math.round(s / 1000), repair: Math.round(r / 1000) }
   })

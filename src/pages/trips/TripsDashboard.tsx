@@ -23,17 +23,18 @@ export function TripsDashboard() {
       const thisMonth = new Date().getMonth()
       const thisYear = new Date().getFullYear()
       const monthlyRevenue = t
-        .filter(tr => isActiveTrip(tr) && new Date(tr.trip_start_date).getMonth() === thisMonth && new Date(tr.trip_start_date).getFullYear() === thisYear)
+        .filter(tr => isActiveTrip(tr) && tr.trip_start_date && new Date(tr.trip_start_date).getMonth() === thisMonth && new Date(tr.trip_start_date).getFullYear() === thisYear)
         .reduce((sum, tr) => sum + (tr.amount_in_ugx || 0), 0)
 
       const yearlyRevenue = t
-        .filter(tr => isActiveTrip(tr) && new Date(tr.trip_start_date).getFullYear() === thisYear)
+        .filter(tr => isActiveTrip(tr) && tr.trip_start_date && new Date(tr.trip_start_date).getFullYear() === thisYear)
         .reduce((sum, tr) => sum + (tr.amount_in_ugx || 0), 0)
 
       const now = new Date()
       const weekStart = startOfWeek(now, { weekStartsOn: 1 })
       const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
       const upcomingThisWeek = t.filter(tr => {
+        if (!tr.trip_start_date) return false
         const start = parseISO(tr.trip_start_date)
         return isWithinInterval(start, { start: weekStart, end: weekEnd }) && computeTripStatus(tr) !== 'cancelled'
       })
@@ -43,14 +44,14 @@ export function TripsDashboard() {
           const s = computeTripStatus(tr)
           return s === 'planned' || s === 'ongoing' || s === 'ends_today'
         })
-        .sort((a, b) => new Date(a.trip_start_date).getTime() - new Date(b.trip_start_date).getTime())
+        .sort((a, b) => new Date(a.trip_start_date || 0).getTime() - new Date(b.trip_start_date || 0).getTime())
         .slice(0, 5)
 
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
       const revenueByMonth = months.map((name, i) => ({
         name,
         value: t
-          .filter(tr => isActiveTrip(tr) && new Date(tr.trip_start_date).getMonth() === i && new Date(tr.trip_start_date).getFullYear() === thisYear)
+          .filter(tr => isActiveTrip(tr) && tr.trip_start_date && new Date(tr.trip_start_date).getMonth() === i && new Date(tr.trip_start_date).getFullYear() === thisYear)
           .reduce((sum, tr) => sum + (tr.amount_in_ugx || 0), 0),
       }))
 

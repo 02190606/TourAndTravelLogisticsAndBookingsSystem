@@ -6,9 +6,9 @@ import { useEffect } from 'react'
 import type { ServiceRecord, Vehicle } from '@/types'
 
 const INTERVALS = [
-  { days: 14, label: '2 weeks', severity: 'upcoming' as const },
-  { days: 7, label: '1 week', severity: 'upcoming' as const },
   { days: 0, label: 'today', severity: 'upcoming' as const },
+  { days: 7, label: '1 week', severity: 'upcoming' as const },
+  { days: 14, label: '2 weeks', severity: 'upcoming' as const },
 ]
 
 interface Alert {
@@ -58,6 +58,7 @@ function checkDocumentExpiry(
         due_date: dueDateStr,
         severity: interval.severity,
       })
+      break
     }
   }
   return alerts

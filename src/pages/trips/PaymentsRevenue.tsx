@@ -29,10 +29,10 @@ export function PaymentsRevenue() {
 
   const thisMonth = now.getMonth()
 
-  const filteredTrips = trips.filter(t => new Date(t.trip_start_date).getFullYear() === yearFilter)
+  const filteredTrips = trips.filter(t => t.trip_start_date && new Date(t.trip_start_date).getFullYear() === yearFilter)
 
   const monthlyRevenue = trips
-    .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getMonth() === thisMonth && new Date(t.trip_start_date).getFullYear() === yearFilter)
+    .filter(t => isActiveTrip(t) && t.trip_start_date && new Date(t.trip_start_date).getMonth() === thisMonth && new Date(t.trip_start_date).getFullYear() === yearFilter)
     .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
 
   const yearlyRevenue = filteredTrips
@@ -47,12 +47,12 @@ export function PaymentsRevenue() {
   const revenueByMonth = months.map((name, i) => ({
     name,
     value: filteredTrips
-      .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getMonth() === i)
+      .filter(t => isActiveTrip(t) && t.trip_start_date && new Date(t.trip_start_date).getMonth() === i)
       .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0),
   }))
 
   const monthlySummary = months.map((name, i) => {
-    const monthTrips = filteredTrips.filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getMonth() === i)
+    const monthTrips = filteredTrips.filter(t => isActiveTrip(t) && t.trip_start_date && new Date(t.trip_start_date).getMonth() === i)
     return {
       name,
       revenue: monthTrips.reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0),

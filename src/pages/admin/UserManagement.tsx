@@ -103,7 +103,7 @@ export function UserManagement() {
     { key: 'full_name', header: 'Name', render: (u) => (
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-[#CC9933] text-white text-xs font-bold flex items-center justify-center">
-          {u.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+          {(u.full_name || '').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?'}
         </div>
         <span className="font-medium">{u.full_name}</span>
       </div>

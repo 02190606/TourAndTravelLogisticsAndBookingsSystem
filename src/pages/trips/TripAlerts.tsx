@@ -109,6 +109,7 @@ export function TripAlerts() {
   const today = new Date()
 
   function getDaysToStart(trip: Trip): number {
+    if (!trip.trip_start_date) return Infinity
     const start = parseISO(trip.trip_start_date)
     return Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
   }
@@ -132,6 +133,7 @@ export function TripAlerts() {
       return s === 'planned' || s === 'ongoing' || s === 'ends_today'
     })
     .filter(t => {
+      if (!t.trip_start_date || !t.trip_end_date) return false
       const start = parseISO(t.trip_start_date)
       const end = parseISO(t.trip_end_date)
       const startThreshold = addDays(today, daysBefore)

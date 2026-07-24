@@ -9,7 +9,7 @@ import type { Trip, Vehicle, Driver } from '@/types'
 type TripWithJoins = Trip & { vehicles?: Vehicle; drivers?: Driver }
 
 function hasExperienceData(trip: TripWithJoins): boolean {
-  return !!(trip.car_seats || trip.has_gps || trip.extras || trip.gorilla_tracking || trip.chimpanzee_tracking || trip.activities)
+  return !!(trip.car_seats || trip.has_gps || trip.has_binoculars || trip.extras || trip.gorilla_tracking || trip.chimpanzee_tracking || trip.activities)
 }
 
 function getInitial(name: string): string {
@@ -26,6 +26,7 @@ const AVATAR_COLORS = [
 ]
 
 function getAvatarColor(name: string): string {
+  if (!name) return AVATAR_COLORS[0]
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
@@ -37,6 +38,7 @@ export function Experience() {
   const [form, setForm] = useState({
     car_seats: 0,
     has_gps: false,
+    has_binoculars: false,
     extras: '',
     gorilla_tracking: false,
     chimpanzee_tracking: false,
@@ -60,6 +62,7 @@ export function Experience() {
       const payload: Record<string, unknown> = {
         car_seats: form.car_seats || null,
         has_gps: form.has_gps || null,
+        has_binoculars: form.has_binoculars || null,
         extras: form.extras || null,
         gorilla_tracking: form.gorilla_tracking || null,
         chimpanzee_tracking: form.chimpanzee_tracking || null,
@@ -80,6 +83,7 @@ export function Experience() {
     setForm({
       car_seats: trip.car_seats ?? 0,
       has_gps: trip.has_gps ?? false,
+      has_binoculars: trip.has_binoculars ?? false,
       extras: trip.extras ?? '',
       gorilla_tracking: trip.gorilla_tracking ?? false,
       chimpanzee_tracking: trip.chimpanzee_tracking ?? false,
@@ -157,6 +161,17 @@ export function Experience() {
                       className="rounded border-muted/60 text-primary focus:ring-primary"
                     />
                     <span className="text-sm font-medium">GPS</span>
+                  </label>
+                </div>
+                <div className="flex items-end pb-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.has_binoculars}
+                      onChange={e => setForm(f => ({ ...f, has_binoculars: e.target.checked }))}
+                      className="rounded border-muted/60 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm font-medium">Binoculars</span>
                   </label>
                 </div>
                 <div className="sm:col-span-2">

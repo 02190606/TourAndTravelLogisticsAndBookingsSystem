@@ -158,6 +158,7 @@ export interface Trip {
   accommodation_cost: number | null
   car_seats: number | null
   has_gps: boolean | null
+  has_binoculars: boolean | null
   extras: string | null
   gorilla_tracking: boolean | null
   chimpanzee_tracking: boolean | null

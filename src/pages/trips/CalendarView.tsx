@@ -60,6 +60,7 @@ export function CalendarView() {
   today.setHours(0, 0, 0, 0)
 
   const events = trips
+    .filter(t => t.trip_start_date && t.trip_end_date)
     .filter(t => {
       const s = computeTripStatus(t)
       if (s === 'planned' || s === 'ongoing' || s === 'ends_today') return true
@@ -200,7 +201,9 @@ export function CalendarView() {
               <div>
                 <p className="text-xs text-text-secondary uppercase tracking-wider">Duration</p>
                 <p className="text-sm mt-1">
-                  {Math.round((new Date(selectedTrip.trip_end_date).getTime() - new Date(selectedTrip.trip_start_date).getTime()) / 86400000) + 1} days
+                  {selectedTrip.trip_start_date && selectedTrip.trip_end_date
+                    ? `${Math.round((new Date(selectedTrip.trip_end_date).getTime() - new Date(selectedTrip.trip_start_date).getTime()) / 86400000) + 1} days`
+                    : '—'}
                 </p>
               </div>
               <div>

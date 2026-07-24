@@ -54,15 +54,15 @@ export function AdminDashboard() {
       const thisMonth = new Date().getMonth()
       const thisYear = new Date().getFullYear()
       const monthlyRevenue = trips
-        .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getMonth() === thisMonth && new Date(t.trip_start_date).getFullYear() === thisYear)
+        .filter(t => isActiveTrip(t) && t.trip_start_date && new Date(t.trip_start_date).getMonth() === thisMonth && new Date(t.trip_start_date).getFullYear() === thisYear)
         .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
       const yearlyRevenue = trips
-        .filter(t => isActiveTrip(t) && new Date(t.trip_start_date).getFullYear() === thisYear)
+        .filter(t => isActiveTrip(t) && t.trip_start_date && new Date(t.trip_start_date).getFullYear() === thisYear)
         .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
 
       const upcomingTrips = trips
         .filter(t => { const s = computeTripStatus(t); return s === 'planned' || s === 'ongoing' || s === 'ends_today' })
-        .sort((a, b) => new Date(a.trip_start_date).getTime() - new Date(b.trip_start_date).getTime())
+        .sort((a, b) => new Date(a.trip_start_date || 0).getTime() - new Date(b.trip_start_date || 0).getTime())
         .slice(0, 5)
 
       const available = vehicles.filter(v => v.status === 'available').length
@@ -148,7 +148,7 @@ export function AdminDashboard() {
                 {trips.upcomingTrips.map(trip => (
                   <div key={trip.id} className="flex items-center gap-3 py-2.5">
                     <div className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                      {trip.client_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                      {(trip.client_name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-slate-950">{trip.client_name}</p>
