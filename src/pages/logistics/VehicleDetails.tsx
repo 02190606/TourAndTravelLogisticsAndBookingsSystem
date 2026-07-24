@@ -24,6 +24,7 @@ export function VehicleDetails() {
       let query = supabase
         .from('vehicles')
         .select('*, current_driver:drivers!left(full_name, phone)')
+        .or('source.eq.logistics,source.is.null')
         .order('created_at', { ascending: false })
       if (!showSold) query = query.neq('status', 'sold')
       const { data } = await query
@@ -34,7 +35,7 @@ export function VehicleDetails() {
   const { data: drivers = [] } = useQuery({
     queryKey: ['drivers-list'],
     queryFn: async () => {
-      const { data } = await supabase.from('drivers').select('id, full_name, license_number, phone').eq('is_active', true).order('full_name')
+      const { data } = await supabase.from('drivers').select('id, full_name, license_number, phone').eq('is_active', true).or('source.eq.logistics,source.is.null').order('full_name')
       return (data || []) as Pick<Driver, 'id' | 'full_name' | 'license_number' | 'phone'>[]
     },
   })
@@ -245,8 +246,8 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
         registration_number: form.registration_number,
         id: editVehicle?.id || generateId('VEH'),
         chassis_number: form.chassis_number || null,
-        make: form.make || null,
-        model: form.model || null,
+        make: form.make || '',
+        model: form.model || '',
         year: Number(form.year) || null,
         date_added: form.date_added || null,
         status: 'available',
@@ -265,7 +266,7 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
         const { error } = await supabase.from('vehicles').update(payload).eq('id', editVehicle.id)
         if (error) throw error
       } else {
-        const { error } = await supabase.from('vehicles').insert(payload)
+        const { error } = await supabase.from('vehicles').insert({ ...payload, source: 'logistics' })
         if (error) throw error
       }
     },
@@ -306,14 +307,6 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Chassis Number</label>
               <input value={form.chassis_number} onChange={e => setForm(f => ({ ...f, chassis_number: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Make</label>
-              <input value={form.make} onChange={e => setForm(f => ({ ...f, make: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Model</label>
-              <input value={form.model} onChange={e => setForm(f => ({ ...f, model: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Year</label>
