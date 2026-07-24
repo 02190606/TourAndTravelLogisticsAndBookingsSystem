@@ -111,27 +111,14 @@ function buildEmailHtml(alerts: Alert[]): string {
   if (logistics.length > 0) {
     let logisticsHtml = ''
     for (const group of grouped) {
-      const rows = group.alerts.map(a => {
-        const titleMap: Record<string, string> = {
-          'Insurance': 'Insurance Expiry',
-          'PMO': 'PMO Expiry',
-          'PSV': 'PSV Expiry',
-          'Permit': 'Permit Expiry',
-          'Service': 'Service Due',
-        }
-        const title = titleMap[a.label] || a.label
-        return `
+      const rows = group.alerts.map(a => `
         <tr>
-          <td style="padding: 8px 12px; font-weight: 600; color: #1e293b; font-size: 13px;">
-            ${title}
-            <div style="color: #64748b; font-size: 11px; margin-top: 1px;">&#128663; ${group.reg}</div>
-          </td>
+          <td style="padding: 8px 12px; font-weight: 500; color: #334155; width: 120px;">${a.label}</td>
           <td style="padding: 8px 12px;">
             <span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; ${urgencyBadge(a.status)}">${urgencyIcon(a.status)} ${a.status}</span>
           </td>
-          <td style="padding: 8px 12px; color: #64748b; font-size: 13px; width: 100px;">${a.date ? formatDate(a.date) : ''}</td>
-        </tr>`
-      }).join('')
+          <td style="padding: 8px 12px; color: #64748b; font-size: 13px; width: 100px;">${a.date}</td>
+        </tr>`).join('')
 
       logisticsHtml += `
         <tr>
@@ -213,7 +200,7 @@ function buildEmailHtml(alerts: Alert[]): string {
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
             <tr style="background: #f8fafc;">
-              <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Title</th>
+              <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Item</th>
               <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Status</th>
               <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Date</th>
             </tr>
@@ -302,16 +289,13 @@ serve(async (req) => {
           const diff = daysUntil(dateStr, today)
           const itemId = `${type}-${v.id}`
 
-          if (diff <= 0 && !sentKey.has(`${user.id}:${itemId}:4`)) {
-            userAlerts.push({ itemId, stage: 4, label, reg: v.registration_number, status: diff === 0 ? 'Expires today' : `Expired ${Math.abs(diff)} day${Math.abs(diff) === 1 ? '' : 's'} ago`, date: dateStr, type: 'logistics' })
-          } else if (diff <= 3 && diff > 0 && !sentKey.has(`${user.id}:${itemId}:3`)) {
-            userAlerts.push({ itemId, stage: 3, label, reg: v.registration_number, status: `Expires in ${diff} day${diff === 1 ? '' : 's'} — urgent`, date: dateStr, type: 'logistics' })
-          } else if (diff <= 7 && diff > 3 && !sentKey.has(`${user.id}:${itemId}:2`)) {
-            userAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: `Expires in ${diff} days — renew soon`, date: dateStr, type: 'logistics' })
-          } else if (diff <= 14 && diff > 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-            userAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: `Expires in ${diff} days`, date: dateStr, type: 'logistics' })
+          if (diff === 0 && !sentKey.has(`${user.id}:${itemId}:3`)) {
+            userAlerts.push({ itemId, stage: 3, label, reg: v.registration_number, status: 'Expires today', date: dateStr, type: 'logistics' })
+          } else if (diff === 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
+            userAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: 'Expires in 2 days', date: dateStr, type: 'logistics' })
+          } else if (diff === 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
+            userAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: 'Expires in 7 days', date: dateStr, type: 'logistics' })
           }
-        }
         }
       }
     }
@@ -323,14 +307,12 @@ serve(async (req) => {
         const diff = daysUntil(s.next_service_date, today)
         const itemId = `service-${s.id}`
 
-        if (diff <= 0 && !sentKey.has(`${user.id}:${itemId}:4`)) {
-          userAlerts.push({ itemId, stage: 4, label: 'Service', reg: s.vehicles.registration_number, status: diff === 0 ? 'Due today' : `Overdue by ${Math.abs(diff)} day${Math.abs(diff) === 1 ? '' : 's'}`, date: s.next_service_date, type: 'logistics' })
-        } else if (diff <= 3 && diff > 0 && !sentKey.has(`${user.id}:${itemId}:3`)) {
-          userAlerts.push({ itemId, stage: 3, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} day${diff === 1 ? '' : 's'} — urgent`, date: s.next_service_date, type: 'logistics' })
-        } else if (diff <= 7 && diff > 3 && !sentKey.has(`${user.id}:${itemId}:2`)) {
-          userAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days — renew soon`, date: s.next_service_date, type: 'logistics' })
-        } else if (diff <= 14 && diff > 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-          userAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days`, date: s.next_service_date, type: 'logistics' })
+        if (diff === 0 && !sentKey.has(`${user.id}:${itemId}:3`)) {
+          userAlerts.push({ itemId, stage: 3, label: 'Service', reg: s.vehicles.registration_number, status: 'Due today', date: s.next_service_date, type: 'logistics' })
+        } else if (diff === 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
+          userAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: 'Due in 2 days', date: s.next_service_date, type: 'logistics' })
+        } else if (diff === 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
+          userAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: 'Due in 7 days', date: s.next_service_date, type: 'logistics' })
         }
       }
     }
@@ -385,14 +367,12 @@ serve(async (req) => {
           if (!dateStr) continue
           const diff = daysUntil(dateStr, today)
           const itemId = `${type}-${v.id}`
-          if (diff <= 0 && !sentKey.has(`${recipientUserId}:${itemId}:4`)) {
-            recipientAlerts.push({ itemId, stage: 4, label, reg: v.registration_number, status: diff === 0 ? 'Expires today' : `Expired ${Math.abs(diff)} day${Math.abs(diff) === 1 ? '' : 's'} ago`, date: dateStr, type: 'logistics' })
-          } else if (diff <= 3 && diff > 0 && !sentKey.has(`${recipientUserId}:${itemId}:3`)) {
-            recipientAlerts.push({ itemId, stage: 3, label, reg: v.registration_number, status: `Expires in ${diff} day${diff === 1 ? '' : 's'} — urgent`, date: dateStr, type: 'logistics' })
-          } else if (diff <= 7 && diff > 3 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
-            recipientAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: `Expires in ${diff} days — renew soon`, date: dateStr, type: 'logistics' })
-          } else if (diff <= 14 && diff > 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
-            recipientAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: `Expires in ${diff} days`, date: dateStr, type: 'logistics' })
+          if (diff === 0 && !sentKey.has(`${recipientUserId}:${itemId}:3`)) {
+            recipientAlerts.push({ itemId, stage: 3, label, reg: v.registration_number, status: 'Expires today', date: dateStr, type: 'logistics' })
+          } else if (diff === 2 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
+            recipientAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: 'Expires in 2 days', date: dateStr, type: 'logistics' })
+          } else if (diff === 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
+            recipientAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: 'Expires in 7 days', date: dateStr, type: 'logistics' })
           }
         }
       }
@@ -403,14 +383,12 @@ serve(async (req) => {
         if (!s.next_service_date) continue
         const diff = daysUntil(s.next_service_date, today)
         const itemId = `service-${s.id}`
-        if (diff <= 0 && !sentKey.has(`${recipientUserId}:${itemId}:4`)) {
-          recipientAlerts.push({ itemId, stage: 4, label: 'Service', reg: s.vehicles.registration_number, status: diff === 0 ? 'Due today' : `Overdue by ${Math.abs(diff)} day${Math.abs(diff) === 1 ? '' : 's'}`, date: s.next_service_date, type: 'logistics' })
-        } else if (diff <= 3 && diff > 0 && !sentKey.has(`${recipientUserId}:${itemId}:3`)) {
-          recipientAlerts.push({ itemId, stage: 3, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} day${diff === 1 ? '' : 's'} — urgent`, date: s.next_service_date, type: 'logistics' })
-        } else if (diff <= 7 && diff > 3 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
-          recipientAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days — renew soon`, date: s.next_service_date, type: 'logistics' })
-        } else if (diff <= 14 && diff > 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
-          recipientAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days`, date: s.next_service_date, type: 'logistics' })
+        if (diff === 0 && !sentKey.has(`${recipientUserId}:${itemId}:3`)) {
+          recipientAlerts.push({ itemId, stage: 3, label: 'Service', reg: s.vehicles.registration_number, status: 'Due today', date: s.next_service_date, type: 'logistics' })
+        } else if (diff === 2 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
+          recipientAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: 'Due in 2 days', date: s.next_service_date, type: 'logistics' })
+        } else if (diff === 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
+          recipientAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: 'Due in 7 days', date: s.next_service_date, type: 'logistics' })
         }
       }
     }
@@ -462,28 +440,21 @@ serve(async (req) => {
   for (const { email, alerts } of emailsToSend) {
     if (!gmailAppPassword) break
 
-    const userRole = users?.find(u => u.email === email)?.role
-    const filteredAlerts = userRole === 'admin' ? alerts
-      : userRole === 'logistics' ? alerts.filter(a => a.type === 'logistics')
-      : userRole === 'trips' ? alerts.filter(a => a.type === 'trip')
-      : alerts
-    if (filteredAlerts.length === 0) continue
-
-    const urgentCount = filteredAlerts.filter(a => a.stage >= 2).length
+    const urgentCount = alerts.filter(a => a.stage >= 2).length
     const subject = urgentCount > 0
       ? `SafariTour - ${urgentCount} urgent alert${urgentCount > 1 ? 's' : ''} need attention`
-      : `SafariTour - ${filteredAlerts.length} upcoming alert${filteredAlerts.length > 1 ? 's' : ''}`
+      : `SafariTour - ${alerts.length} upcoming alert${alerts.length > 1 ? 's' : ''}`
 
     try {
       await transporter.sendMail({
         from: '"SafariTour Alerts" <mugir2000@gmail.com>',
         to: email,
         subject,
-        html: buildEmailHtml(filteredAlerts),
+        html: buildEmailHtml(alerts),
       })
 
       sent++
-      const rows = filteredAlerts.map(a => ({
+      const rows = alerts.map(a => ({
         user_id: users?.find(u => u.email === email)?.id || email,
         alert_item_id: a.itemId,
         stage: a.stage,
@@ -492,18 +463,6 @@ serve(async (req) => {
       if (rows.length > 0) {
         const { error: insertError } = await supabase.from('sent_alerts').insert(rows)
         if (insertError) errors.push(`tracking insert: ${insertError.message}`)
-      }
-
-      const ackRows = filteredAlerts.map(a => ({
-        user_id: users?.find(u => u.email === email)?.id || email,
-        alert_id: a.itemId,
-      })).filter(r => r.user_id)
-
-      if (ackRows.length > 0) {
-        const { error: ackError } = await supabase
-          .from('acknowledged_alerts')
-          .upsert(ackRows, { onConflict: 'user_id,alert_id', ignoreDuplicates: true })
-        if (ackError) errors.push(`acknowledge insert: ${ackError.message}`)
       }
     } catch (err) {
       errors.push(`${email}: ${err.message}`)
