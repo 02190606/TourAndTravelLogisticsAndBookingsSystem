@@ -80,7 +80,7 @@ export function TripManagement() {
   })
 
   const columns = [
-    { key: 'client_name', header: 'Client' },
+    { key: 'client_name', header: 'Client', render: (t: any) => <span className={!t.client_name ? 'text-text-secondary italic' : ''}>{t.client_name || 'Unnamed trip'}</span> },
     { key: 'clients', header: 'Clients', render: (t: any) => t.number_of_clients },
     { key: 'car_type', header: 'Car Type' },
     { key: 'trip_type', header: 'Trip Type', render: (t: any) => (
@@ -102,8 +102,8 @@ export function TripManagement() {
     { key: 'balance', header: 'Balance (UGX)', render: (t: any) => (
       <span className={t.balance > 0 ? 'text-warning font-mono' : 'text-success font-mono'}>{(t.balance || 0).toLocaleString()}</span>
     )},
-    { key: 'trip_start_date', header: 'Start', render: (t: any) => formatDate(t.trip_start_date) },
-    { key: 'trip_end_date', header: 'End', render: (t: any) => formatDate(t.trip_end_date) },
+    { key: 'trip_start_date', header: 'Start', render: (t: any) => t.trip_start_date ? formatDate(t.trip_start_date) : <span className="text-text-secondary">—</span> },
+    { key: 'trip_end_date', header: 'End', render: (t: any) => t.trip_end_date ? formatDate(t.trip_end_date) : <span className="text-text-secondary">—</span> },
     { key: 'status', header: 'Status', render: (t: any) => <StatusBadge status={computeTripStatus(t)} /> },
     { key: 'actions', header: '', render: (t: any) => (
       <>
@@ -169,7 +169,7 @@ export function TripManagement() {
       <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Cancel Trip">
         {deleteTarget && (
           <div className="space-y-4">
-            <p>Cancel trip for <strong>{deleteTarget.client_name}</strong>? This action will be logged.</p>
+            <p>Cancel trip for <strong>{deleteTarget.client_name || 'Unnamed trip'}</strong>? This action will be logged.</p>
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setDeleteTarget(null)}>Back</Button>
               <Button variant="danger" onClick={() => deleteTrip.mutate(deleteTarget.id)}>Confirm Cancel</Button>
@@ -181,7 +181,7 @@ export function TripManagement() {
       <Modal open={!!permanentDeleteTarget} onClose={() => setPermanentDeleteTarget(null)} title="Delete Trip">
         {permanentDeleteTarget && (
           <div className="space-y-4">
-            <p>Are you sure you want to permanently delete this trip for <strong>{permanentDeleteTarget.client_name}</strong>? This cannot be undone.</p>
+            <p>Are you sure you want to permanently delete this trip for <strong>{permanentDeleteTarget.client_name || 'Unnamed trip'}</strong>? This cannot be undone.</p>
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setPermanentDeleteTarget(null)}>Cancel</Button>
               <Button variant="danger" onClick={() => permanentDeleteTrip.mutate(permanentDeleteTarget.id)} isLoading={permanentDeleteTrip.isPending}>Confirm Delete</Button>
@@ -199,7 +199,7 @@ export function TripManagement() {
                 {viewTrip.client_name?.charAt(0)?.toUpperCase() || '?'}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-lg font-bold text-text-primary">{viewTrip.client_name}</p>
+                <p className="text-lg font-bold text-text-primary">{viewTrip.client_name || 'Unnamed trip'}</p>
                 <p className="text-sm text-text-secondary">{viewTrip.number_of_clients} client{viewTrip.number_of_clients !== 1 ? 's' : ''}</p>
               </div>
               <StatusBadge status={computeTripStatus(viewTrip)} />
@@ -443,7 +443,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload: Record<string, unknown> = {
-        client_name: form.client_name,
+        client_name: form.client_name || null,
         number_of_clients: Number(form.number_of_clients) || 1,
         car_type: form.car_type,
         vehicle_id: form.vehicle_id || null,
@@ -495,8 +495,8 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
           <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Client Info</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Client Name *</label>
-              <input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+              <label className="block text-sm font-medium mb-1">Client Name</label>
+              <input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Number of Clients</label>
