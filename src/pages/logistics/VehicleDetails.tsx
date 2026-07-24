@@ -266,7 +266,7 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
         const { error } = await supabase.from('vehicles').update(payload).eq('id', editVehicle.id)
         if (error) throw error
       } else {
-        const { error } = await supabase.from('vehicles').insert({ ...payload, source: 'trips' })
+        const { error } = await supabase.from('vehicles').insert({ ...payload, source: 'logistics' })
         if (error) throw error
       }
     },
@@ -307,6 +307,14 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Chassis Number</label>
               <input value={form.chassis_number} onChange={e => setForm(f => ({ ...f, chassis_number: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">Make</label>
+              <input value={form.make} onChange={e => setForm(f => ({ ...f, make: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">Model</label>
+              <input value={form.model} onChange={e => setForm(f => ({ ...f, model: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Year</label>

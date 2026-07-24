@@ -327,7 +327,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
   const queryClient = useQueryClient()
   const [showAddVehicle, setShowAddVehicle] = useState(false)
   const [showAddDriver, setShowAddDriver] = useState(false)
-  const [newVehicle, setNewVehicle] = useState({ registration_number: '', make: '', model: '' })
+  const [newVehicle, setNewVehicle] = useState({ registration_number: '' })
   const [newDriver, setNewDriver] = useState({ full_name: '', phone: '' })
   const [form, setForm] = useState({
     client_name: editTrip?.client_name || '',
@@ -381,7 +381,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     mutationFn: async () => {
       if (!newVehicle.registration_number) throw new Error('Registration number is required')
       const id = generateId('VEH')
-      const { error } = await supabase.from('vehicles').insert({ id, registration_number: newVehicle.registration_number, make: newVehicle.make, model: newVehicle.model, source: 'trips' })
+      const { error } = await supabase.from('vehicles').insert({ id, registration_number: newVehicle.registration_number, source: 'trips' })
       if (error) throw error
       return id
     },
@@ -389,7 +389,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
       queryClient.invalidateQueries({ queryKey: ['available-vehicles'] })
       setForm(f => ({ ...f, vehicle_id: id }))
       setShowAddVehicle(false)
-      setNewVehicle({ registration_number: '', make: '', model: '' })
+      setNewVehicle({ registration_number: '' })
       toast.success('Vehicle added')
     },
     onError: (err: Error) => toast.error(err.message),
@@ -683,14 +683,6 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             <div>
               <label className="block text-sm font-medium mb-1">Registration Number *</label>
               <input value={newVehicle.registration_number} onChange={e => setNewVehicle(v => ({ ...v, registration_number: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Make</label>
-              <input value={newVehicle.make} onChange={e => setNewVehicle(v => ({ ...v, make: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Model</label>
-              <input value={newVehicle.model} onChange={e => setNewVehicle(v => ({ ...v, model: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
             <div className="flex gap-3 pt-2">
               <Button onClick={() => addVehicleMutation.mutate()} isLoading={addVehicleMutation.isPending}>Add Vehicle</Button>
