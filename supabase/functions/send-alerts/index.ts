@@ -289,13 +289,14 @@ serve(async (req) => {
           const diff = daysUntil(dateStr, today)
           const itemId = `${type}-${v.id}`
 
-          if (diff === 0 && !sentKey.has(`${user.id}:${itemId}:3`)) {
-            userAlerts.push({ itemId, stage: 3, label, reg: v.registration_number, status: 'Expires today', date: dateStr, type: 'logistics' })
-          } else if (diff === 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
-            userAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: 'Expires in 2 days', date: dateStr, type: 'logistics' })
-          } else if (diff === 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-            userAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: 'Expires in 7 days', date: dateStr, type: 'logistics' })
+          if (diff <= 0 && !sentKey.has(`${user.id}:${itemId}:3`)) {
+            userAlerts.push({ itemId, stage: 3, label, reg: v.registration_number, status: diff === 0 ? 'Expires today' : 'Expired', date: dateStr, type: 'logistics' })
+          } else if (diff <= 7 && diff > 0 && !sentKey.has(`${user.id}:${itemId}:2`)) {
+            userAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: `Expires in ${diff} day${diff === 1 ? '' : 's'}`, date: dateStr, type: 'logistics' })
+          } else if (diff <= 14 && diff > 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
+            userAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: `Expires in ${diff} days`, date: dateStr, type: 'logistics' })
           }
+        }
         }
       }
     }
@@ -307,12 +308,12 @@ serve(async (req) => {
         const diff = daysUntil(s.next_service_date, today)
         const itemId = `service-${s.id}`
 
-        if (diff === 0 && !sentKey.has(`${user.id}:${itemId}:3`)) {
-          userAlerts.push({ itemId, stage: 3, label: 'Service', reg: s.vehicles.registration_number, status: 'Due today', date: s.next_service_date, type: 'logistics' })
-        } else if (diff === 2 && !sentKey.has(`${user.id}:${itemId}:2`)) {
-          userAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: 'Due in 2 days', date: s.next_service_date, type: 'logistics' })
-        } else if (diff === 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
-          userAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: 'Due in 7 days', date: s.next_service_date, type: 'logistics' })
+        if (diff <= 0 && !sentKey.has(`${user.id}:${itemId}:3`)) {
+          userAlerts.push({ itemId, stage: 3, label: 'Service', reg: s.vehicles.registration_number, status: diff === 0 ? 'Due today' : 'Overdue', date: s.next_service_date, type: 'logistics' })
+        } else if (diff <= 7 && diff > 0 && !sentKey.has(`${user.id}:${itemId}:2`)) {
+          userAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} day${diff === 1 ? '' : 's'}`, date: s.next_service_date, type: 'logistics' })
+        } else if (diff <= 14 && diff > 7 && !sentKey.has(`${user.id}:${itemId}:1`)) {
+          userAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days`, date: s.next_service_date, type: 'logistics' })
         }
       }
     }
@@ -367,12 +368,12 @@ serve(async (req) => {
           if (!dateStr) continue
           const diff = daysUntil(dateStr, today)
           const itemId = `${type}-${v.id}`
-          if (diff === 0 && !sentKey.has(`${recipientUserId}:${itemId}:3`)) {
-            recipientAlerts.push({ itemId, stage: 3, label, reg: v.registration_number, status: 'Expires today', date: dateStr, type: 'logistics' })
-          } else if (diff === 2 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
-            recipientAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: 'Expires in 2 days', date: dateStr, type: 'logistics' })
-          } else if (diff === 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
-            recipientAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: 'Expires in 7 days', date: dateStr, type: 'logistics' })
+          if (diff <= 0 && !sentKey.has(`${recipientUserId}:${itemId}:3`)) {
+            recipientAlerts.push({ itemId, stage: 3, label, reg: v.registration_number, status: diff === 0 ? 'Expires today' : 'Expired', date: dateStr, type: 'logistics' })
+          } else if (diff <= 7 && diff > 0 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
+            recipientAlerts.push({ itemId, stage: 2, label, reg: v.registration_number, status: `Expires in ${diff} day${diff === 1 ? '' : 's'}`, date: dateStr, type: 'logistics' })
+          } else if (diff <= 14 && diff > 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
+            recipientAlerts.push({ itemId, stage: 1, label, reg: v.registration_number, status: `Expires in ${diff} days`, date: dateStr, type: 'logistics' })
           }
         }
       }
@@ -383,12 +384,12 @@ serve(async (req) => {
         if (!s.next_service_date) continue
         const diff = daysUntil(s.next_service_date, today)
         const itemId = `service-${s.id}`
-        if (diff === 0 && !sentKey.has(`${recipientUserId}:${itemId}:3`)) {
-          recipientAlerts.push({ itemId, stage: 3, label: 'Service', reg: s.vehicles.registration_number, status: 'Due today', date: s.next_service_date, type: 'logistics' })
-        } else if (diff === 2 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
-          recipientAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: 'Due in 2 days', date: s.next_service_date, type: 'logistics' })
-        } else if (diff === 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
-          recipientAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: 'Due in 7 days', date: s.next_service_date, type: 'logistics' })
+        if (diff <= 0 && !sentKey.has(`${recipientUserId}:${itemId}:3`)) {
+          recipientAlerts.push({ itemId, stage: 3, label: 'Service', reg: s.vehicles.registration_number, status: diff === 0 ? 'Due today' : 'Overdue', date: s.next_service_date, type: 'logistics' })
+        } else if (diff <= 7 && diff > 0 && !sentKey.has(`${recipientUserId}:${itemId}:2`)) {
+          recipientAlerts.push({ itemId, stage: 2, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} day${diff === 1 ? '' : 's'}`, date: s.next_service_date, type: 'logistics' })
+        } else if (diff <= 14 && diff > 7 && !sentKey.has(`${recipientUserId}:${itemId}:1`)) {
+          recipientAlerts.push({ itemId, stage: 1, label: 'Service', reg: s.vehicles.registration_number, status: `Due in ${diff} days`, date: s.next_service_date, type: 'logistics' })
         }
       }
     }
