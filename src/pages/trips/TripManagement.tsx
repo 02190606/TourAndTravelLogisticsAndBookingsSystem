@@ -327,6 +327,8 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
   const queryClient = useQueryClient()
   const [showAddVehicle, setShowAddVehicle] = useState(false)
   const [showAddDriver, setShowAddDriver] = useState(false)
+  const [editVehicleTarget, setEditVehicleTarget] = useState<Pick<Vehicle, 'id' | 'registration_number'> | null>(null)
+  const [editDriverTarget, setEditDriverTarget] = useState<Pick<Driver, 'id' | 'full_name' | 'phone'> | null>(null)
   const [newVehicle, setNewVehicle] = useState({ registration_number: '' })
   const [newDriver, setNewDriver] = useState({ full_name: '', phone: '' })
   const [form, setForm] = useState({
@@ -372,14 +374,19 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
   const { data: drivers = [] } = useQuery({
     queryKey: ['active-drivers'],
     queryFn: async () => {
-      const { data } = await supabase.from('drivers').select('id, full_name, license_number').eq('is_active', true)
-      return (data || []) as Pick<Driver, 'id' | 'full_name' | 'license_number'>[]
+      const { data } = await supabase.from('drivers').select('id, full_name, phone, license_number').eq('is_active', true)
+      return (data || []) as Pick<Driver, 'id' | 'full_name' | 'phone' | 'license_number'>[]
     },
   })
 
   const addVehicleMutation = useMutation({
     mutationFn: async () => {
       if (!newVehicle.registration_number) throw new Error('Registration number is required')
+      if (editVehicleTarget) {
+        const { error } = await supabase.from('vehicles').update({ registration_number: newVehicle.registration_number }).eq('id', editVehicleTarget.id)
+        if (error) throw error
+        return editVehicleTarget.id
+      }
       const id = generateId('VEH')
       const { error } = await supabase.from('vehicles').insert({ id, registration_number: newVehicle.registration_number, source: 'trips' })
       if (error) throw error
@@ -389,8 +396,24 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
       queryClient.invalidateQueries({ queryKey: ['available-vehicles'] })
       setForm(f => ({ ...f, vehicle_id: id }))
       setShowAddVehicle(false)
+      setEditVehicleTarget(null)
       setNewVehicle({ registration_number: '' })
-      toast.success('Vehicle added')
+      toast.success(editVehicleTarget ? 'Vehicle updated' : 'Vehicle added')
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const deleteVehicleMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('vehicles').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['available-vehicles'] })
+      setShowAddVehicle(false)
+      setEditVehicleTarget(null)
+      setNewVehicle({ registration_number: '' })
+      toast.success('Vehicle deleted')
     },
     onError: (err: Error) => toast.error(err.message),
   })
@@ -398,6 +421,11 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
   const addDriverMutation = useMutation({
     mutationFn: async () => {
       if (!newDriver.full_name) throw new Error('Driver name is required')
+      if (editDriverTarget) {
+        const { error } = await supabase.from('drivers').update({ full_name: newDriver.full_name, phone: newDriver.phone }).eq('id', editDriverTarget.id)
+        if (error) throw error
+        return editDriverTarget.id
+      }
       const id = generateId('DRV')
       const { error } = await supabase.from('drivers').insert({ id, full_name: newDriver.full_name, phone: newDriver.phone, source: 'trips' })
       if (error) throw error
@@ -407,8 +435,24 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
       queryClient.invalidateQueries({ queryKey: ['active-drivers'] })
       setForm(f => ({ ...f, driver_id: id }))
       setShowAddDriver(false)
+      setEditDriverTarget(null)
       setNewDriver({ full_name: '', phone: '' })
-      toast.success('Driver added')
+      toast.success(editDriverTarget ? 'Driver updated' : 'Driver added')
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const deleteDriverMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('drivers').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-drivers'] })
+      setShowAddDriver(false)
+      setEditDriverTarget(null)
+      setNewDriver({ full_name: '', phone: '' })
+      toast.success('Driver deleted')
     },
     onError: (err: Error) => toast.error(err.message),
   })
@@ -549,7 +593,12 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-sm font-medium">Assign Vehicle</label>
-                <button type="button" onClick={() => setShowAddVehicle(true)} className="text-xs text-primary hover:text-primary/80 font-medium">+ Add New</button>
+                <div className="flex items-center gap-2">
+                  {form.vehicle_id && (
+                    <button type="button" onClick={() => { const v = vehicles.find(v => v.id === form.vehicle_id); if (v) { setEditVehicleTarget(v); setNewVehicle({ registration_number: v.registration_number }); setShowAddVehicle(true) } }} className="text-xs text-text-secondary hover:text-text-primary font-medium">Edit</button>
+                  )}
+                  <button type="button" onClick={() => { setEditVehicleTarget(null); setNewVehicle({ registration_number: '' }); setShowAddVehicle(true) }} className="text-xs text-primary hover:text-primary/80 font-medium">+ Add New</button>
+                </div>
               </div>
               <select value={form.vehicle_id} onChange={e => setForm(f => ({ ...f, vehicle_id: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
                 <option value="">Select vehicle</option>
@@ -561,7 +610,12 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-sm font-medium">Assign Driver</label>
-                <button type="button" onClick={() => setShowAddDriver(true)} className="text-xs text-primary hover:text-primary/80 font-medium">+ Add New</button>
+                <div className="flex items-center gap-2">
+                  {form.driver_id && (
+                    <button type="button" onClick={() => { const d = drivers.find(d => d.id === form.driver_id); if (d) { setEditDriverTarget({ id: d.id, full_name: d.full_name, phone: d.phone || '' }); setNewDriver({ full_name: d.full_name, phone: d.phone || '' }); setShowAddDriver(true) } }} className="text-xs text-text-secondary hover:text-text-primary font-medium">Edit</button>
+                  )}
+                  <button type="button" onClick={() => { setEditDriverTarget(null); setNewDriver({ full_name: '', phone: '' }); setShowAddDriver(true) }} className="text-xs text-primary hover:text-primary/80 font-medium">+ Add New</button>
+                </div>
               </div>
               <select value={form.driver_id} onChange={e => setForm(f => ({ ...f, driver_id: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
                 <option value="">Select driver</option>
@@ -677,25 +731,28 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
       </form>
 
       {showAddVehicle && (
-        <Modal open={showAddVehicle} onClose={() => setShowAddVehicle(false)}>
+        <Modal open={showAddVehicle} onClose={() => { setShowAddVehicle(false); setEditVehicleTarget(null) }}>
           <div className="p-6 space-y-4">
-            <h3 className="text-lg font-semibold">Add Vehicle</h3>
+            <h3 className="text-lg font-semibold">{editVehicleTarget ? 'Edit Vehicle' : 'Add Vehicle'}</h3>
             <div>
               <label className="block text-sm font-medium mb-1">Registration Number *</label>
               <input value={newVehicle.registration_number} onChange={e => setNewVehicle(v => ({ ...v, registration_number: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
             <div className="flex gap-3 pt-2">
-              <Button onClick={() => addVehicleMutation.mutate()} isLoading={addVehicleMutation.isPending}>Add Vehicle</Button>
-              <Button variant="outline" onClick={() => setShowAddVehicle(false)}>Cancel</Button>
+              <Button onClick={() => addVehicleMutation.mutate()} isLoading={addVehicleMutation.isPending}>{editVehicleTarget ? 'Update' : 'Add Vehicle'}</Button>
+              <Button variant="outline" onClick={() => { setShowAddVehicle(false); setEditVehicleTarget(null) }}>Cancel</Button>
+              {editVehicleTarget && (
+                <Button variant="danger" onClick={() => { if (confirm('Delete this vehicle?')) deleteVehicleMutation.mutate(editVehicleTarget.id) }} isLoading={deleteVehicleMutation.isPending}>Delete</Button>
+              )}
             </div>
           </div>
         </Modal>
       )}
 
       {showAddDriver && (
-        <Modal open={showAddDriver} onClose={() => setShowAddDriver(false)}>
+        <Modal open={showAddDriver} onClose={() => { setShowAddDriver(false); setEditDriverTarget(null) }}>
           <div className="p-6 space-y-4">
-            <h3 className="text-lg font-semibold">Add Driver</h3>
+            <h3 className="text-lg font-semibold">{editDriverTarget ? 'Edit Driver' : 'Add Driver'}</h3>
             <div>
               <label className="block text-sm font-medium mb-1">Full Name *</label>
               <input value={newDriver.full_name} onChange={e => setNewDriver(d => ({ ...d, full_name: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
@@ -705,8 +762,11 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
               <input value={newDriver.phone} onChange={e => setNewDriver(d => ({ ...d, phone: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
             <div className="flex gap-3 pt-2">
-              <Button onClick={() => addDriverMutation.mutate()} isLoading={addDriverMutation.isPending}>Add Driver</Button>
-              <Button variant="outline" onClick={() => setShowAddDriver(false)}>Cancel</Button>
+              <Button onClick={() => addDriverMutation.mutate()} isLoading={addDriverMutation.isPending}>{editDriverTarget ? 'Update' : 'Add Driver'}</Button>
+              <Button variant="outline" onClick={() => { setShowAddDriver(false); setEditDriverTarget(null) }}>Cancel</Button>
+              {editDriverTarget && (
+                <Button variant="danger" onClick={() => { if (confirm('Delete this driver?')) deleteDriverMutation.mutate(editDriverTarget.id) }} isLoading={deleteDriverMutation.isPending}>Delete</Button>
+              )}
             </div>
           </div>
         </Modal>
