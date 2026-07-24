@@ -111,14 +111,27 @@ function buildEmailHtml(alerts: Alert[]): string {
   if (logistics.length > 0) {
     let logisticsHtml = ''
     for (const group of grouped) {
-      const rows = group.alerts.map(a => `
+      const rows = group.alerts.map(a => {
+        const titleMap: Record<string, string> = {
+          'Insurance': 'Insurance Expiry',
+          'PMO': 'PMO Expiry',
+          'PSV': 'PSV Expiry',
+          'Permit': 'Permit Expiry',
+          'Service': 'Service Due',
+        }
+        const title = titleMap[a.label] || a.label
+        return `
         <tr>
-          <td style="padding: 8px 12px; font-weight: 500; color: #334155; width: 120px;">${a.label}</td>
+          <td style="padding: 8px 12px; font-weight: 600; color: #1e293b; font-size: 13px;">
+            ${title}
+            <div style="color: #64748b; font-size: 11px; margin-top: 1px;">&#128663; ${group.reg}</div>
+          </td>
           <td style="padding: 8px 12px;">
             <span style="display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; ${urgencyBadge(a.status)}">${urgencyIcon(a.status)} ${a.status}</span>
           </td>
-          <td style="padding: 8px 12px; color: #64748b; font-size: 13px; width: 100px;">${a.date}</td>
-        </tr>`).join('')
+          <td style="padding: 8px 12px; color: #64748b; font-size: 13px; width: 100px;">${a.date ? formatDate(a.date) : ''}</td>
+        </tr>`
+      }).join('')
 
       logisticsHtml += `
         <tr>
@@ -200,7 +213,7 @@ function buildEmailHtml(alerts: Alert[]): string {
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
             <tr style="background: #f8fafc;">
-              <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Item</th>
+              <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Title</th>
               <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Status</th>
               <th style="padding: 6px 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Date</th>
             </tr>
