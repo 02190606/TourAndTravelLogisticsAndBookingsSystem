@@ -14,6 +14,7 @@ const INTERVALS = [
 interface Alert {
   id: string
   type: 'service' | 'maintenance' | 'permit' | 'insurance' | 'pmo' | 'psv'
+  category: 'logistics'
   vehicle_reg: string
   message: string
   due_date: string
@@ -35,6 +36,7 @@ function checkDocumentExpiry(
     return [{
       id: `${prefix}-overdue-${vehicleId}`,
       type,
+      category: 'logistics',
       vehicle_reg: vehicleReg,
       message: `${type.charAt(0).toUpperCase() + type.slice(1)} expired on ${dueDateStr}`,
       due_date: dueDateStr,
@@ -48,6 +50,7 @@ function checkDocumentExpiry(
       alerts.push({
         id: `${prefix}-${interval.days}-${vehicleId}`,
         type,
+        category: 'logistics',
         vehicle_reg: vehicleReg,
         message: diff === 0
           ? `${type.charAt(0).toUpperCase() + type.slice(1)} expires today`

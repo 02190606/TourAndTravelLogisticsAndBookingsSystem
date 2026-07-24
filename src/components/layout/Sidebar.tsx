@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { useAlerts } from '@/hooks/useAlerts'
+import { useTripAlerts } from '@/hooks/useTripAlerts'
 import type { UserRole } from '@/types'
 import { useState, type ReactNode } from 'react'
 
@@ -55,6 +56,7 @@ interface SidebarProps {
 export function Sidebar({ open, onClose }: SidebarProps) {
   const { user } = useAuth()
   const { data: alertData } = useAlerts()
+  const { data: tripAlertCount = 0 } = useTripAlerts()
   const role = user?.role || 'logistics'
   const location = useLocation()
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
@@ -74,7 +76,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     setOpenSections(prev => ({ ...prev, [title]: !prev[title] }))
   }
 
-  const alertCount = alertData?.count || 0
+  const logisticsAlertCount = alertData?.count || 0
 
   const initials = user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??'
 
@@ -110,7 +112,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             isOpen={!!openSections['Admin']}
             onToggle={() => toggleSection('Admin')}
             onNavClick={onClose}
-            alertCount={alertCount}
+            alertCount={logisticsAlertCount}
           />
         )}
 
@@ -123,7 +125,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             isOpen={!!openSections[section.title]}
             onToggle={() => toggleSection(section.title)}
             onNavClick={onClose}
-            alertCount={alertCount}
+            alertCount={section.title === 'Trips' ? tripAlertCount : logisticsAlertCount}
           />
         ))}
       </nav>
