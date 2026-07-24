@@ -244,15 +244,15 @@ export function TripManagement() {
                   <p className="text-sm font-bold text-text-primary">{formatDate(viewTrip.trip_end_date)}</p>
                 </div>
               </div>
-              {(viewTrip.is_cross_border || viewTrip.is_one_way || viewTrip.is_return_trip) && (
+              {(viewTrip.is_cross_border || viewTrip.is_one_way || viewTrip.return_date) && (
                 <div className="flex gap-2 mt-3">
                   {viewTrip.is_cross_border && <Badge variant="info">Cross Border</Badge>}
                   {viewTrip.is_one_way && <Badge variant="warning">One Way</Badge>}
-                  {viewTrip.is_return_trip && <Badge variant="info">Return trip</Badge>}
+                  {viewTrip.return_date && <Badge variant="info">Return trip</Badge>}
                 </div>
               )}
-              {viewTrip.is_return_trip && viewTrip['Return Trip'] && (
-                <p className="mt-2 text-sm text-text-secondary">Return: <span className="font-medium text-text-primary">{formatDate(viewTrip['Return Trip'])}</span></p>
+              {viewTrip.return_date && (
+                <p className="mt-2 text-sm text-text-secondary">Return: <span className="font-medium text-text-primary">{formatDate(viewTrip.return_date)}</span></p>
               )}
             </div>
 
@@ -328,6 +328,10 @@ export function TripManagement() {
 
 function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () => void; editTrip: Trip | null }) {
   const queryClient = useQueryClient()
+  const [showAddVehicle, setShowAddVehicle] = useState(false)
+  const [showAddDriver, setShowAddDriver] = useState(false)
+  const [newVehicle, setNewVehicle] = useState({ registration_number: '', make: '', model: '' })
+  const [newDriver, setNewDriver] = useState({ full_name: '', phone: '' })
   const [form, setForm] = useState({
     client_name: editTrip?.client_name || '',
     number_of_clients: editTrip?.number_of_clients || 1,
@@ -341,20 +345,20 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     destination: editTrip?.Destination || '',
     is_cross_border: editTrip?.is_cross_border || false,
     is_one_way: editTrip?.is_one_way || false,
-    is_return_trip: editTrip?.is_return_trip || false,
-    return_date: editTrip?.['Return Trip']?.split('T')[0] || '',
+    is_return_trip: !!editTrip?.return_date,
+    return_date: editTrip?.return_date?.split('T')[0] || '',
     needs_accommodation: editTrip?.needs_accommodation || false,
     accommodation_name: editTrip?.accommodation_name || '',
     accommodation_checkin: editTrip?.accommodation_checkin?.split('T')[0] || '',
     accommodation_checkout: editTrip?.accommodation_checkout?.split('T')[0] || '',
-    accommodation_rooms: editTrip?.accommodation_rooms || 1,
-    accommodation_cost: editTrip?.accommodation_cost || 0,
+    accommodation_rooms: editTrip?.accommodation_rooms ?? null,
+    accommodation_cost: editTrip?.accommodation_cost ?? null,
     currency: editTrip?.currency || 'UGX',
     amount: 0,
-    amount_in_ugx: editTrip?.amount_in_ugx || 0,
+    amount_in_ugx: editTrip?.amount_in_ugx ?? null,
     payment_mode: editTrip?.payment_mode || 'cash',
-    amount_paid: editTrip?.amount_paid || 0,
-    balance: editTrip?.balance || 0,
+    amount_paid: editTrip?.amount_paid ?? null,
+    balance: editTrip?.balance ?? null,
     exchangeRate: 1,
   })
 
@@ -377,6 +381,42 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     },
   })
 
+  const addVehicleMutation = useMutation({
+    mutationFn: async () => {
+      if (!newVehicle.registration_number) throw new Error('Registration number is required')
+      const id = generateId('VEH')
+      const { error } = await supabase.from('vehicles').insert({ id, registration_number: newVehicle.registration_number, make: newVehicle.make, model: newVehicle.model, source: 'trips' })
+      if (error) throw error
+      return id
+    },
+    onSuccess: (id) => {
+      queryClient.invalidateQueries({ queryKey: ['available-vehicles'] })
+      setForm(f => ({ ...f, vehicle_id: id }))
+      setShowAddVehicle(false)
+      setNewVehicle({ registration_number: '', make: '', model: '' })
+      toast.success('Vehicle added')
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const addDriverMutation = useMutation({
+    mutationFn: async () => {
+      if (!newDriver.full_name) throw new Error('Driver name is required')
+      const id = generateId('DRV')
+      const { error } = await supabase.from('drivers').insert({ id, full_name: newDriver.full_name, phone: newDriver.phone, source: 'trips' })
+      if (error) throw error
+      return id
+    },
+    onSuccess: (id) => {
+      queryClient.invalidateQueries({ queryKey: ['active-drivers'] })
+      setForm(f => ({ ...f, driver_id: id }))
+      setShowAddDriver(false)
+      setNewDriver({ full_name: '', phone: '' })
+      toast.success('Driver added')
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
   const days = form.trip_start_date && form.trip_end_date
     ? getDaysBetween(form.trip_start_date, form.trip_end_date)
     : 0
@@ -388,41 +428,34 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
   function updateAmount(amount: number) {
     setForm(f => {
       const ugx = f.currency === 'UGX' ? amount : Math.round(amount * f.exchangeRate)
-      const balance = ugx - f.amount_paid
-      return { ...f, amount, amount_in_ugx: ugx, balance: Math.max(0, balance) }
+      const balance = Math.max(0, ugx - (f.amount_paid ?? 0))
+      return { ...f, amount, amount_in_ugx: ugx, balance }
     })
   }
 
   function updateAmountPaid(paid: number) {
     setForm(f => {
-      const balance = Math.max(0, f.amount_in_ugx - paid)
+      const balance = Math.max(0, (f.amount_in_ugx ?? 0) - paid)
       return { ...f, amount_paid: paid, balance }
     })
   }
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!form.trip_start_date) throw new Error('Trip Start Date is required')
-      if (!form.trip_end_date) throw new Error('Trip End Date is required')
-      if (form.needs_accommodation) {
-        if (!form.accommodation_checkin) throw new Error('Check-in Date is required when accommodation is needed')
-        if (!form.accommodation_checkout) throw new Error('Check-out Date is required when accommodation is needed')
-      }
-      const payload = {
+      const payload: Record<string, unknown> = {
         client_name: form.client_name,
-        number_of_clients: Number(form.number_of_clients),
+        number_of_clients: Number(form.number_of_clients) || 1,
         car_type: form.car_type,
         vehicle_id: form.vehicle_id || null,
         driver_id: form.driver_id || null,
-        trip_start_date: form.trip_start_date,
-        trip_end_date: form.trip_end_date,
+        trip_start_date: form.trip_start_date || null,
+        trip_end_date: form.trip_end_date || null,
         flight_arrival_time: form.flight_arrival_time || null,
         pickup_location: form.pickup_location || null,
         Destination: form.destination || null,
         is_cross_border: form.is_cross_border,
         is_one_way: form.is_one_way,
-        is_return_trip: form.is_return_trip,
-        'Return Trip': form.return_date || null,
+        return_date: form.return_date || null,
         needs_accommodation: form.needs_accommodation,
         accommodation_name: form.accommodation_name || null,
         accommodation_checkin: form.accommodation_checkin || null,
@@ -430,10 +463,10 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
         accommodation_rooms: form.accommodation_rooms || null,
         accommodation_cost: form.accommodation_cost || null,
         currency: form.currency,
-        amount_in_ugx: Number(form.amount_in_ugx),
+        amount_in_ugx: Number(form.amount_in_ugx) || null,
         payment_mode: form.payment_mode,
-        amount_paid: Number(form.amount_paid),
-        balance: Number(form.balance),
+        amount_paid: Number(form.amount_paid) || null,
+        balance: Number(form.balance) || null,
       }
       if (editTrip) {
         const { error } = await supabase.from('trips').update(payload).eq('id', editTrip.id)
@@ -488,12 +521,12 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
                   <input value={form.accommodation_name} onChange={e => setForm(f => ({ ...f, accommodation_name: e.target.value }))} placeholder="e.g. Serena Hotel Kampala" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Check-in Date *</label>
-                  <input type="date" value={form.accommodation_checkin} onChange={e => setForm(f => ({ ...f, accommodation_checkin: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                  <label className="block text-sm font-medium mb-1">Check-in Date</label>
+                  <input type="date" value={form.accommodation_checkin} onChange={e => setForm(f => ({ ...f, accommodation_checkin: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Check-out Date *</label>
-                  <input type="date" value={form.accommodation_checkout} onChange={e => setForm(f => ({ ...f, accommodation_checkout: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                  <label className="block text-sm font-medium mb-1">Check-out Date</label>
+                  <input type="date" value={form.accommodation_checkout} onChange={e => setForm(f => ({ ...f, accommodation_checkout: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Number of Rooms</label>
@@ -518,7 +551,10 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Assign Vehicle</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium">Assign Vehicle</label>
+                <button type="button" onClick={() => setShowAddVehicle(true)} className="text-xs text-primary hover:text-primary/80 font-medium">+ Add New</button>
+              </div>
               <select value={form.vehicle_id} onChange={e => setForm(f => ({ ...f, vehicle_id: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
                 <option value="">Select vehicle</option>
                 {vehicles.map(v => (
@@ -527,7 +563,10 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Assign Driver</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium">Assign Driver</label>
+                <button type="button" onClick={() => setShowAddDriver(true)} className="text-xs text-primary hover:text-primary/80 font-medium">+ Add New</button>
+              </div>
               <select value={form.driver_id} onChange={e => setForm(f => ({ ...f, driver_id: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
                 <option value="">Select driver</option>
                 {drivers.map(d => (
@@ -543,11 +582,11 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Trip Start Date</label>
-              <input type="date" value={form.trip_start_date} onChange={e => setForm(f => ({ ...f, trip_start_date: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+              <input type="date" value={form.trip_start_date} onChange={e => setForm(f => ({ ...f, trip_start_date: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Trip End Date</label>
-              <input type="date" value={form.trip_end_date} onChange={e => setForm(f => ({ ...f, trip_end_date: e.target.value }))} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+              <input type="date" value={form.trip_end_date} onChange={e => setForm(f => ({ ...f, trip_end_date: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
             {days > 0 && (
               <div className="sm:col-span-2">
@@ -646,6 +685,50 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
           <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
         </div>
       </form>
+
+      {showAddVehicle && (
+        <Modal open={showAddVehicle} onClose={() => setShowAddVehicle(false)}>
+          <div className="p-6 space-y-4">
+            <h3 className="text-lg font-semibold">Add Vehicle</h3>
+            <div>
+              <label className="block text-sm font-medium mb-1">Registration Number *</label>
+              <input value={newVehicle.registration_number} onChange={e => setNewVehicle(v => ({ ...v, registration_number: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Make</label>
+              <input value={newVehicle.make} onChange={e => setNewVehicle(v => ({ ...v, make: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Model</label>
+              <input value={newVehicle.model} onChange={e => setNewVehicle(v => ({ ...v, model: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button onClick={() => addVehicleMutation.mutate()} isLoading={addVehicleMutation.isPending}>Add Vehicle</Button>
+              <Button variant="outline" onClick={() => setShowAddVehicle(false)}>Cancel</Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {showAddDriver && (
+        <Modal open={showAddDriver} onClose={() => setShowAddDriver(false)}>
+          <div className="p-6 space-y-4">
+            <h3 className="text-lg font-semibold">Add Driver</h3>
+            <div>
+              <label className="block text-sm font-medium mb-1">Full Name *</label>
+              <input value={newDriver.full_name} onChange={e => setNewDriver(d => ({ ...d, full_name: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Phone</label>
+              <input value={newDriver.phone} onChange={e => setNewDriver(d => ({ ...d, phone: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button onClick={() => addDriverMutation.mutate()} isLoading={addDriverMutation.isPending}>Add Driver</Button>
+              <Button variant="outline" onClick={() => setShowAddDriver(false)}>Cancel</Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </Drawer>
   )
 }

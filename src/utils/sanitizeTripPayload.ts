@@ -7,7 +7,7 @@ const NULLABLE_FIELDS = [
   'accommodation_name',
   'accommodation_checkin',
   'accommodation_checkout',
-  'Return Trip',
+  'return_date',
 ] as const
 
 export function sanitizeTripPayload<T extends Record<string, unknown>>(payload: T): T {
