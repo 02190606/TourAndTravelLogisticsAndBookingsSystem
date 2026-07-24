@@ -248,7 +248,7 @@ export function TripManagement() {
                 <div className="flex gap-2 mt-3">
                   {viewTrip.is_cross_border && <Badge variant="info">Cross Border</Badge>}
                   {viewTrip.is_one_way && <Badge variant="warning">One Way</Badge>}
-                  {viewTrip.return_trip && <Badge variant="info">Return trip</Badge>}
+                  {viewTrip.return_trip && <Badge variant="info">Return Trip</Badge>}
                 </div>
               )}
               {viewTrip.return_trip && (
@@ -606,13 +606,13 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={form.is_return_trip} onChange={e => setForm(f => ({ ...f, is_return_trip: e.target.checked }))} className="rounded border-muted/60 text-primary focus:ring-primary" />
-                  <span className="text-sm">Return trip</span>
+                  <span className="text-sm">Return Trip</span>
                 </label>
               </div>
             </div>
             {form.is_return_trip && (
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1">Return trip</label>
+                <label className="block text-sm font-medium mb-1">Return Trip</label>
                 <input type="date" value={form.return_trip} onChange={e => setForm(f => ({ ...f, return_trip: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
               </div>
             )}
