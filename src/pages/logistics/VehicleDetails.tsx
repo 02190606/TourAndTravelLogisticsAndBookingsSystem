@@ -24,7 +24,7 @@ export function VehicleDetails() {
       let query = supabase
         .from('vehicles')
         .select('*, current_driver:drivers!left(full_name, phone)')
-        .or('source.eq.logistics,source.is.null')
+        .or('source.eq.trips,source.eq.logistics,source.is.null')
         .order('created_at', { ascending: false })
       if (!showSold) query = query.neq('status', 'sold')
       const { data } = await query
@@ -266,7 +266,7 @@ function VehicleDrawer({ open, onClose, editVehicle, drivers }: { open: boolean;
         const { error } = await supabase.from('vehicles').update(payload).eq('id', editVehicle.id)
         if (error) throw error
       } else {
-        const { error } = await supabase.from('vehicles').insert({ ...payload, source: 'logistics' })
+        const { error } = await supabase.from('vehicles').insert({ ...payload, source: 'trips' })
         if (error) throw error
       }
     },
