@@ -244,15 +244,15 @@ export function TripManagement() {
                   <p className="text-sm font-bold text-text-primary">{formatDate(viewTrip.trip_end_date)}</p>
                 </div>
               </div>
-              {(viewTrip.is_cross_border || viewTrip.is_one_way || viewTrip.return_date) && (
+              {(viewTrip.is_cross_border || viewTrip.is_one_way || viewTrip.return_trip) && (
                 <div className="flex gap-2 mt-3">
                   {viewTrip.is_cross_border && <Badge variant="info">Cross Border</Badge>}
                   {viewTrip.is_one_way && <Badge variant="warning">One Way</Badge>}
-                  {viewTrip.return_date && <Badge variant="info">Return trip</Badge>}
+                  {viewTrip.return_trip && <Badge variant="info">Return trip</Badge>}
                 </div>
               )}
-              {viewTrip.return_date && (
-                <p className="mt-2 text-sm text-text-secondary">Return: <span className="font-medium text-text-primary">{formatDate(viewTrip.return_date)}</span></p>
+              {viewTrip.return_trip && (
+                <p className="mt-2 text-sm text-text-secondary">Return: <span className="font-medium text-text-primary">{formatDate(viewTrip.return_trip)}</span></p>
               )}
             </div>
 
@@ -345,8 +345,8 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     destination: editTrip?.Destination || '',
     is_cross_border: editTrip?.is_cross_border || false,
     is_one_way: editTrip?.is_one_way || false,
-    is_return_trip: !!editTrip?.return_date,
-    return_date: editTrip?.return_date?.split('T')[0] || '',
+    is_return_trip: !!editTrip?.return_trip,
+    return_trip: editTrip?.return_trip?.split('T')[0] || '',
     needs_accommodation: editTrip?.needs_accommodation || false,
     accommodation_name: editTrip?.accommodation_name || '',
     accommodation_checkin: editTrip?.accommodation_checkin?.split('T')[0] || '',
@@ -455,7 +455,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
         Destination: form.destination || null,
         is_cross_border: form.is_cross_border,
         is_one_way: form.is_one_way,
-        return_date: form.return_date || null,
+        return_trip: form.return_trip || null,
         needs_accommodation: form.needs_accommodation,
         accommodation_name: form.accommodation_name || null,
         accommodation_checkin: form.accommodation_checkin || null,
@@ -613,7 +613,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             {form.is_return_trip && (
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium mb-1">Return trip</label>
-                <input type="date" value={form.return_date} onChange={e => setForm(f => ({ ...f, return_date: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                <input type="date" value={form.return_trip} onChange={e => setForm(f => ({ ...f, return_trip: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
               </div>
             )}
             <div>
