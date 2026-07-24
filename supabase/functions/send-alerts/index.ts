@@ -346,8 +346,8 @@ serve(async (req) => {
           ? `${t.vehicles.driving_permit}${t.vehicles.permit_expiry_date ? ` (exp ${t.vehicles.permit_expiry_date})` : ''}`
           : ''
 
-        if (startDiff === 14 && !sentKey.has(`${user.id}:trip_start-${t.id}:1`)) {
-          userAlerts.push({ itemId: `trip_start-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 14 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
+        if (startDiff === 14 && !sentKey.has(`${user.id}:trip_start-${t.id}:0`)) {
+          userAlerts.push({ itemId: `trip_start-${t.id}`, stage: 0, label: 'Trip Start', reg: t.client_name, status: 'Starts in 14 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         } else if (startDiff === 7 && !sentKey.has(`${user.id}:trip_start-${t.id}:1`)) {
           userAlerts.push({ itemId: `trip_start-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 7 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         } else if (startDiff === 2 && !sentKey.has(`${user.id}:trip_start-${t.id}:2`)) {
@@ -426,8 +426,8 @@ serve(async (req) => {
           ? `${t.vehicles.driving_permit}${t.vehicles.permit_expiry_date ? ` (exp ${t.vehicles.permit_expiry_date})` : ''}`
           : ''
 
-        if (startDiff === 14 && !sentKey.has(`${recipientUserId}:trip_start-${t.id}:1`)) {
-          recipientAlerts.push({ itemId: `trip_start-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 14 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
+        if (startDiff === 14 && !sentKey.has(`${recipientUserId}:trip_start-${t.id}:0`)) {
+          recipientAlerts.push({ itemId: `trip_start-${t.id}`, stage: 0, label: 'Trip Start', reg: t.client_name, status: 'Starts in 14 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         } else if (startDiff === 7 && !sentKey.has(`${recipientUserId}:trip_start-${t.id}:1`)) {
           recipientAlerts.push({ itemId: `trip_start-${t.id}`, stage: 1, label: 'Trip Start', reg: t.client_name, status: 'Starts in 7 days', date: t.trip_start_date, type: 'trip', tripStart: t.trip_start_date, tripEnd: t.trip_end_date, destination: t.destination || '', permitInfo: tripPermitInfo })
         } else if (startDiff === 2 && !sentKey.has(`${recipientUserId}:trip_start-${t.id}:2`)) {
