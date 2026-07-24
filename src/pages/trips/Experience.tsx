@@ -9,7 +9,7 @@ import type { Trip, Vehicle, Driver } from '@/types'
 type TripWithJoins = Trip & { vehicles?: Vehicle; drivers?: Driver }
 
 function hasExperienceData(trip: TripWithJoins): boolean {
-  return !!(trip.car_seats || trip.has_gps || trip.has_binoculars || trip.extras || trip.gorilla_tracking || trip.chimpanzee_tracking || trip.activities)
+  return !!(trip.car_seats || trip.has_gps || trip.has_binoculars || trip.extras || trip.gorilla_tracking || trip.gorilla_habituation || trip.chimpanzee_tracking || trip.chimpanzee_habituation || trip.activities)
 }
 
 function getInitial(name: string): string {
@@ -41,7 +41,9 @@ export function Experience() {
     has_binoculars: false,
     extras: '',
     gorilla_tracking: false,
+    gorilla_habituation: false,
     chimpanzee_tracking: false,
+    chimpanzee_habituation: false,
     activities: '',
   })
 
@@ -65,7 +67,9 @@ export function Experience() {
         has_binoculars: form.has_binoculars || null,
         extras: form.extras || null,
         gorilla_tracking: form.gorilla_tracking || null,
+        gorilla_habituation: form.gorilla_habituation || null,
         chimpanzee_tracking: form.chimpanzee_tracking || null,
+        chimpanzee_habituation: form.chimpanzee_habituation || null,
         activities: form.activities || null,
       }
       const { error } = await supabase.from('trips').update(payload).eq('id', selected.id)
@@ -86,7 +90,9 @@ export function Experience() {
       has_binoculars: trip.has_binoculars ?? false,
       extras: trip.extras ?? '',
       gorilla_tracking: trip.gorilla_tracking ?? false,
+      gorilla_habituation: trip.gorilla_habituation ?? false,
       chimpanzee_tracking: trip.chimpanzee_tracking ?? false,
+      chimpanzee_habituation: trip.chimpanzee_habituation ?? false,
       activities: trip.activities ?? '',
     })
     setSelected(trip)
@@ -189,7 +195,7 @@ export function Experience() {
 
             <div className="border-t border-muted/30 pt-4">
               <h4 className="text-sm font-semibold uppercase tracking-wider text-primary mb-3">Permits</h4>
-              <div className="flex gap-5">
+              <div className="flex gap-5 flex-wrap">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -202,11 +208,29 @@ export function Experience() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
+                    checked={form.gorilla_habituation}
+                    onChange={e => setForm(f => ({ ...f, gorilla_habituation: e.target.checked }))}
+                    className="rounded border-muted/60 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm font-medium">Gorilla Habituation</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
                     checked={form.chimpanzee_tracking}
                     onChange={e => setForm(f => ({ ...f, chimpanzee_tracking: e.target.checked }))}
                     className="rounded border-muted/60 text-primary focus:ring-primary"
                   />
                   <span className="text-sm font-medium">Chimpanzee Tracking</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.chimpanzee_habituation}
+                    onChange={e => setForm(f => ({ ...f, chimpanzee_habituation: e.target.checked }))}
+                    className="rounded border-muted/60 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm font-medium">Chimpanzee Habituation</span>
                 </label>
               </div>
             </div>

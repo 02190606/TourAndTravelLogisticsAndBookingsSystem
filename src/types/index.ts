@@ -161,7 +161,9 @@ export interface Trip {
   has_binoculars: boolean | null
   extras: string | null
   gorilla_tracking: boolean | null
+  gorilla_habituation: boolean | null
   chimpanzee_tracking: boolean | null
+  chimpanzee_habituation: boolean | null
   activities: string | null
   status: TripStatus
   created_at: string
