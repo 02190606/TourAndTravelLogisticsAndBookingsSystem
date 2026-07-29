@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, Drawer, Modal, StatusBadge, Badge, CardSkeleton } from '@/components/common'
+import { format, parseISO } from 'date-fns'
 import { formatDate, formatUGX, generateId, getDaysBetween, computeTripStatus, sanitizeTripPayload } from '@/utils'
 import toast from 'react-hot-toast'
 import { MapPin } from 'lucide-react'
@@ -79,6 +80,27 @@ export function TripManagement() {
     onError: (err: Error) => toast.error(err.message),
   })
 
+  function formatTripDates(startDate: string, endDate: string): string | null {
+    const start = parseISO(startDate.split('T')[0])
+    const end = parseISO(endDate.split('T')[0])
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return null
+
+    const startDay = format(start, 'dd')
+    const endDay = format(end, 'dd')
+    const startMonth = format(start, 'MMM')
+    const endMonth = format(end, 'MMM')
+    const startYear = format(start, 'yyyy')
+    const endYear = format(end, 'yyyy')
+
+    if (startYear === endYear && startMonth === endMonth) {
+      return `${startDay}–${endDay} ${startMonth} ${startYear}`
+    }
+    if (startYear === endYear) {
+      return `${startDay} ${startMonth} – ${endDay} ${endMonth} ${startYear}`
+    }
+    return `${startDay} ${startMonth} ${startYear} – ${endDay} ${endMonth} ${endYear}`
+  }
+
   const columns = [
     { key: 'client_name', header: 'Client', render: (t: any) => <span className={!t.client_name ? 'text-text-secondary italic' : ''}>{t.client_name || 'Unnamed trip'}</span> },
     { key: 'clients', header: 'Clients', render: (t: any) => <span className="tabular-nums">{t.number_of_clients}</span> },
@@ -104,8 +126,13 @@ export function TripManagement() {
     { key: 'balance', header: 'Balance (UGX)', render: (t: any) => (
       <span className={t.balance > 0 ? 'text-warning font-mono' : 'text-success font-mono'}>{(t.balance || 0).toLocaleString()}</span>
     )},
-    { key: 'trip_start_date', header: 'Start', render: (t: any) => t.trip_start_date ? formatDate(t.trip_start_date, 'dd MMM yy') : <span className="text-text-secondary">—</span> },
-    { key: 'trip_end_date', header: 'End', render: (t: any) => t.trip_end_date ? formatDate(t.trip_end_date, 'dd MMM yy') : <span className="text-text-secondary">—</span> },
+    { key: 'trip_dates', header: 'Trip Dates', render: (t: any) => {
+      if (!t.trip_start_date && !t.trip_end_date) return <span className="text-text-secondary">—</span>
+      if (!t.trip_start_date) return <span>{formatDate(t.trip_end_date, 'dd MMM yyyy')}</span>
+      if (!t.trip_end_date) return <span>{formatDate(t.trip_start_date, 'dd MMM yyyy')}</span>
+      const formatted = formatTripDates(t.trip_start_date, t.trip_end_date)
+      return <span className="whitespace-nowrap">{formatted || '—'}</span>
+    } },
     { key: 'status', header: 'Status', render: (t: any) => <StatusBadge status={computeTripStatus(t)} /> },
     { key: 'actions', header: '', render: (t: any) => (
       <>
