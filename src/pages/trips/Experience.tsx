@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Modal, Button, CardSkeleton } from '@/components/common'
@@ -6,10 +6,26 @@ import { formatDate, computeTripStatus, isActiveTrip } from '@/utils'
 import toast from 'react-hot-toast'
 import type { Trip, Vehicle, Driver } from '@/types'
 
+const PERMITS = [
+  { key: 'gorilla_tracking', label: 'Gorilla Tracking' },
+  { key: 'gorilla_habituation', label: 'Gorilla Habituation' },
+  { key: 'chimpanzee_tracking', label: 'Chimpanzee Tracking' },
+  { key: 'golden_monkey_tracking', label: 'Golden Monkey Tracking' },
+  { key: 'chimpanzee_habituation', label: 'Chimpanzee Habituation' },
+  { key: 'already_bought', label: 'Already Bought' },
+] as const
+
 type TripWithJoins = Trip & { vehicles?: Vehicle; drivers?: Driver }
 
 function hasExperienceData(trip: TripWithJoins): boolean {
-  return !!(trip.car_seats || trip.has_gps || trip.has_binoculars || trip.extras || trip.gorilla_tracking || trip.gorilla_habituation || trip.chimpanzee_tracking || trip.chimpanzee_habituation || trip.golden_monkey_tracking || trip.already_bought || trip.activities)
+  return !!(trip.car_seats || trip.has_gps || trip.has_binoculars || trip.extras ||
+    trip.gorilla_tracking || trip.gorilla_tracking_date || trip.gorilla_tracking_qty ||
+    trip.gorilla_habituation || trip.gorilla_habituation_date || trip.gorilla_habituation_qty ||
+    trip.chimpanzee_tracking || trip.chimpanzee_tracking_date || trip.chimpanzee_tracking_qty ||
+    trip.golden_monkey_tracking || trip.golden_monkey_tracking_date || trip.golden_monkey_tracking_qty ||
+    trip.chimpanzee_habituation || trip.chimpanzee_habituation_date || trip.chimpanzee_habituation_qty ||
+    trip.already_bought || trip.already_bought_date || trip.already_bought_qty ||
+    trip.activities)
 }
 
 function getInitial(name: string): string {
@@ -34,6 +50,7 @@ function getAvatarColor(name: string): string {
 
 export function Experience() {
   const queryClient = useQueryClient()
+  const blurRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [selected, setSelected] = useState<TripWithJoins | null>(null)
   const [form, setForm] = useState({
     car_seats: 0,
@@ -48,6 +65,8 @@ export function Experience() {
     already_bought: false,
     activities: '',
   })
+  const [permitData, setPermitData] = useState<Record<string, { date: string; qty: number }>>({})
+  const [expandedPermit, setExpandedPermit] = useState<string | null>(null)
 
   const { data: trips = [], isLoading } = useQuery({
     queryKey: ['trips', false],
@@ -69,11 +88,23 @@ export function Experience() {
         has_binoculars: form.has_binoculars || null,
         extras: form.extras || null,
         gorilla_tracking: form.gorilla_tracking || null,
+        gorilla_tracking_date: permitData.gorilla_tracking?.date || null,
+        gorilla_tracking_qty: permitData.gorilla_tracking?.qty || null,
         gorilla_habituation: form.gorilla_habituation || null,
+        gorilla_habituation_date: permitData.gorilla_habituation?.date || null,
+        gorilla_habituation_qty: permitData.gorilla_habituation?.qty || null,
         chimpanzee_tracking: form.chimpanzee_tracking || null,
+        chimpanzee_tracking_date: permitData.chimpanzee_tracking?.date || null,
+        chimpanzee_tracking_qty: permitData.chimpanzee_tracking?.qty || null,
         chimpanzee_habituation: form.chimpanzee_habituation || null,
+        chimpanzee_habituation_date: permitData.chimpanzee_habituation?.date || null,
+        chimpanzee_habituation_qty: permitData.chimpanzee_habituation?.qty || null,
         golden_monkey_tracking: form.golden_monkey_tracking || null,
+        golden_monkey_tracking_date: permitData.golden_monkey_tracking?.date || null,
+        golden_monkey_tracking_qty: permitData.golden_monkey_tracking?.qty || null,
         already_bought: form.already_bought || null,
+        already_bought_date: permitData.already_bought?.date || null,
+        already_bought_qty: permitData.already_bought?.qty || null,
         activities: form.activities || null,
       }
       const { error } = await supabase.from('trips').update(payload).eq('id', selected.id)
@@ -101,6 +132,15 @@ export function Experience() {
       already_bought: trip.already_bought ?? false,
       activities: trip.activities ?? '',
     })
+    setPermitData({
+      gorilla_tracking: { date: trip.gorilla_tracking_date ?? '', qty: trip.gorilla_tracking_qty ?? 1 },
+      gorilla_habituation: { date: trip.gorilla_habituation_date ?? '', qty: trip.gorilla_habituation_qty ?? 1 },
+      chimpanzee_tracking: { date: trip.chimpanzee_tracking_date ?? '', qty: trip.chimpanzee_tracking_qty ?? 1 },
+      chimpanzee_habituation: { date: trip.chimpanzee_habituation_date ?? '', qty: trip.chimpanzee_habituation_qty ?? 1 },
+      golden_monkey_tracking: { date: trip.golden_monkey_tracking_date ?? '', qty: trip.golden_monkey_tracking_qty ?? 1 },
+      already_bought: { date: trip.already_bought_date ?? '', qty: trip.already_bought_qty ?? 1 },
+    })
+    setExpandedPermit(null)
     setSelected(trip)
   }
 
@@ -201,61 +241,80 @@ export function Experience() {
 
             <div className="border-t border-muted/30 pt-4">
               <h4 className="text-sm font-semibold uppercase tracking-wider text-primary mb-3">Permits</h4>
-              <div className="flex gap-5 flex-wrap">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.gorilla_tracking}
-                    onChange={e => setForm(f => ({ ...f, gorilla_tracking: e.target.checked }))}
-                    className="rounded border-muted/60 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm font-medium">Gorilla Tracking</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.gorilla_habituation}
-                    onChange={e => setForm(f => ({ ...f, gorilla_habituation: e.target.checked }))}
-                    className="rounded border-muted/60 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm font-medium">Gorilla Habituation</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.chimpanzee_tracking}
-                    onChange={e => setForm(f => ({ ...f, chimpanzee_tracking: e.target.checked }))}
-                    className="rounded border-muted/60 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm font-medium">Chimpanzee Tracking</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.golden_monkey_tracking}
-                    onChange={e => setForm(f => ({ ...f, golden_monkey_tracking: e.target.checked }))}
-                    className="rounded border-muted/60 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm font-medium">Golden Monkey Tracking</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.chimpanzee_habituation}
-                    onChange={e => setForm(f => ({ ...f, chimpanzee_habituation: e.target.checked }))}
-                    className="rounded border-muted/60 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm font-medium">Chimpanzee Habituation</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.already_bought}
-                    onChange={e => setForm(f => ({ ...f, already_bought: e.target.checked }))}
-                    className="rounded border-muted/60 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm font-medium">Already Bought</span>
-                </label>
+              <div className="flex flex-wrap gap-x-5 gap-y-3">
+                {PERMITS.map(p => {
+                  const checked = form[p.key as keyof typeof form] as boolean
+                  const data = permitData[p.key]
+                  const hasDetails = data && (data.date || data.qty)
+                  const isExpanded = expandedPermit === p.key
+                  return (
+                    <div key={p.key} className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={e => {
+                              setForm(f => ({ ...f, [p.key]: e.target.checked }))
+                              if (!e.target.checked) {
+                                setPermitData(d => ({ ...d, [p.key]: { date: '', qty: 1 } }))
+                              }
+                            }}
+                            className="rounded border-muted/60 text-primary focus:ring-primary"
+                          />
+                          <span className="text-sm font-medium">{p.label}</span>
+                        </label>
+                        {checked && !isExpanded && !hasDetails && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedPermit(p.key)}
+                            className="text-xs text-primary/70 hover:text-primary cursor-pointer"
+                          >+ <span className="underline">Add details</span></button>
+                        )}
+                        {checked && hasDetails && !isExpanded && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedPermit(p.key)}
+                            className="text-xs text-text-secondary hover:text-text-primary cursor-pointer"
+                          >
+                            <span className="text-success font-semibold">✓</span> ({data?.qty || 1}x, {data?.date ? formatDate(data.date, 'dd MMM') : '—'})
+                          </button>
+                        )}
+                      </div>
+                      {isExpanded && (
+                        <div
+                          className="flex items-center gap-2 ml-1"
+                          onBlur={e => {
+                            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                              blurRef.current = setTimeout(() => setExpandedPermit(null), 120)
+                            }
+                          }}
+                          onFocus={() => { if (blurRef.current) clearTimeout(blurRef.current) }}
+                        >
+                          <input
+                            type="date"
+                            value={data?.date || ''}
+                            onChange={e => setPermitData(d => ({ ...d, [p.key]: { ...d[p.key], date: e.target.value, qty: d[p.key]?.qty || 1 } }))}
+                            className="w-36 px-2 py-1.5 border border-muted/60 rounded-lg text-xs"
+                          />
+                          <input
+                            type="number"
+                            min={1}
+                            value={data?.qty || 1}
+                            onChange={e => setPermitData(d => ({ ...d, [p.key]: { ...d[p.key], date: d[p.key]?.date || '', qty: Math.max(1, Number(e.target.value)) } }))}
+                            className="w-16 px-2 py-1.5 border border-muted/60 rounded-lg text-xs text-center"
+                          />
+                          <span className="text-xs text-text-secondary">people</span>
+                          <button
+                            type="button"
+                            onClick={() => setExpandedPermit(null)}
+                            className="text-xs text-primary/70 hover:text-primary cursor-pointer underline"
+                          >Done</button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
 

@@ -311,50 +311,54 @@ export function TripManagement() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-primary">Experience</span>
               </div>
               {(() => {
-                const hasExperience = viewTrip.car_seats || viewTrip.has_gps || viewTrip.has_binoculars || viewTrip.extras || viewTrip.gorilla_tracking || viewTrip.gorilla_habituation || viewTrip.chimpanzee_tracking || viewTrip.chimpanzee_habituation || viewTrip.golden_monkey_tracking || viewTrip.already_bought || viewTrip.activities
-                if (!hasExperience) return <p className="text-sm text-text-secondary">No experience details added yet.</p>
+                const amenities = [
+                  ...((viewTrip.car_seats ?? 0) > 0 ? [{ label: 'Car Seats', value: String(viewTrip.car_seats) }] : []),
+                  ...(viewTrip.has_gps ? [{ label: 'GPS', value: '✓' }] : []),
+                  ...(viewTrip.has_binoculars ? [{ label: 'Binoculars', value: '✓' }] : []),
+                  ...(viewTrip.extras ? [{ label: 'Extras', value: viewTrip.extras }] : []),
+                ]
+                type PermitRec = { label: string; date: string | null; qty: number | null }
+                const permits: PermitRec[] = [
+                  ...(viewTrip.gorilla_tracking ? [{ label: 'Gorilla Tracking', date: viewTrip.gorilla_tracking_date, qty: viewTrip.gorilla_tracking_qty }] : []),
+                  ...(viewTrip.chimpanzee_tracking ? [{ label: 'Chimpanzee Tracking', date: viewTrip.chimpanzee_tracking_date, qty: viewTrip.chimpanzee_tracking_qty }] : []),
+                  ...(viewTrip.golden_monkey_tracking ? [{ label: 'Golden Monkey Tracking', date: viewTrip.golden_monkey_tracking_date, qty: viewTrip.golden_monkey_tracking_qty }] : []),
+                  ...(viewTrip.gorilla_habituation ? [{ label: 'Gorilla Habituation', date: viewTrip.gorilla_habituation_date, qty: viewTrip.gorilla_habituation_qty }] : []),
+                  ...(viewTrip.chimpanzee_habituation ? [{ label: 'Chimpanzee Habituation', date: viewTrip.chimpanzee_habituation_date, qty: viewTrip.chimpanzee_habituation_qty }] : []),
+                  ...(viewTrip.already_bought ? [{ label: 'Already Bought', date: viewTrip.already_bought_date, qty: viewTrip.already_bought_qty }] : []),
+                ]
+                const hasAny = amenities.length > 0 || permits.length > 0 || viewTrip.activities
+                if (!hasAny) return <p className="text-sm text-text-secondary">No permits or amenities selected.</p>
+                const fmtLabel = (p: PermitRec) => {
+                  let s = ''
+                  if (p.qty) s += `x${p.qty}`
+                  if (p.qty && p.date) s += ' · '
+                  if (p.date) s += formatDate(p.date, 'dd MMM yyyy')
+                  return s ? `${p.label} — ${s}` : p.label
+                }
                 return (
                   <div className="rounded-xl border border-muted/40 bg-surface-2 divide-y divide-muted/30">
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-[15px] text-text-secondary">Car Seats</span>
-                      <span className="text-[15px] font-bold text-text-primary">{viewTrip.car_seats ?? '—'}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-[15px] text-text-secondary">GPS</span>
-                      <span className="text-[15px] font-bold text-text-primary">{viewTrip.has_gps ? 'Yes' : 'No'}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-[15px] text-text-secondary">Binoculars</span>
-                      <span className="text-[15px] font-bold text-text-primary">{viewTrip.has_binoculars ? 'Yes' : 'No'}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-[15px] text-text-secondary">Extras</span>
-                      <span className="text-[15px] font-bold text-text-primary">{viewTrip.extras || '—'}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-[15px] text-text-secondary">Gorilla Tracking</span>
-                      <span className={`text-[15px] font-bold ${viewTrip.gorilla_tracking ? 'text-success' : 'text-text-primary'}`}>{viewTrip.gorilla_tracking ? 'Yes' : 'No'}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-[15px] text-text-secondary">Chimpanzee Tracking</span>
-                      <span className={`text-[15px] font-bold ${viewTrip.chimpanzee_tracking ? 'text-success' : 'text-text-primary'}`}>{viewTrip.chimpanzee_tracking ? 'Yes' : 'No'}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-[15px] text-text-secondary">Golden Monkey Tracking</span>
-                      <span className={`text-[15px] font-bold ${viewTrip.golden_monkey_tracking ? 'text-success' : 'text-text-primary'}`}>{viewTrip.golden_monkey_tracking ? 'Yes' : 'No'}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-[15px] text-text-secondary">Gorilla Habituation</span>
-                      <span className={`text-[15px] font-bold ${viewTrip.gorilla_habituation ? 'text-success' : 'text-text-primary'}`}>{viewTrip.gorilla_habituation ? 'Yes' : 'No'}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-[15px] text-text-secondary">Chimpanzee Habituation</span>
-                      <span className={`text-[15px] font-bold ${viewTrip.chimpanzee_habituation ? 'text-success' : 'text-text-primary'}`}>{viewTrip.chimpanzee_habituation ? 'Yes' : 'No'}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <span className="text-[15px] text-text-secondary">Already Bought</span>
-                      <span className={`text-[15px] font-bold ${viewTrip.already_bought ? 'text-success' : 'text-text-primary'}`}>{viewTrip.already_bought ? 'Yes' : 'No'}</span>
-                    </div>
+                    {amenities.length > 0 && (
+                      <div className="px-4 pt-3 pb-1">
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Amenities</span>
+                      </div>
+                    )}
+                    {amenities.map(a => (
+                      <div key={a.label} className="flex items-center justify-between px-4 py-2">
+                        <span className="text-[15px] text-text-secondary">{a.label}</span>
+                        <span className="text-[15px] font-bold text-text-primary">{a.value}</span>
+                      </div>
+                    ))}
+                    {permits.length > 0 && (
+                      <div className="px-4 pt-3 pb-1">
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Permits</span>
+                      </div>
+                    )}
+                    {permits.map(p => (
+                      <div key={p.label} className="flex items-center justify-between px-4 py-2">
+                        <span className="text-[15px] text-text-secondary">{fmtLabel(p)}</span>
+                        <span className="text-[15px] font-bold text-success">✓</span>
+                      </div>
+                    ))}
                     {viewTrip.activities && (
                       <div className="px-4 py-3">
                         <p className="text-[15px] text-text-secondary mb-1">Activities</p>

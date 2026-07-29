@@ -161,11 +161,23 @@ export interface Trip {
   has_binoculars: boolean | null
   extras: string | null
   gorilla_tracking: boolean | null
+  gorilla_tracking_date: string | null
+  gorilla_tracking_qty: number | null
   gorilla_habituation: boolean | null
+  gorilla_habituation_date: string | null
+  gorilla_habituation_qty: number | null
   chimpanzee_tracking: boolean | null
+  chimpanzee_tracking_date: string | null
+  chimpanzee_tracking_qty: number | null
   chimpanzee_habituation: boolean | null
-  already_bought: boolean | null
+  chimpanzee_habituation_date: string | null
+  chimpanzee_habituation_qty: number | null
   golden_monkey_tracking: boolean | null
+  golden_monkey_tracking_date: string | null
+  golden_monkey_tracking_qty: number | null
+  already_bought: boolean | null
+  already_bought_date: string | null
+  already_bought_qty: number | null
   activities: string | null
   status: TripStatus
   created_at: string
