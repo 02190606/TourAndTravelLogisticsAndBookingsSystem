@@ -102,8 +102,8 @@ export function TripManagement() {
     { key: 'balance', header: 'Balance (UGX)', render: (t: any) => (
       <span className={t.balance > 0 ? 'text-warning font-mono' : 'text-success font-mono'}>{(t.balance || 0).toLocaleString()}</span>
     )},
-    { key: 'trip_start_date', header: 'Start', render: (t: any) => t.trip_start_date ? formatDate(t.trip_start_date) : <span className="text-text-secondary">—</span> },
-    { key: 'trip_end_date', header: 'End', render: (t: any) => t.trip_end_date ? formatDate(t.trip_end_date) : <span className="text-text-secondary">—</span> },
+    { key: 'trip_start_date', header: 'Start', render: (t: any) => t.trip_start_date ? formatDate(t.trip_start_date, 'dd MMM yy') : <span className="text-text-secondary">—</span> },
+    { key: 'trip_end_date', header: 'End', render: (t: any) => t.trip_end_date ? formatDate(t.trip_end_date, 'dd MMM yy') : <span className="text-text-secondary">—</span> },
     { key: 'status', header: 'Status', render: (t: any) => <StatusBadge status={computeTripStatus(t)} /> },
     { key: 'actions', header: '', render: (t: any) => (
       <>
