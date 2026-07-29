@@ -282,7 +282,7 @@ export function TripManagement() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-primary">Experience</span>
               </div>
               {(() => {
-                const hasExperience = viewTrip.car_seats || viewTrip.has_gps || viewTrip.has_binoculars || viewTrip.extras || viewTrip.gorilla_tracking || viewTrip.gorilla_habituation || viewTrip.chimpanzee_tracking || viewTrip.chimpanzee_habituation || viewTrip.activities
+                const hasExperience = viewTrip.car_seats || viewTrip.has_gps || viewTrip.has_binoculars || viewTrip.extras || viewTrip.gorilla_tracking || viewTrip.gorilla_habituation || viewTrip.chimpanzee_tracking || viewTrip.chimpanzee_habituation || viewTrip.already_bought || viewTrip.activities
                 if (!hasExperience) return <p className="text-sm text-text-secondary">No experience details added yet.</p>
                 return (
                   <div className="rounded-xl border border-muted/40 bg-surface-2 divide-y divide-muted/30">
@@ -317,6 +317,10 @@ export function TripManagement() {
                     <div className="flex items-center justify-between px-4 py-3">
                       <span className="text-[15px] text-text-secondary">Chimpanzee Habituation</span>
                       <span className={`text-[15px] font-bold ${viewTrip.chimpanzee_habituation ? 'text-success' : 'text-text-primary'}`}>{viewTrip.chimpanzee_habituation ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <span className="text-[15px] text-text-secondary">Already Bought</span>
+                      <span className={`text-[15px] font-bold ${viewTrip.already_bought ? 'text-success' : 'text-text-primary'}`}>{viewTrip.already_bought ? 'Yes' : 'No'}</span>
                     </div>
                     {viewTrip.activities && (
                       <div className="px-4 py-3">
