@@ -42,7 +42,7 @@ async function run() {
   await client.query(`
     SELECT cron.schedule(
       'sync-trip-statuses-daily',
-      '55 8 * * *',
+      '55 10 * * *',
       $$UPDATE trips SET status = CASE
         WHEN CURRENT_DATE < trip_start_date THEN 'planned'
         WHEN CURRENT_DATE > trip_end_date  THEN 'completed'
@@ -54,12 +54,12 @@ async function run() {
       );$$
     )
   `)
-  console.log('Trip status sync cron created (08:55 AM UTC / 11:55 AM EAT)')
+  console.log('Trip status sync cron created (10:55 AM UTC / 1:55 PM EAT)')
 
   await client.query(`
     SELECT cron.schedule(
       'send-alerts-daily',
-      '0 9 * * *',
+      '0 11 * * *',
       $$SELECT net.http_post(
         url:='https://ymjmqubbmeryqzolszvr.supabase.co/functions/v1/send-alerts',
         headers:=jsonb_build_object(
@@ -69,7 +69,7 @@ async function run() {
       ) AS request_id;$$
     )
   `)
-  console.log('Send-alerts cron created (09:00 AM UTC / 12:00 PM EAT)')
+  console.log('Send-alerts cron created (11:00 AM UTC / 2:00 PM EAT)')
 
   await client.end()
   console.log('All done!')
