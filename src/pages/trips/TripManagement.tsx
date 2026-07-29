@@ -369,7 +369,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     payment_mode: editTrip?.payment_mode || 'cash',
     amount_paid: editTrip?.amount_paid ?? null,
     balance: editTrip?.balance ?? null,
-    exchangeRate: 1,
+    exchangeRate: null as number | null,
   })
 
   const { data: vehicles = [] } = useQuery({
@@ -479,7 +479,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
 
   function updateAmount(amount: number) {
     setForm(f => {
-      const ugx = f.currency === 'UGX' ? amount : Math.round(amount * f.exchangeRate)
+      const ugx = f.currency === 'UGX' ? amount : Math.round(amount * (f.exchangeRate ?? 1))
       const balance = Math.max(0, ugx - (f.amount_paid ?? 0))
       return { ...f, amount, amount_in_ugx: ugx, balance }
     })
@@ -699,12 +699,12 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             {form.currency !== 'UGX' && (
               <div>
                 <label className="block text-sm font-medium mb-1">Exchange Rate (1 {form.currency} = ? UGX)</label>
-                <input type="number" value={form.exchangeRate} onChange={e => {
+                <input type="number" value={form.exchangeRate ?? ''} onChange={e => {
                   const raw = e.target.value
-                  if (raw === '') { setForm(f => ({ ...f, exchangeRate: 1 })); return }
+                  if (raw === '') { setForm(f => ({ ...f, exchangeRate: null })); return }
                   const n = Number(raw)
                   if (!isNaN(n)) setForm(f => ({ ...f, exchangeRate: Math.round(n) }))
-                }} step="1" min="1" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                }} step="1" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
               </div>
             )}
             <div>
