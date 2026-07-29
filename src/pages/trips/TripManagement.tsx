@@ -81,7 +81,7 @@ export function TripManagement() {
 
   const columns = [
     { key: 'client_name', header: 'Client', render: (t: any) => <span className={!t.client_name ? 'text-text-secondary italic' : ''}>{t.client_name || 'Unnamed trip'}</span> },
-    { key: 'clients', header: 'Clients', render: (t: any) => t.number_of_clients },
+    { key: 'clients', header: 'Clients', render: (t: any) => <span className="tabular-nums">{t.number_of_clients}</span> },
     { key: 'car_type', header: 'Car Type' },
     { key: 'trip_type', header: 'Trip Type', render: (t: any) => (
       <div className="flex gap-1 flex-wrap">
@@ -92,8 +92,10 @@ export function TripManagement() {
     )},
     { key: 'vehicle_driver', header: 'Vehicle / Driver', render: (t: any) => (
       <div className="leading-tight">
-        <span className="font-medium">{t.vehicles?.registration_number || '—'}</span>
-        <span className="text-text-secondary text-xs block">{t.drivers?.full_name || '—'}</span>
+        {t.vehicles?.registration_number || t.drivers?.full_name ? <>
+          <span className="font-medium">{t.vehicles?.registration_number || '—'}</span>
+          <span className="text-text-secondary text-xs block">{t.drivers?.full_name || '—'}</span>
+        </> : <span className="text-text-secondary">—</span>}
       </div>
     )},
     { key: 'amount_in_ugx', header: 'Amount (UGX)', render: (t: any) => <span className="font-mono">{(t.amount_in_ugx || 0).toLocaleString()}</span> },
@@ -155,7 +157,7 @@ export function TripManagement() {
               {trips.map((t, i) => (
                 <tr key={t.id} className={i % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
                   {columns.map(col => (
-                    <td key={col.key} data-label={col.header} className="px-4 py-3.5 text-sm whitespace-nowrap">{col.render ? col.render(t) : (t as any)[col.key]}</td>
+                    <td key={col.key} data-label={col.header} className="px-4 py-3.5 text-sm whitespace-nowrap border-r border-muted/20 last:border-r-0">{col.render ? col.render(t) : (t as any)[col.key]}</td>
                   ))}
                 </tr>
               ))}
