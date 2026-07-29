@@ -364,7 +364,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     accommodation_rooms: editTrip?.accommodation_rooms ?? null,
     accommodation_cost: editTrip?.accommodation_cost ?? null,
     currency: editTrip?.currency || 'UGX',
-    amount: 0,
+    amount: null as number | null,
     amount_in_ugx: editTrip?.amount_in_ugx ?? null,
     payment_mode: editTrip?.payment_mode || 'cash',
     amount_paid: editTrip?.amount_paid ?? null,
@@ -699,12 +699,21 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             {form.currency !== 'UGX' && (
               <div>
                 <label className="block text-sm font-medium mb-1">Exchange Rate (1 {form.currency} = ? UGX)</label>
-                <input type="number" value={form.exchangeRate} onChange={e => setForm(f => ({ ...f, exchangeRate: Number(e.target.value) }))} step="0.01" min="0.01" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+                <input type="number" value={form.exchangeRate} onChange={e => {
+                  const raw = e.target.value
+                  if (raw === '') { setForm(f => ({ ...f, exchangeRate: 1 })); return }
+                  const n = Number(raw)
+                  if (!isNaN(n)) setForm(f => ({ ...f, exchangeRate: Math.round(n) }))
+                }} step="1" min="1" className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
               </div>
             )}
             <div>
               <label className="block text-sm font-medium mb-1">Amount ({form.currency})</label>
-              <input type="number" value={form.amount} onChange={e => updateAmount(Number(e.target.value))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
+              <input type="number" value={form.amount ?? ''} onChange={e => {
+                const raw = e.target.value
+                if (raw === '') { setForm(f => ({ ...f, amount: null, amount_in_ugx: 0, balance: Math.max(0, 0 - (f.amount_paid ?? 0)) })); return }
+                updateAmount(Number(raw.replace(/^0+(?=\d)/, '')))
+              }} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm" />
             </div>
             {form.currency !== 'UGX' && (
               <div>
