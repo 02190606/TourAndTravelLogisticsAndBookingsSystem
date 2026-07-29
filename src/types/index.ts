@@ -165,6 +165,7 @@ export interface Trip {
   chimpanzee_tracking: boolean | null
   chimpanzee_habituation: boolean | null
   already_bought: boolean | null
+  golden_monkey_tracking: boolean | null
   activities: string | null
   status: TripStatus
   created_at: string

@@ -9,7 +9,7 @@ import type { Trip, Vehicle, Driver } from '@/types'
 type TripWithJoins = Trip & { vehicles?: Vehicle; drivers?: Driver }
 
 function hasExperienceData(trip: TripWithJoins): boolean {
-  return !!(trip.car_seats || trip.has_gps || trip.has_binoculars || trip.extras || trip.gorilla_tracking || trip.gorilla_habituation || trip.chimpanzee_tracking || trip.chimpanzee_habituation || trip.already_bought || trip.activities)
+  return !!(trip.car_seats || trip.has_gps || trip.has_binoculars || trip.extras || trip.gorilla_tracking || trip.gorilla_habituation || trip.chimpanzee_tracking || trip.chimpanzee_habituation || trip.golden_monkey_tracking || trip.already_bought || trip.activities)
 }
 
 function getInitial(name: string): string {
@@ -44,6 +44,7 @@ export function Experience() {
     gorilla_habituation: false,
     chimpanzee_tracking: false,
     chimpanzee_habituation: false,
+    golden_monkey_tracking: false,
     already_bought: false,
     activities: '',
   })
@@ -71,6 +72,7 @@ export function Experience() {
         gorilla_habituation: form.gorilla_habituation || null,
         chimpanzee_tracking: form.chimpanzee_tracking || null,
         chimpanzee_habituation: form.chimpanzee_habituation || null,
+        golden_monkey_tracking: form.golden_monkey_tracking || null,
         already_bought: form.already_bought || null,
         activities: form.activities || null,
       }
@@ -95,6 +97,7 @@ export function Experience() {
       gorilla_habituation: trip.gorilla_habituation ?? false,
       chimpanzee_tracking: trip.chimpanzee_tracking ?? false,
       chimpanzee_habituation: trip.chimpanzee_habituation ?? false,
+      golden_monkey_tracking: trip.golden_monkey_tracking ?? false,
       already_bought: trip.already_bought ?? false,
       activities: trip.activities ?? '',
     })
@@ -225,6 +228,15 @@ export function Experience() {
                     className="rounded border-muted/60 text-primary focus:ring-primary"
                   />
                   <span className="text-sm font-medium">Chimpanzee Tracking</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.golden_monkey_tracking}
+                    onChange={e => setForm(f => ({ ...f, golden_monkey_tracking: e.target.checked }))}
+                    className="rounded border-muted/60 text-primary focus:ring-primary"
+                  />
+                  <span className="text-sm font-medium">Golden Monkey Tracking</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
