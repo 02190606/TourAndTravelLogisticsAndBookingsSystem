@@ -718,7 +718,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             {form.currency !== 'UGX' && (
               <div>
                 <label className="block text-sm font-medium mb-1">Amount (UGX)</label>
-                <div className="w-full px-3 py-2.5 bg-muted/20 rounded-xl text-sm font-mono font-semibold text-primary">{(form.amount_in_ugx ?? 0).toLocaleString()} UGX</div>
+                <div className="w-full px-3 py-2.5 bg-muted/20 rounded-xl text-sm font-mono font-semibold text-primary">{(form.amount_in_ugx ?? 0).toLocaleString()}</div>
               </div>
             )}
             <div>
