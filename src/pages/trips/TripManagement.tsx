@@ -798,12 +798,12 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             <div>
               <label className="block text-sm font-medium mb-1">Balance</label>
               <div className={`w-full px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 ${form.fully_paid ? 'bg-success/10 text-success' : (form.balance ?? 0) > 0 ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'}`}>
-                {form.fully_paid ? 'Fully Paid' : `${(form.balance ?? 0).toLocaleString()} UGX`}
+                <span className="flex-1">{form.fully_paid ? 'Fully Paid' : `${(form.balance ?? 0).toLocaleString()} UGX`}</span>
+                <label className="flex items-center gap-1.5 text-xs font-normal cursor-pointer select-none whitespace-nowrap">
+                  <input type="checkbox" checked={form.fully_paid} onChange={e => setForm(f => ({ ...f, fully_paid: e.target.checked }))} className="rounded border-muted/60 text-primary focus:ring-primary/30" />
+                  Fully Paid
+                </label>
               </div>
-            </div>
-            <div className="flex items-center gap-2 pt-2">
-              <input type="checkbox" id="fully_paid" checked={form.fully_paid} onChange={e => setForm(f => ({ ...f, fully_paid: e.target.checked }))} className="rounded border-muted/60 text-primary focus:ring-primary/30" />
-              <label htmlFor="fully_paid" className="text-sm font-medium text-text-secondary cursor-pointer select-none">Mark as Fully Paid</label>
             </div>
           </div>
         </div>
