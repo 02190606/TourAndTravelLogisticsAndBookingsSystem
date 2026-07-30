@@ -356,21 +356,17 @@ export function Experience() {
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              {editing ? (
-                <>
-                  <Button variant="outline" onClick={() => {
-                    setForm({ ...savedFormRef.current } as typeof form)
-                    setPermitData({ ...savedPermitDataRef.current })
-                    setEditing(false)
-                  }}>Cancel</Button>
-                  <Button onClick={() => saveMutation.mutate()} isLoading={saveMutation.isPending}>Save</Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="outline" onClick={() => setSelected(null)}>Cancel</Button>
-                  <Button onClick={() => setEditing(true)}>Edit</Button>
-                </>
-              )}
+              <Button onClick={() => { if (!editing) setEditing(true) }}>Edit</Button>
+              <Button variant="outline" onClick={() => {
+                if (editing) {
+                  setForm({ ...savedFormRef.current } as typeof form)
+                  setPermitData({ ...savedPermitDataRef.current })
+                  setEditing(false)
+                } else {
+                  setSelected(null)
+                }
+              }}>Cancel</Button>
+              <Button onClick={() => saveMutation.mutate()} isLoading={saveMutation.isPending} disabled={!editing}>Save</Button>
             </div>
           </div>
         )}
