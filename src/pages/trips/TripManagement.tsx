@@ -797,9 +797,8 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Balance</label>
-              <div className={`w-full px-3 py-2.5 rounded-xl text-sm font-mono font-semibold flex items-center gap-2 ${(form.balance ?? 0) > 0 ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'}`}>
-                {(form.balance ?? 0).toLocaleString()} UGX
-                {(form.balance ?? 0) === 0 && <Badge variant="success">Fully Paid</Badge>}
+              <div className={`w-full px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 ${form.fully_paid ? 'bg-success/10 text-success' : (form.balance ?? 0) > 0 ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'}`}>
+                {form.fully_paid ? 'Fully Paid' : `${(form.balance ?? 0).toLocaleString()} UGX`}
               </div>
             </div>
             <div className="flex items-center gap-2 pt-2">
