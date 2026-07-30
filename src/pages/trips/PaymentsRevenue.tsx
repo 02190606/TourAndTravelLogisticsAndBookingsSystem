@@ -5,7 +5,7 @@ import { PageHeader, StatCard, Button, CardSkeleton, StatusBadge } from '@/compo
 import { BarChart } from '@/components/charts/BarChart'
 import { formatUGX, formatDate, computeTripStatus, isActiveTrip } from '@/utils'
 import { saveAs } from 'file-saver'
-import { DollarSign, TrendingUp, AlertTriangle } from 'lucide-react'
+import { DollarSign, TrendingUp } from 'lucide-react'
 import type { Trip } from '@/types'
 
 export function PaymentsRevenue() {
@@ -25,7 +25,7 @@ export function PaymentsRevenue() {
     },
   })
 
-  if (isLoading) return <CardSkeleton count={3} />
+  if (isLoading) return <CardSkeleton count={2} />
 
   const thisMonth = now.getMonth()
 
@@ -38,10 +38,6 @@ export function PaymentsRevenue() {
   const yearlyRevenue = filteredTrips
     .filter(t => isActiveTrip(t))
     .reduce((sum, t) => sum + (t.amount_in_ugx || 0), 0)
-
-  const outstandingBalance = trips
-    .filter(t => t.balance > 0 && isActiveTrip(t))
-    .reduce((sum, t) => sum + (t.balance || 0), 0)
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   const revenueByMonth = months.map((name, i) => ({
@@ -93,7 +89,6 @@ export function PaymentsRevenue() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 overflow-x-auto">
         <StatCard title="This Month" value={formatUGX(monthlyRevenue)} icon={<DollarSign />} color="primary" />
         <StatCard title="This Year" value={formatUGX(yearlyRevenue)} icon={<TrendingUp />} color="secondary" />
-        <StatCard title="Outstanding Balances" value={formatUGX(outstandingBalance)} icon={<AlertTriangle />} color="warning" className="border-amber-200/60 bg-amber-50/20" />
       </div>
 
       <div className="bg-white rounded-lg shadow-sm">
