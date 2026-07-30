@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useTripAlerts } from '@/hooks/useTripAlerts'
 import type { UserRole } from '@/types'

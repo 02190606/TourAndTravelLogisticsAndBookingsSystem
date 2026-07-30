@@ -1,28 +1,16 @@
-import { createContext, useContext, useReducer, useEffect, useCallback, useRef, type ReactNode } from 'react'
+import { useReducer, useEffect, useCallback, useRef, type ReactNode } from 'react'
+import type { AuthSession as Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabaseClient'
 import { useMobileAutoLogout } from '@/hooks/useMobileAutoLogout'
+import { AuthContext } from './auth'
+import type { AuthState } from './auth'
 import type { User, UserRole } from '@/types'
 
-interface AuthState {
-  user: User | null
-  session: any | null
-  isLoading: boolean
-  error: string | null
-}
-
 type AuthAction =
-  | { type: 'SET_USER'; payload: { user: User; session: any } }
+  | { type: 'SET_USER'; payload: { user: User; session: Session } }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'LOGOUT' }
-
-interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
-  hasRole: (roles: UserRole[]) => boolean
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
@@ -67,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function fetchUser(userId: string, session: any) {
+  async function fetchUser(userId: string, session: Session) {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -126,10 +114,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) throw new Error('useAuth must be used within AuthProvider')
-  return context
 }

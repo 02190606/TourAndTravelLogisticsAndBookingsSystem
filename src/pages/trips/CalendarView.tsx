@@ -9,7 +9,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import type { Trip, TripStatus } from '@/types'
 import { useNavigate } from 'react-router-dom'
 import { formatDate, computeTripStatus } from '@/utils'
-import { addDays, parseISO, isAfter } from 'date-fns'
+import { parseISO, isAfter } from 'date-fns'
 
 const statusColors: Record<string, string> = {
   planned: '#3B82F6',
@@ -35,6 +35,32 @@ const statusDots: Record<string, string> = {
   cancelled: 'bg-red-300',
 }
 
+const CLIENT_COLORS = [
+  { bg: '#E3F2FD', dot: '#1565C0' },
+  { bg: '#FCE4EC', dot: '#C62828' },
+  { bg: '#E8F5E9', dot: '#2E7D32' },
+  { bg: '#FFF3E0', dot: '#E65100' },
+  { bg: '#F3E5F5', dot: '#7B1FA2' },
+  { bg: '#E0F7FA', dot: '#00838F' },
+  { bg: '#FFF8E1', dot: '#F9A825' },
+  { bg: '#FBE9E7', dot: '#BF360C' },
+  { bg: '#E8EAF6', dot: '#283593' },
+  { bg: '#FCE4EC', dot: '#AD1457' },
+  { bg: '#E0F2F1', dot: '#00695C' },
+  { bg: '#FFFDE7', dot: '#F57F17' },
+  { bg: '#EDE7F6', dot: '#4527A0' },
+  { bg: '#F1F8E9', dot: '#558B2F' },
+]
+
+function hashString(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash)
+}
+
 export function CalendarView() {
   const navigate = useNavigate()
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null)
@@ -53,8 +79,12 @@ export function CalendarView() {
 
   if (isLoading) return <CardSkeleton count={3} />
 
-  const nameCount: Record<string, number> = {}
-  trips.forEach(t => { nameCount[t.client_name] = (nameCount[t.client_name] || 0) + 1 })
+  const clientColors: Record<string, { bg: string; dot: string }> = {}
+  trips.forEach(t => {
+    if (!clientColors[t.client_name]) {
+      clientColors[t.client_name] = CLIENT_COLORS[hashString(t.client_name) % CLIENT_COLORS.length]
+    }
+  })
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -74,28 +104,32 @@ export function CalendarView() {
       if (!viewStart || !viewEnd) return true
       return t.trip_end_date >= viewStart && t.trip_start_date < viewEnd
     })
-    .map(trip => {
-      const computed = computeTripStatus(trip)
-      const label = nameCount[trip.client_name] > 1
-        ? `${trip.client_name} · ${formatDate(trip.trip_start_date, 'dd MMM')}–${formatDate(trip.trip_end_date, 'dd MMM')}`
-        : trip.client_name
-      const endDate = addDays(parseISO(trip.trip_end_date), 1)
-      const endStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`
-      return {
-        id: trip.id,
-        title: label,
-        start: trip.trip_start_date,
-        end: endStr,
-        backgroundColor: statusColors[computed] || '#475569',
-        borderColor: statusColors[computed] || '#475569',
-        textColor: '#fff',
-        extendedProps: {
-          vehicle: trip.vehicles?.registration_number,
-          driver: trip.drivers?.full_name || (trip.needs_driver ? 'With Driver (TBD)' : null),
-          status: computed,
-          actualEndDate: trip.trip_end_date,
+    .flatMap(trip => {
+      const color = clientColors[trip.client_name]
+      return [
+        {
+          id: `${trip.id}-start`,
+          title: trip.client_name,
+          start: trip.trip_start_date,
+          end: trip.trip_start_date,
+          backgroundColor: 'transparent',
+          borderColor: 'transparent',
+          textColor: color.dot,
+          classNames: ['trip-pill'],
+          extendedProps: { tripId: trip.id, type: 'start', clientName: trip.client_name },
         },
-      }
+        {
+          id: `${trip.id}-end`,
+          title: trip.client_name,
+          start: trip.trip_end_date,
+          end: trip.trip_end_date,
+          backgroundColor: 'transparent',
+          borderColor: 'transparent',
+          textColor: color.dot,
+          classNames: ['trip-pill'],
+          extendedProps: { tripId: trip.id, type: 'end', clientName: trip.client_name },
+        },
+      ]
     })
 
   return (
@@ -105,30 +139,27 @@ export function CalendarView() {
       <style>{`
         .fc-event {
           border: none !important;
-          padding-right: 0 !important;
           position: relative;
         }
-        .fc-event-end-flag {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 16px;
-          height: 16px;
-          border-radius: 3px;
-          background: rgba(0,0,0,0.3);
-          color: #fff;
-          font-size: 9px;
-          font-weight: 800;
-          line-height: 1;
-          flex-shrink: 0;
-          margin-left: auto;
-          letter-spacing: -0.5px;
+        .fc-daygrid-event {
+          padding: 0 !important;
+          margin: 0 !important;
+          border: none !important;
+          background: transparent !important;
+          overflow: visible !important;
         }
-        .fc-event .fc-event-main {
-          color: #fff !important;
+        .fc-daygrid-event .fc-event-main {
+          padding: 0 !important;
+          overflow: visible !important;
+        }
+        .fc-daygrid-day-events {
+          min-height: 0 !important;
+        }
+        .fc-daygrid-event-harness {
+          margin-top: 1px !important;
         }
         .fc-daygrid-event-harness + .fc-daygrid-event-harness {
-          margin-top: 1px;
+          margin-top: 1px !important;
         }
       `}</style>
 
@@ -145,47 +176,20 @@ export function CalendarView() {
           eventClassNames="cursor-pointer hover:brightness-110 hover:shadow-md transition-all"
           eventDidMount={(arg) => {
             const el = arg.el
-            el.style.borderRadius = '0'
+            el.style.borderRadius = '999px'
             el.style.border = 'none'
-            if (arg.isStart && arg.isEnd) {
-              el.style.borderRadius = '999px'
-            } else if (arg.isStart) {
-              el.style.borderTopLeftRadius = '999px'
-              el.style.borderBottomLeftRadius = '999px'
-            } else if (arg.isEnd) {
-              el.style.borderTopRightRadius = '999px'
-              el.style.borderBottomRightRadius = '999px'
-            }
-            const actualEnd = arg.event.extendedProps.actualEndDate as string
-            if (actualEnd) {
-              const dayCells = document.querySelectorAll('.fc-daygrid-day[data-date]')
-              if (dayCells.length) {
-                const elRight = el.getBoundingClientRect().right
-                let segEndDate = ''
-                for (const cell of dayCells) {
-                  const cr = cell.getBoundingClientRect()
-                  if (Math.abs(cr.right - elRight) < 2) {
-                    segEndDate = cell.getAttribute('data-date') || ''
-                    break
-                  }
-                }
-                if (segEndDate === actualEnd) {
-                  const flag = el.querySelector('.fc-event-end-flag') as HTMLElement
-                  if (flag) flag.style.display = ''
-                }
-              }
-            }
           }}
           eventContent={(arg) => {
-            const status = arg.event.extendedProps.status as string
-            const dot = statusDots[status] || 'bg-slate-400'
-            const label = statusLabels[status] || status.toUpperCase()
+            const type = arg.event.extendedProps.type as string
+            const clientName = arg.event.extendedProps.clientName as string
+            const color = clientColors[clientName]
+            if (!color) return null
             return (
-              <span className="flex items-center gap-1 text-xs leading-tight px-0.5 w-full" style={{ color: '#fff' }}>
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />
-                <span className="truncate font-semibold">{arg.event.title}</span>
-                <span className="text-white/70 text-[10px] flex-shrink-0">{label}</span>
-                <span className="fc-event-end-flag" style={{ display: 'none' }}>END</span>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] leading-tight max-w-full"
+                style={{ background: color.bg }}>
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color.dot }} />
+                <span className="font-medium truncate" style={{ color: color.dot }}>{clientName}</span>
+                <span className="text-gray-500 flex-shrink-0 whitespace-nowrap">{type === 'start' ? 'starts' : 'ends'}</span>
               </span>
             )
           }}
@@ -194,7 +198,8 @@ export function CalendarView() {
             setViewEnd(dateInfo.endStr.slice(0, 10))
           }}
           eventClick={(info) => {
-            const trip = trips.find(t => t.id === info.event.id)
+            const tripId = info.event.extendedProps.tripId as string
+            const trip = trips.find(t => t.id === tripId)
             if (trip) setSelectedTrip(trip)
           }}
           height="auto"

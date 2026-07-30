@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, Button, StatCard, Table, Modal, Drawer, StatusBadge, RoleBadge } from '@/components/common'
 import { generatePassword } from '@/utils'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import toast from 'react-hot-toast'
 import type { Column } from '@/components/common'
 import type { User, UserRole } from '@/types'
@@ -28,12 +28,10 @@ export function UserManagement() {
   const inactiveUsers = users.filter(u => !u.is_active).length
 
   const createUser = useMutation({
-    mutationFn: async (formData: { full_name: string; email: string; role: UserRole; phone: string; is_active: boolean }) => {
-      const password = generatePassword()
-
+    mutationFn: async (formData: { full_name: string; email: string; role: UserRole; phone: string; is_active: boolean; password: string }) => {
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
-        password,
+        password: formData.password,
         options: { data: { role: formData.role, full_name: formData.full_name } },
       })
       if (signUpError) throw signUpError
@@ -49,7 +47,7 @@ export function UserManagement() {
       })
       if (dbError) throw dbError
 
-      return { email: formData.email, password, name: formData.full_name }
+      return { email: formData.email, password: formData.password, name: formData.full_name }
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -201,18 +199,19 @@ function UserDrawer({ open, onClose, editUser, onSubmit, isLoading }: {
   open: boolean
   onClose: () => void
   editUser: User | null
-  onSubmit: (data: { full_name: string; email: string; role: UserRole; phone: string; is_active: boolean }) => void
+  onSubmit: (data: { full_name: string; email: string; role: UserRole; phone: string; is_active: boolean; password?: string }) => void
   isLoading: boolean
 }) {
   const [name, setName] = useState(editUser?.full_name || '')
   const [email, setEmail] = useState(editUser?.email || '')
   const [role, setRole] = useState<UserRole>(editUser?.role || 'logistics')
   const [phone, setPhone] = useState(editUser?.phone || '')
+  const [password, setPassword] = useState('')
   const [isActive, setIsActive] = useState(editUser?.is_active ?? true)
 
   return (
     <Drawer open={open} onClose={onClose} title={editUser ? 'Edit User' : 'Add User'}>
-      <form onSubmit={(e) => { e.preventDefault(); onSubmit({ full_name: name, email, role, phone, is_active: isActive }) }} className="space-y-5">
+      <form onSubmit={(e) => { e.preventDefault(); onSubmit(editUser ? { full_name: name, email, role, phone, is_active: isActive } : { full_name: name, email, role, phone, is_active: isActive, password }) }} className="space-y-5">
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">Full Name</label>
           <input value={name} onChange={e => setName(e.target.value)} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
@@ -221,6 +220,12 @@ function UserDrawer({ open, onClose, editUser, onSubmit, isLoading }: {
           <label className="block text-sm font-medium text-text-primary mb-1">Email Address</label>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
         </div>
+        {!editUser && (
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-1">Password</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">Role</label>
           <select value={role} onChange={e => setRole(e.target.value as UserRole)} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary">

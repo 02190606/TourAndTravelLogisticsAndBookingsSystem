@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import { supabase } from '@/lib/supabaseClient'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import heroImage from '@/assets/login-hero.jpg'
 
 const heroTitle = 'Your fleet, your trips, in one view'

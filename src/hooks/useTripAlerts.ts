@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { addDays, parseISO, isBefore } from 'date-fns'
 import { computeTripStatus } from '@/utils/tripStatus'
 import type { Trip, AlertSetting } from '@/types'

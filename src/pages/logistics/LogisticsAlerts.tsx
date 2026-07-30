@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { PageHeader, CardSkeleton } from '@/components/common'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { formatDate } from '@/utils'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'

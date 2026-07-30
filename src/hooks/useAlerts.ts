@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { parseISO, differenceInCalendarDays } from 'date-fns'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { useEffect } from 'react'
 import type { ServiceRecord, Vehicle } from '@/types'
 

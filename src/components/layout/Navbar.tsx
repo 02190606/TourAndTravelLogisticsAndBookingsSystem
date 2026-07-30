@@ -1,4 +1,4 @@
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useNavigate } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
