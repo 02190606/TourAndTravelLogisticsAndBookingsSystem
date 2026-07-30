@@ -19,7 +19,7 @@ export function TripManagement() {
   const [deleteTarget, setDeleteTarget] = useState<Trip | null>(null)
   const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<Trip | null>(null)
   const [viewTrip, setViewTrip] = useState<Trip & { vehicles?: Vehicle; drivers?: Driver } | null>(null)
-  const [showCancelled, setShowCancelled] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<'active' | 'completed' | 'cancelled' | 'all'>('active')
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({})
@@ -46,16 +46,16 @@ export function TripManagement() {
   }, [actionMenuOpen])
 
   const { data: trips = [], isLoading } = useQuery({
-    queryKey: ['trips', showCancelled],
+    queryKey: ['trips', statusFilter],
     queryFn: async () => {
       const query = supabase
         .from('trips')
         .select('*, vehicles!left(registration_number, make, model), drivers!left(full_name, license_number)')
         .order('trip_start_date', { ascending: false })
-      if (showCancelled) {
-        query.eq('status', 'cancelled')
-      } else {
-        query.neq('status', 'cancelled')
+      if (statusFilter === 'active') {
+        query.not('status', 'in', '(completed,cancelled)')
+      } else if (statusFilter !== 'all') {
+        query.eq('status', statusFilter)
       }
       const { data } = await query
       return (data || []) as (Trip & { vehicles?: Vehicle; drivers?: Driver })[]
@@ -166,8 +166,10 @@ export function TripManagement() {
         subtitle={`${trips.length} trips`}
         actions={<>
           <div className="flex items-center rounded-lg border border-muted/40 overflow-hidden text-xs">
-            <button onClick={() => setShowCancelled(false)} className={`px-3 py-1.5 cursor-pointer ${!showCancelled ? 'bg-primary text-white' : 'text-text-secondary hover:bg-muted/20'}`}>Active</button>
-            <button onClick={() => setShowCancelled(true)} className={`px-3 py-1.5 cursor-pointer ${showCancelled ? 'bg-primary text-white' : 'text-text-secondary hover:bg-muted/20'}`}>Cancelled</button>
+            <button onClick={() => setStatusFilter('active')} className={`px-3 py-1.5 cursor-pointer ${statusFilter === 'active' ? 'bg-primary text-white' : 'text-text-secondary hover:bg-muted/20'}`}>Active</button>
+            <button onClick={() => setStatusFilter('completed')} className={`px-3 py-1.5 cursor-pointer ${statusFilter === 'completed' ? 'bg-primary text-white' : 'text-text-secondary hover:bg-muted/20'}`}>Completed</button>
+            <button onClick={() => setStatusFilter('cancelled')} className={`px-3 py-1.5 cursor-pointer ${statusFilter === 'cancelled' ? 'bg-primary text-white' : 'text-text-secondary hover:bg-muted/20'}`}>Cancelled</button>
+            <button onClick={() => setStatusFilter('all')} className={`px-3 py-1.5 cursor-pointer ${statusFilter === 'all' ? 'bg-primary text-white' : 'text-text-secondary hover:bg-muted/20'}`}>All</button>
           </div>
           <Button onClick={() => { setEditTrip(null); setDrawerOpen(true) }}>Create Trip</Button>
         </>}
