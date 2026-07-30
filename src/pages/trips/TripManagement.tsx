@@ -45,21 +45,22 @@ export function TripManagement() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [actionMenuOpen])
 
-  const { data: trips = [], isLoading } = useQuery({
-    queryKey: ['trips', statusFilter],
+  const { data: allTrips = [], isLoading } = useQuery({
+    queryKey: ['trips'],
     queryFn: async () => {
-      const query = supabase
+      const { data } = await supabase
         .from('trips')
         .select('*, vehicles!left(registration_number, make, model), drivers!left(full_name, license_number)')
         .order('trip_start_date', { ascending: false })
-      if (statusFilter === 'active') {
-        query.not('status', 'in', '(completed,cancelled)')
-      } else if (statusFilter !== 'all') {
-        query.eq('status', statusFilter)
-      }
-      const { data } = await query
       return (data || []) as (Trip & { vehicles?: Vehicle; drivers?: Driver })[]
     },
+  })
+
+  const trips = allTrips.filter(t => {
+    const computed = computeTripStatus(t)
+    if (statusFilter === 'active') return computed !== 'completed' && computed !== 'cancelled'
+    if (statusFilter === 'all') return true
+    return computed === statusFilter
   })
 
   const deleteTrip = useMutation({
