@@ -44,12 +44,12 @@ async function run() {
       'sync-trip-statuses-daily',
       '55 10 * * *',
       $$UPDATE trips SET status = CASE
-        WHEN CURRENT_DATE < trip_start_date THEN 'planned'
-        WHEN CURRENT_DATE > trip_end_date  THEN 'completed'
+        WHEN (now() AT TIME ZONE 'Africa/Kampala')::date < trip_start_date THEN 'planned'
+        WHEN (now() AT TIME ZONE 'Africa/Kampala')::date > trip_end_date   THEN 'completed'
         ELSE 'ongoing'
       END WHERE status != 'cancelled' AND status != (
-        CASE WHEN CURRENT_DATE < trip_start_date THEN 'planned'
-             WHEN CURRENT_DATE > trip_end_date  THEN 'completed'
+        CASE WHEN (now() AT TIME ZONE 'Africa/Kampala')::date < trip_start_date THEN 'planned'
+             WHEN (now() AT TIME ZONE 'Africa/Kampala')::date > trip_end_date   THEN 'completed'
              ELSE 'ongoing' END
       );$$
     )
@@ -65,7 +65,8 @@ async function run() {
         headers:=jsonb_build_object(
           'Content-Type', 'application/json',
           'Authorization', 'Bearer ${serviceRoleKey}'
-        )
+        ),
+        timeout_milliseconds:=30000
       ) AS request_id;$$
     )
   `)
