@@ -1,8 +1,4 @@
 const { Client } = require('pg')
-const dns = require('dns')
-
-const resolver = new dns.Resolver()
-resolver.setServers(['1.1.1.1', '8.8.8.8'])
 
 const client = new Client({
   host: 'db.ymjmqubbmeryqzolszvr.supabase.co',
@@ -11,18 +7,6 @@ const client = new Client({
   user: 'postgres',
   password: '2T6cljKYJESq6cbj',
   ssl: { rejectUnauthorized: false },
-  lookup: (hostname, opts, cb) => {
-    resolver.resolve6(hostname, (err, addrs) => {
-      if (err || !addrs || addrs.length === 0) {
-        resolver.resolve4(hostname, (err2, addrs4) => {
-          if (err2 || !addrs4 || addrs4.length === 0) return cb(err || err2 || new Error('DNS failed'))
-          cb(null, addrs4[0], 4)
-        })
-      } else {
-        cb(null, addrs[0], 6)
-      }
-    })
-  },
 })
 
 const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inltam1xdWJibWVyeXF6b2xzenZyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjM4NTc3MCwiZXhwIjoyMDk3OTYxNzcwfQ.18uxZKglZuVSoZQYtVQ2HEwWLyXjvogBiVgbIF3kX-8'
