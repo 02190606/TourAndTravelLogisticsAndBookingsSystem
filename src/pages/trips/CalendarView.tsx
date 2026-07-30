@@ -107,6 +107,22 @@ export function CalendarView() {
           padding-right: 0 !important;
           position: relative;
         }
+        .fc-event-end-flag {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 16px;
+          height: 16px;
+          border-radius: 3px;
+          background: rgba(0,0,0,0.3);
+          color: #fff;
+          font-size: 9px;
+          font-weight: 800;
+          line-height: 1;
+          flex-shrink: 0;
+          margin-left: auto;
+          letter-spacing: -0.5px;
+        }
         .fc-daygrid-event-harness + .fc-daygrid-event-harness {
           margin-top: 1px;
         }
@@ -146,6 +162,7 @@ export function CalendarView() {
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />
                 <span className="truncate">{arg.event.title}</span>
                 <span className="opacity-50 text-[10px] flex-shrink-0">{label}</span>
+                {arg.isEnd && <span className="fc-event-end-flag" title="Trip ends here">END</span>}
               </span>
             )
           }}
