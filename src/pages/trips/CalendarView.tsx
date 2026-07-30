@@ -93,6 +93,7 @@ export function CalendarView() {
           vehicle: trip.vehicles?.registration_number,
           driver: trip.drivers?.full_name || (trip.needs_driver ? 'With Driver (TBD)' : null),
           status: computed,
+          actualEndDate: trip.trip_end_date,
         },
       }
     })
@@ -123,6 +124,9 @@ export function CalendarView() {
           margin-left: auto;
           letter-spacing: -0.5px;
         }
+        .fc-event .fc-event-main {
+          color: #fff !important;
+        }
         .fc-daygrid-event-harness + .fc-daygrid-event-harness {
           margin-top: 1px;
         }
@@ -152,17 +156,36 @@ export function CalendarView() {
               el.style.borderTopRightRadius = '999px'
               el.style.borderBottomRightRadius = '999px'
             }
+            const actualEnd = arg.event.extendedProps.actualEndDate as string
+            if (actualEnd) {
+              const dayCells = document.querySelectorAll('.fc-daygrid-day[data-date]')
+              if (dayCells.length) {
+                const elRight = el.getBoundingClientRect().right
+                let segEndDate = ''
+                for (const cell of dayCells) {
+                  const cr = cell.getBoundingClientRect()
+                  if (Math.abs(cr.right - elRight) < 2) {
+                    segEndDate = cell.getAttribute('data-date') || ''
+                    break
+                  }
+                }
+                if (segEndDate === actualEnd) {
+                  const flag = el.querySelector('.fc-event-end-flag') as HTMLElement
+                  if (flag) flag.style.display = ''
+                }
+              }
+            }
           }}
           eventContent={(arg) => {
             const status = arg.event.extendedProps.status as string
             const dot = statusDots[status] || 'bg-slate-400'
             const label = statusLabels[status] || status.toUpperCase()
             return (
-              <span className="flex items-center gap-1 text-xs leading-tight px-0.5 overflow-hidden w-full">
+              <span className="flex items-center gap-1 text-xs leading-tight px-0.5 w-full" style={{ color: '#fff' }}>
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />
-                <span className="truncate">{arg.event.title}</span>
-                <span className="opacity-50 text-[10px] flex-shrink-0">{label}</span>
-                {arg.isEnd && <span className="fc-event-end-flag" title="Trip ends here">END</span>}
+                <span className="truncate font-semibold">{arg.event.title}</span>
+                <span className="text-white/70 text-[10px] flex-shrink-0">{label}</span>
+                <span className="fc-event-end-flag" style={{ display: 'none' }}>END</span>
               </span>
             )
           }}
