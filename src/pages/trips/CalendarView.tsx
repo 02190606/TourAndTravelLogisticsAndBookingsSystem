@@ -103,28 +103,9 @@ export function CalendarView() {
 
       <style>{`
         .fc-event {
-          border-radius: 4px !important;
-          border-right-width: 4px !important;
-          border-right-style: solid !important;
-          border-right-color: rgba(0,0,0,0.35) !important;
+          border: none !important;
           padding-right: 0 !important;
           position: relative;
-        }
-        .fc-event-end-flag {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 16px;
-          height: 16px;
-          border-radius: 3px;
-          background: rgba(0,0,0,0.3);
-          color: #fff;
-          font-size: 9px;
-          font-weight: 800;
-          line-height: 1;
-          flex-shrink: 0;
-          margin-left: auto;
-          letter-spacing: -0.5px;
         }
         .fc-daygrid-event-harness + .fc-daygrid-event-harness {
           margin-top: 1px;
@@ -142,17 +123,29 @@ export function CalendarView() {
           }}
           events={events}
           eventClassNames="cursor-pointer hover:brightness-110 hover:shadow-md transition-all"
+          eventDidMount={(arg) => {
+            const el = arg.el
+            el.style.borderRadius = '0'
+            el.style.border = 'none'
+            if (arg.isStart && arg.isEnd) {
+              el.style.borderRadius = '999px'
+            } else if (arg.isStart) {
+              el.style.borderTopLeftRadius = '999px'
+              el.style.borderBottomLeftRadius = '999px'
+            } else if (arg.isEnd) {
+              el.style.borderTopRightRadius = '999px'
+              el.style.borderBottomRightRadius = '999px'
+            }
+          }}
           eventContent={(arg) => {
             const status = arg.event.extendedProps.status as string
             const dot = statusDots[status] || 'bg-slate-400'
             const label = statusLabels[status] || status.toUpperCase()
-            const hasEnd = !!arg.event.end
             return (
               <span className="flex items-center gap-1 text-xs leading-tight px-0.5 overflow-hidden w-full">
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />
                 <span className="truncate">{arg.event.title}</span>
                 <span className="opacity-50 text-[10px] flex-shrink-0">{label}</span>
-                {hasEnd && <span className="fc-event-end-flag" title="Trip ends here">END</span>}
               </span>
             )
           }}
