@@ -67,6 +67,9 @@ export function Experience() {
   })
   const [permitData, setPermitData] = useState<Record<string, { date: string; qty: number }>>({})
   const [expandedPermit, setExpandedPermit] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
+  const savedFormRef = useRef(form)
+  const savedPermitDataRef = useRef(permitData)
 
   const { data: trips = [], isLoading } = useQuery({
     queryKey: ['trips', false],
@@ -112,14 +115,16 @@ export function Experience() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trips'] })
-      setSelected(null)
+      savedFormRef.current = { ...form }
+      savedPermitDataRef.current = Object.fromEntries(Object.entries(permitData).map(([k, v]) => [k, { ...v }])) as Record<string, { date: string; qty: number }>
+      setEditing(false)
       toast.success('Experience saved')
     },
     onError: (err: Error) => toast.error(err.message),
   })
 
   function openModal(trip: TripWithJoins) {
-    setForm({
+    const f = {
       car_seats: trip.car_seats ?? 0,
       has_gps: trip.has_gps ?? false,
       has_binoculars: trip.has_binoculars ?? false,
@@ -131,15 +136,20 @@ export function Experience() {
       golden_monkey_tracking: trip.golden_monkey_tracking ?? false,
       already_bought: trip.already_bought ?? false,
       activities: trip.activities ?? '',
-    })
-    setPermitData({
+    }
+    const pd = {
       gorilla_tracking: { date: trip.gorilla_tracking_date ?? '', qty: trip.gorilla_tracking_qty ?? 1 },
       gorilla_habituation: { date: trip.gorilla_habituation_date ?? '', qty: trip.gorilla_habituation_qty ?? 1 },
       chimpanzee_tracking: { date: trip.chimpanzee_tracking_date ?? '', qty: trip.chimpanzee_tracking_qty ?? 1 },
       chimpanzee_habituation: { date: trip.chimpanzee_habituation_date ?? '', qty: trip.chimpanzee_habituation_qty ?? 1 },
       golden_monkey_tracking: { date: trip.golden_monkey_tracking_date ?? '', qty: trip.golden_monkey_tracking_qty ?? 1 },
       already_bought: { date: trip.already_bought_date ?? '', qty: trip.already_bought_qty ?? 1 },
-    })
+    }
+    setForm(f)
+    setPermitData(pd)
+    savedFormRef.current = { ...f }
+    savedPermitDataRef.current = Object.fromEntries(Object.entries(pd).map(([k, v]) => [k, { ...v }])) as Record<string, { date: string; qty: number }>
+    setEditing(false)
     setExpandedPermit(null)
     setSelected(trip)
   }
@@ -196,32 +206,35 @@ export function Experience() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Car Seats</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.car_seats}
-                    onChange={e => setForm(f => ({ ...f, car_seats: Number(e.target.value) }))}
-                    className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm"
-                  />
+                    <input
+                      type="number"
+                      min={0}
+                      value={form.car_seats}
+                      onChange={e => setForm(f => ({ ...f, car_seats: Number(e.target.value) }))}
+                      disabled={!editing}
+                      className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
                 </div>
                 <div className="flex items-end pb-1">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className={`flex items-center gap-2 ${editing ? 'cursor-pointer' : ''}`}>
                     <input
                       type="checkbox"
                       checked={form.has_gps}
                       onChange={e => setForm(f => ({ ...f, has_gps: e.target.checked }))}
-                      className="rounded border-muted/60 text-primary focus:ring-primary"
+                      disabled={!editing}
+                      className="rounded border-muted/60 text-primary focus:ring-primary disabled:opacity-50"
                     />
                     <span className="text-sm font-medium">GPS</span>
                   </label>
                 </div>
                 <div className="flex items-end pb-1">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className={`flex items-center gap-2 ${editing ? 'cursor-pointer' : ''}`}>
                     <input
                       type="checkbox"
                       checked={form.has_binoculars}
                       onChange={e => setForm(f => ({ ...f, has_binoculars: e.target.checked }))}
-                      className="rounded border-muted/60 text-primary focus:ring-primary"
+                      disabled={!editing}
+                      className="rounded border-muted/60 text-primary focus:ring-primary disabled:opacity-50"
                     />
                     <span className="text-sm font-medium">Binoculars</span>
                   </label>
@@ -233,7 +246,8 @@ export function Experience() {
                     value={form.extras}
                     onChange={e => setForm(f => ({ ...f, extras: e.target.value }))}
                     placeholder="e.g. Cooler box, child seat, Wi-Fi"
-                    className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm"
+                    disabled={!editing}
+                    className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -250,7 +264,7 @@ export function Experience() {
                   return (
                     <div key={p.key} className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className={`flex items-center gap-2 ${editing ? 'cursor-pointer' : ''}`}>
                           <input
                             type="checkbox"
                             checked={checked}
@@ -260,11 +274,12 @@ export function Experience() {
                                 setPermitData(d => ({ ...d, [p.key]: { date: '', qty: 1 } }))
                               }
                             }}
-                            className="rounded border-muted/60 text-primary focus:ring-primary"
+                            disabled={!editing}
+                            className="rounded border-muted/60 text-primary focus:ring-primary disabled:opacity-50"
                           />
                           <span className="text-sm font-medium">{p.label}</span>
                         </label>
-                        {checked && !isExpanded && !hasDetails && (
+                        {editing && checked && !isExpanded && !hasDetails && (
                           <button
                             type="button"
                             onClick={() => setExpandedPermit(p.key)}
@@ -272,13 +287,19 @@ export function Experience() {
                           >+ <span className="underline">Add details</span></button>
                         )}
                         {checked && hasDetails && !isExpanded && (
-                          <button
-                            type="button"
-                            onClick={() => setExpandedPermit(p.key)}
-                            className="text-xs text-text-secondary hover:text-text-primary cursor-pointer"
-                          >
-                            <span className="text-success font-semibold">✓</span> ({data?.qty || 1}x, {data?.date ? formatDate(data.date, 'dd MMM') : '—'})
-                          </button>
+                          editing ? (
+                            <button
+                              type="button"
+                              onClick={() => setExpandedPermit(p.key)}
+                              className="text-xs text-text-secondary hover:text-text-primary cursor-pointer"
+                            >
+                              <span className="text-success font-semibold">✓</span> ({data?.qty || 1}x, {data?.date ? formatDate(data.date, 'dd MMM') : '—'})
+                            </button>
+                          ) : (
+                            <span className="text-xs text-text-secondary">
+                              <span className="text-success font-semibold">✓</span> ({data?.qty || 1}x, {data?.date ? formatDate(data.date, 'dd MMM') : '—'})
+                            </span>
+                          )
                         )}
                       </div>
                       {isExpanded && (
@@ -295,21 +316,25 @@ export function Experience() {
                             type="date"
                             value={data?.date || ''}
                             onChange={e => setPermitData(d => ({ ...d, [p.key]: { ...d[p.key], date: e.target.value, qty: d[p.key]?.qty || 1 } }))}
-                            className="w-36 px-2 py-1.5 border border-muted/60 rounded-lg text-xs"
+                            disabled={!editing}
+                            className="w-36 px-2 py-1.5 border border-muted/60 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <input
                             type="number"
                             min={1}
                             value={data?.qty || 1}
                             onChange={e => setPermitData(d => ({ ...d, [p.key]: { ...d[p.key], date: d[p.key]?.date || '', qty: Math.max(1, Number(e.target.value)) } }))}
-                            className="w-16 px-2 py-1.5 border border-muted/60 rounded-lg text-xs text-center"
+                            disabled={!editing}
+                            className="w-16 px-2 py-1.5 border border-muted/60 rounded-lg text-xs text-center disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <span className="text-xs text-text-secondary">people</span>
-                          <button
-                            type="button"
-                            onClick={() => setExpandedPermit(null)}
-                            className="text-xs text-primary/70 hover:text-primary cursor-pointer underline"
-                          >Done</button>
+                          {editing && (
+                            <button
+                              type="button"
+                              onClick={() => setExpandedPermit(null)}
+                              className="text-xs text-primary/70 hover:text-primary cursor-pointer underline"
+                            >Done</button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -325,13 +350,27 @@ export function Experience() {
                 onChange={e => setForm(f => ({ ...f, activities: e.target.value }))}
                 placeholder="e.g. Game drive at Murchison Falls, boat safari, nature walk..."
                 rows={4}
-                className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm resize-y"
+                disabled={!editing}
+                className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm resize-y disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button variant="outline" onClick={() => setSelected(null)}>Cancel</Button>
-              <Button onClick={() => saveMutation.mutate()} isLoading={saveMutation.isPending}>Save</Button>
+              {editing ? (
+                <>
+                  <Button variant="outline" onClick={() => {
+                    setForm({ ...savedFormRef.current } as typeof form)
+                    setPermitData({ ...savedPermitDataRef.current })
+                    setEditing(false)
+                  }}>Cancel</Button>
+                  <Button onClick={() => saveMutation.mutate()} isLoading={saveMutation.isPending}>Save</Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => setSelected(null)}>Cancel</Button>
+                  <Button onClick={() => setEditing(true)}>Edit</Button>
+                </>
+              )}
             </div>
           </div>
         )}
