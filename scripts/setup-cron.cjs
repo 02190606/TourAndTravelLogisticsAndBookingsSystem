@@ -59,7 +59,7 @@ async function run() {
   await client.query(`
     SELECT cron.schedule(
       'send-alerts-daily',
-      '0 11 * * *',
+      '0 9 * * *',
       $$SELECT net.http_post(
         url:='https://ymjmqubbmeryqzolszvr.supabase.co/functions/v1/send-alerts',
         headers:=jsonb_build_object(
@@ -69,7 +69,7 @@ async function run() {
       ) AS request_id;$$
     )
   `)
-  console.log('Send-alerts cron created (11:00 AM UTC / 2:00 PM EAT)')
+  console.log('Send-alerts cron created (9:00 AM UTC / 12:00 PM EAT)')
 
   await client.end()
   console.log('All done!')
