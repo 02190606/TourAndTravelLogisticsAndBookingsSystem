@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
-import { PageHeader, StatCard, Button, CardSkeleton, StatusBadge } from '@/components/common'
+import { PageHeader, StatCard, Button, CardSkeleton, StatusBadge, Badge } from '@/components/common'
 import { BarChart } from '@/components/charts/BarChart'
 import { formatUGX, formatDate, computeTripStatus, isActiveTrip } from '@/utils'
 import { saveAs } from 'file-saver'
@@ -123,7 +123,12 @@ export function PaymentsRevenue() {
                 <td data-label="Amount (UGX)" className="px-3 py-3 text-sm font-mono text-right whitespace-nowrap">{(t.amount_in_ugx || 0).toLocaleString()}</td>
                 <td data-label="Paid (UGX)" className="px-3 py-3 text-sm font-mono text-right text-success whitespace-nowrap">{(t.amount_paid || 0).toLocaleString()}</td>
                 <td data-label="Payment" className="px-3 py-3 text-sm capitalize whitespace-nowrap">{t.payment_mode}</td>
-                <td data-label="Balance (UGX)" className={`px-3 py-3 text-sm font-mono text-right whitespace-nowrap ${t.balance > 0 ? 'text-warning' : 'text-success'}`}>{(t.balance || 0).toLocaleString()}</td>
+                <td data-label="Balance (UGX)" className="px-3 py-3 text-sm font-mono text-right whitespace-nowrap">
+                  <span className="inline-flex items-center gap-2 justify-end">
+                    <span className={t.balance > 0 && !t.fully_paid ? 'text-warning' : 'text-success'}>{(t.balance || 0).toLocaleString()}</span>
+                    {t.fully_paid && <Badge variant="success">Fully Paid</Badge>}
+                  </span>
+                </td>
                 <td data-label="Start" className="px-3 py-3 text-sm whitespace-nowrap">{formatDate(t.trip_start_date)}</td>
                 <td data-label="Status" className="whitespace-nowrap"><StatusBadge status={computeTripStatus(t)} /></td>
               </tr>

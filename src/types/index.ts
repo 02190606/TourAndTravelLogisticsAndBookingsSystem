@@ -143,6 +143,7 @@ export interface Trip {
   amount_in_ugx: number
   payment_mode: PaymentMode
   balance: number
+  fully_paid: boolean
   trip_start_date: string
   trip_end_date: string
   flight_arrival_time: string | null

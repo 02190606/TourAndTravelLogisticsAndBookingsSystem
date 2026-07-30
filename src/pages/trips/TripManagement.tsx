@@ -124,7 +124,10 @@ export function TripManagement() {
     { key: 'amount_paid', header: 'Paid (UGX)', render: (t: any) => <span className="font-mono text-success">{(t.amount_paid || 0).toLocaleString()}</span> },
     { key: 'payment_mode', header: 'Payment', render: (t: any) => <span className="capitalize">{t.payment_mode}</span> },
     { key: 'balance', header: 'Balance (UGX)', render: (t: any) => (
-      <span className={t.balance > 0 ? 'text-warning font-mono' : 'text-success font-mono'}>{(t.balance || 0).toLocaleString()}</span>
+      <span className="inline-flex items-center gap-2">
+        <span className={t.balance > 0 && !t.fully_paid ? 'text-warning font-mono' : 'text-success font-mono'}>{(t.balance || 0).toLocaleString()}</span>
+        {t.fully_paid && <Badge variant="success">Fully Paid</Badge>}
+      </span>
     )},
     { key: 'trip_dates', header: 'Trip Dates', render: (t: any) => {
       if (!t.trip_start_date && !t.trip_end_date) return <span className="text-text-secondary">—</span>
@@ -299,7 +302,10 @@ export function TripManagement() {
                 </div>
                 <div className="flex items-center justify-between px-4 py-3">
                   <span className="text-[15px] text-text-secondary">Balance</span>
-                  <span className={`text-[15px] font-bold font-mono ${viewTrip.balance > 0 ? 'text-warning' : 'text-success'}`}>{formatUGX(viewTrip.balance)}</span>
+                  <span className="inline-flex items-center gap-2">
+                    <span className={`text-[15px] font-bold font-mono ${viewTrip.balance > 0 && !viewTrip.fully_paid ? 'text-warning' : 'text-success'}`}>{formatUGX(viewTrip.balance)}</span>
+                    {viewTrip.fully_paid && <Badge variant="success">Fully Paid</Badge>}
+                  </span>
                 </div>
               </div>
             </div>
@@ -411,6 +417,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     payment_mode: editTrip?.payment_mode || 'cash',
     amount_paid: editTrip?.amount_paid ?? null,
     balance: editTrip?.balance ?? null,
+    fully_paid: editTrip?.fully_paid || false,
     exchangeRate: null as number | null,
   })
 
@@ -562,6 +569,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
         payment_mode: form.payment_mode,
         amount_paid: Number(form.amount_paid) || null,
         balance: Number(form.balance) || null,
+        fully_paid: form.fully_paid,
       }
       if (editTrip) {
         const { error } = await supabase.from('trips').update(payload).eq('id', editTrip.id)
@@ -793,6 +801,10 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
                 {(form.balance ?? 0).toLocaleString()} UGX
                 {(form.balance ?? 0) === 0 && <Badge variant="success">Fully Paid</Badge>}
               </div>
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              <input type="checkbox" id="fully_paid" checked={form.fully_paid} onChange={e => setForm(f => ({ ...f, fully_paid: e.target.checked }))} className="rounded border-muted/60 text-primary focus:ring-primary/30" />
+              <label htmlFor="fully_paid" className="text-sm font-medium text-text-secondary cursor-pointer select-none">Mark as Fully Paid</label>
             </div>
           </div>
         </div>
