@@ -114,9 +114,9 @@ export function TripManagement() {
     )},
     { key: 'vehicle_driver', header: 'Vehicle / Driver', render: (t: any) => (
       <div className="leading-tight">
-        {t.vehicles?.registration_number || t.drivers?.full_name ? <>
+        {t.vehicles?.registration_number || t.drivers?.full_name || t.needs_driver ? <>
           <span className="font-medium">{t.vehicles?.registration_number || '—'}</span>
-          <span className="text-text-secondary text-xs block">{t.drivers?.full_name || '—'}</span>
+          <span className="text-text-secondary text-xs block">{t.drivers?.full_name || (t.needs_driver ? 'With Driver (TBD)' : '—')}</span>
         </> : <span className="text-text-secondary">—</span>}
       </div>
     )},
@@ -246,7 +246,7 @@ export function TripManagement() {
               </div>
               <div>
                 <p className="text-[13px] text-text-secondary mb-0.5">Driver</p>
-                <p className="text-[15px] font-bold text-text-primary">{viewTrip.drivers?.full_name || '—'}</p>
+                <p className="text-[15px] font-bold text-text-primary">{viewTrip.drivers?.full_name || (viewTrip.needs_driver ? 'With Driver (TBD)' : '—')}</p>
               </div>
               {(viewTrip.pickup_location || viewTrip.Destination) && (
                 <div>
@@ -390,6 +390,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     car_type: editTrip?.car_type || 'sedan',
     vehicle_id: editTrip?.vehicle_id || '',
     driver_id: editTrip?.driver_id || '',
+    needs_driver: editTrip?.needs_driver ?? false,
     trip_start_date: editTrip?.trip_start_date?.split('T')[0] || '',
     trip_end_date: editTrip?.trip_end_date?.split('T')[0] || '',
     flight_arrival_time: editTrip?.flight_arrival_time || '',
@@ -541,6 +542,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
         car_type: form.car_type,
         vehicle_id: form.vehicle_id || null,
         driver_id: form.driver_id || null,
+        needs_driver: form.needs_driver || null,
         trip_start_date: form.trip_start_date || null,
         trip_end_date: form.trip_end_date || null,
         flight_arrival_time: form.flight_arrival_time || null,
@@ -670,8 +672,16 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
                   <button type="button" onClick={() => { setEditDriverTarget(null); setNewDriver({ full_name: '', phone: '' }); setShowAddDriver(true) }} className="text-xs text-primary hover:text-primary/80 font-medium">+ Add New</button>
                 </div>
               </div>
-              <select value={form.driver_id} onChange={e => setForm(f => ({ ...f, driver_id: e.target.value }))} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
+              <select value={form.needs_driver ? '__TBD__' : form.driver_id} onChange={e => {
+                const v = e.target.value
+                if (v === '__TBD__') {
+                  setForm(f => ({ ...f, driver_id: '', needs_driver: true }))
+                } else {
+                  setForm(f => ({ ...f, driver_id: v, needs_driver: false }))
+                }
+              }} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
                 <option value="">Select driver</option>
+                <option value="__TBD__">With Driver (TBD)</option>
                 {drivers.map(d => (
                   <option key={d.id} value={d.id}>{d.full_name} ({d.license_number})</option>
                 ))}
