@@ -28,10 +28,11 @@ export function UserManagement() {
   const inactiveUsers = users.filter(u => !u.is_active).length
 
   const createUser = useMutation({
-    mutationFn: async (formData: { full_name: string; email: string; role: UserRole; phone: string; is_active: boolean; password: string }) => {
+    mutationFn: async (formData: { full_name: string; email: string; role: UserRole; phone: string; is_active: boolean; password?: string }) => {
+      const password = formData.password || ''
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
-        password: formData.password,
+        password,
         options: { data: { role: formData.role, full_name: formData.full_name } },
       })
       if (signUpError) throw signUpError
@@ -47,7 +48,7 @@ export function UserManagement() {
       })
       if (dbError) throw dbError
 
-      return { email: formData.email, password: formData.password, name: formData.full_name }
+      return { email: formData.email, password, name: formData.full_name }
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
