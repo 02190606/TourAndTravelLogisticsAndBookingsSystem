@@ -20,7 +20,7 @@ const STATUS_ORDER: TripStatus[] = ['planned', 'ongoing', 'ends_today', 'complet
 
 const STAR_COLOR = '#FACC15'
 const DOT_COLOR = '#EF4444'
-const CLIENT_NAME_COLOR = '#374151'
+const CLIENT_NAME_COLOR = '#0F172A'
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -300,7 +300,7 @@ function TripCard({ card, onSelect }: { card: DayCard; onSelect: (t: TripRow) =>
       ) : (
         <span className="flex-shrink-0 h-1.5 w-1.5 rounded-full" style={{ backgroundColor: DOT_COLOR }} />
       )}
-      <span className="min-w-0 flex-1 truncate text-[11px] font-medium leading-tight" style={{ color: CLIENT_NAME_COLOR }}>
+      <span className="min-w-0 flex-1 truncate text-xs font-bold leading-tight" style={{ color: CLIENT_NAME_COLOR }}>
         {trip.client_name}
       </span>
       {isStartOrSame ? statusPill(computeTripStatus(trip)) : endPill()}
