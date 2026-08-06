@@ -138,6 +138,7 @@ export interface Trip {
   vehicle_id: string | null
   driver_id: string | null
   needs_driver: boolean | null
+  is_self_drive: boolean | null
   amount_paid: number
   currency: string
   amount_in_ugx: number

@@ -115,9 +115,9 @@ export function TripManagement() {
     )},
     { key: 'vehicle_driver', header: 'Vehicle / Driver', render: (t: any) => (
       <div className="leading-tight">
-        {t.vehicles?.registration_number || t.drivers?.full_name || t.needs_driver ? <>
+        {t.is_self_drive || t.vehicles?.registration_number || t.drivers?.full_name || t.needs_driver ? <>
           <span className="font-medium">{t.vehicles?.registration_number || '—'}</span>
-          <span className="text-text-secondary text-xs block">{t.drivers?.full_name || (t.needs_driver ? 'With Driver (TBD)' : '—')}</span>
+          <span className="text-text-secondary text-xs block">{t.is_self_drive ? 'Self Drive' : (t.drivers?.full_name || (t.needs_driver ? 'With Driver (TBD)' : '—'))}</span>
         </> : <span className="text-text-secondary">—</span>}
       </div>
     )},
@@ -252,7 +252,7 @@ export function TripManagement() {
               </div>
               <div>
                 <p className="text-[13px] text-text-secondary mb-0.5">Driver</p>
-                <p className="text-[15px] font-bold text-text-primary">{viewTrip.drivers?.full_name || (viewTrip.needs_driver ? 'With Driver (TBD)' : '—')}</p>
+                <p className="text-[15px] font-bold text-text-primary">{viewTrip.is_self_drive ? 'Self Drive' : (viewTrip.drivers?.full_name || (viewTrip.needs_driver ? 'With Driver (TBD)' : '—'))}</p>
               </div>
               {(viewTrip.pickup_location || viewTrip.Destination) && (
                 <div>
@@ -400,6 +400,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
     vehicle_id: editTrip?.vehicle_id || '',
     driver_id: editTrip?.driver_id || '',
     needs_driver: editTrip?.needs_driver ?? false,
+    is_self_drive: editTrip?.is_self_drive ?? false,
     trip_start_date: editTrip?.trip_start_date?.split('T')[0] || '',
     trip_end_date: editTrip?.trip_end_date?.split('T')[0] || '',
     flight_arrival_time: editTrip?.flight_arrival_time || '',
@@ -553,6 +554,7 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
         vehicle_id: form.vehicle_id || null,
         driver_id: form.driver_id || null,
         needs_driver: form.needs_driver || null,
+        is_self_drive: form.is_self_drive,
         trip_start_date: form.trip_start_date || null,
         trip_end_date: form.trip_end_date || null,
         flight_arrival_time: form.flight_arrival_time || null,
@@ -676,27 +678,43 @@ function TripDrawer({ open, onClose, editTrip }: { open: boolean; onClose: () =>
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-sm font-medium">Assign Driver</label>
-                <div className="flex items-center gap-2">
-                  {form.driver_id && (
-                    <button type="button" onClick={() => { const d = drivers.find(d => d.id === form.driver_id); if (d) { setEditDriverTarget({ id: d.id, full_name: d.full_name, phone: d.phone || '' }); setNewDriver({ full_name: d.full_name, phone: d.phone || '' }); setShowAddDriver(true) } }} className="text-xs text-text-secondary hover:text-text-primary font-medium">Edit</button>
-                  )}
-                  <button type="button" onClick={() => { setEditDriverTarget(null); setNewDriver({ full_name: '', phone: '' }); setShowAddDriver(true) }} className="text-xs text-primary hover:text-primary/80 font-medium">+ Add New</button>
-                </div>
+                {!form.is_self_drive && (
+                  <div className="flex items-center gap-2">
+                    {form.driver_id && (
+                      <button type="button" onClick={() => { const d = drivers.find(d => d.id === form.driver_id); if (d) { setEditDriverTarget({ id: d.id, full_name: d.full_name, phone: d.phone || '' }); setNewDriver({ full_name: d.full_name, phone: d.phone || '' }); setShowAddDriver(true) } }} className="text-xs text-text-secondary hover:text-text-primary font-medium">Edit</button>
+                    )}
+                    <button type="button" onClick={() => { setEditDriverTarget(null); setNewDriver({ full_name: '', phone: '' }); setShowAddDriver(true) }} className="text-xs text-primary hover:text-primary/80 font-medium">+ Add New</button>
+                  </div>
+                )}
               </div>
-              <select value={form.needs_driver ? '__TBD__' : form.driver_id} onChange={e => {
+              <select value={form.needs_driver ? '__TBD__' : form.driver_id} disabled={form.is_self_drive} onChange={e => {
                 const v = e.target.value
                 if (v === '__TBD__') {
                   setForm(f => ({ ...f, driver_id: '', needs_driver: true }))
                 } else {
                   setForm(f => ({ ...f, driver_id: v, needs_driver: false }))
                 }
-              }} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm">
+              }} className="w-full px-3 py-2.5 border border-muted/60 rounded-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 <option value="">Select driver</option>
                 <option value="__TBD__">With Driver (TBD)</option>
                 {drivers.map(d => (
                   <option key={d.id} value={d.id}>{d.full_name} ({d.license_number})</option>
                 ))}
               </select>
+            </div>
+            <div className="flex items-center">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.is_self_drive} onChange={e => {
+                  const checked = e.target.checked
+                  setForm(f => ({
+                    ...f,
+                    is_self_drive: checked,
+                    driver_id: checked ? '' : f.driver_id,
+                    needs_driver: checked ? false : f.needs_driver,
+                  }))
+                }} className="rounded border-muted/60 text-primary focus:ring-primary" />
+                <span className="text-sm font-medium">Self Drive</span>
+              </label>
             </div>
           </div>
         </div>

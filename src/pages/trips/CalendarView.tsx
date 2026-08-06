@@ -262,7 +262,7 @@ export function CalendarView() {
               </div>
               <div>
                 <p className="text-xs text-text-secondary uppercase tracking-wider">Driver</p>
-                <p className="text-sm mt-1">{selectedTrip.drivers?.full_name || (selectedTrip.needs_driver ? 'With Driver (TBD)' : '—')}</p>
+                <p className="text-sm mt-1">{selectedTrip.is_self_drive ? 'Self Drive' : (selectedTrip.drivers?.full_name || (selectedTrip.needs_driver ? 'With Driver (TBD)' : '—'))}</p>
               </div>
               {(selectedTrip.is_cross_border || selectedTrip.is_one_way) && (
                 <div className="col-span-2">
